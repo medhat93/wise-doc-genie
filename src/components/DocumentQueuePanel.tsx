@@ -164,79 +164,80 @@ function SortableDocCard({
   const isUploading = doc.status === "uploading" && !doc.isTemplate && !doc.isAI;
 
   return (
-    <Card ref={setNodeRef} style={style} className="group relative overflow-hidden">
-      {/* Drag handle - always visible */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute top-1.5 left-1.5 z-10 cursor-grab bg-background/80 backdrop-blur-sm rounded p-0.5 shadow-sm"
-      >
-        <HugeiconsIcon icon={DragDropVerticalIcon} size={14} className="text-muted-foreground" />
-      </div>
-
-      {/* Delete button */}
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <button className="absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded p-0.5">
-            <HugeiconsIcon icon={Delete02Icon} size={12} className="text-destructive" />
-          </button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove from queue?</AlertDialogTitle>
-            <AlertDialogDescription>
-              "{doc.name}" will be removed from the queue.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => onRemove(doc.id)}>Remove</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
+    <Card
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="group relative overflow-hidden cursor-grab active:cursor-grabbing"
+    >
       {/* Status badge */}
       {doc.status === "complete" && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 400 }}
-          className="absolute top-1 right-1 z-10"
+          className="absolute top-1.5 right-1.5 z-10"
         >
           <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="text-emerald-500" />
         </motion.div>
       )}
 
       {/* Thumbnail */}
-      <div className="cursor-pointer" onClick={() => onPreview(doc)}>
-        <VerticalThumbnail doc={doc} />
-      </div>
+      <VerticalThumbnail doc={doc} />
 
-      {/* Info */}
-      <div className="p-2">
-        <p className="text-[11px] font-medium truncate leading-tight">{doc.name}</p>
-        {doc.isAI && doc.status === "uploading" ? (
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={doc.aiThinkingStep || "generating"}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="text-[10px] ai-thinking-text truncate mt-0.5"
+      {/* Info + delete row */}
+      <div className="p-2 flex items-start gap-1.5">
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-medium truncate leading-tight">{doc.name}</p>
+          {doc.isAI && doc.status === "uploading" ? (
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={doc.aiThinkingStep || "generating"}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+                className="text-[10px] ai-thinking-text truncate mt-0.5"
+              >
+                {doc.aiThinkingStep || "AI is generating..."}
+              </motion.p>
+            </AnimatePresence>
+          ) : (
+            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+              {doc.isTemplate
+                ? `${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
+                : doc.status === "uploading"
+                  ? (doc.isDriveImport ? "Importing..." : "Uploading...")
+                  : `${doc.pageCount ?? 0} pages`}
+            </p>
+          )}
+        </div>
+
+        {/* Delete button */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 flex-shrink-0"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
             >
-              {doc.aiThinkingStep || "AI is generating..."}
-            </motion.p>
-          </AnimatePresence>
-        ) : (
-          <p className="text-[10px] text-muted-foreground truncate mt-0.5">
-            {doc.isTemplate
-              ? `${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
-              : doc.status === "uploading"
-                ? (doc.isDriveImport ? "Importing..." : "Uploading...")
-                : `${doc.pageCount ?? 0} pages`}
-          </p>
-        )}
+              <HugeiconsIcon icon={Delete02Icon} size={12} className="text-destructive" />
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove from queue?</AlertDialogTitle>
+              <AlertDialogDescription>
+                "{doc.name}" will be removed from the queue.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => onRemove(doc.id)}>Remove</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Upload progress */}
