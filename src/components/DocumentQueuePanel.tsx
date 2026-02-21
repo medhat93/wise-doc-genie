@@ -171,6 +171,11 @@ function SortableDocCard({
       {...listeners}
       className="group relative overflow-hidden cursor-grab active:cursor-grabbing"
     >
+      {/* Drag handle indicator */}
+      <div className="absolute top-1.5 left-1.5 z-10 bg-background/80 backdrop-blur-sm rounded p-0.5 pointer-events-none">
+        <HugeiconsIcon icon={DragDropVerticalIcon} size={14} className="text-muted-foreground/60" />
+      </div>
+
       {/* Status badge */}
       {doc.status === "complete" && (
         <motion.div
