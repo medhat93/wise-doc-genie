@@ -566,7 +566,7 @@ const CreateDocument = () => {
     : [
         { id: "created", label: "My Templates" },
         { id: "shared", label: "Shared Templates" },
-        { id: "library", label: "Library", icon: <img src={signitLogo} alt="Signit" className="h-4 w-4 rounded-full" /> },
+        { id: "library", label: "Library", icon: <img src={signitLogo} alt="Signit" className="h-3.5" /> },
       ];
 
   const driveFilters = connectedDriveIds.map((id) => {
