@@ -520,7 +520,7 @@ const CreateDocument = () => {
   // ─── Edit button label ────────────────────────────────────────────────────
 
   const editButtonLabel =
-    count === 0 ? "Start a Blank Document" : count === 1 ? "Edit Document" : `Edit ${count} Documents`;
+    count === 0 ? "Start a blank document" : count === 1 ? "Edit document" : `Edit ${count} documents`;
   const editButtonIcon = count === 0 ? FileAddIcon : Edit02Icon;
 
   return (
