@@ -16,12 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -70,7 +65,8 @@ interface DocumentQueuePanelProps {
 
 function getFileIcon(type: string) {
   if (type.includes("pdf")) return { icon: File01Icon, bg: "bg-red-100", color: "text-red-600" };
-  if (type.includes("word") || type.includes("doc")) return { icon: File01Icon, bg: "bg-brand-indigo-light", color: "text-brand-indigo" };
+  if (type.includes("word") || type.includes("doc"))
+    return { icon: File01Icon, bg: "bg-brand-indigo-light", color: "text-brand-indigo" };
   if (type.startsWith("image/")) return { icon: Image01Icon, bg: "bg-green-100", color: "text-green-600" };
   return { icon: File01Icon, bg: "bg-muted", color: "text-muted-foreground" };
 }
@@ -97,7 +93,9 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
       );
     }
     return (
-      <div className={`w-full aspect-[3/4] rounded-t-lg bg-gradient-to-br ${doc.gradient} flex items-center justify-center`}>
+      <div
+        className={`w-full aspect-[3/4] rounded-t-lg bg-gradient-to-br ${doc.gradient} flex items-center justify-center`}
+      >
         <div className="w-[80px] space-y-1.5 p-2 bg-white/90 rounded shadow-sm">
           <div className="h-[3px] bg-gray-200 rounded w-full" />
           <div className="h-[3px] bg-gray-200 rounded w-4/5" />
@@ -111,7 +109,9 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
   if (doc.isAI) {
     const isGenerating = doc.status === "uploading";
     return (
-      <div className={`w-full aspect-[3/4] rounded-t-lg bg-muted/50 border-b flex items-center justify-center ${isGenerating ? "animate-pulse" : ""}`}>
+      <div
+        className={`w-full aspect-[3/4] rounded-t-lg bg-muted/50 border-b flex items-center justify-center ${isGenerating ? "animate-pulse" : ""}`}
+      >
         <AiIcon size={32} className={isGenerating ? "animate-spin" : ""} />
       </div>
     );
@@ -213,7 +213,9 @@ function SortableDocCard({
               {doc.isTemplate
                 ? `${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
                 : doc.status === "uploading"
-                  ? (doc.isDriveImport ? "Importing..." : "Uploading...")
+                  ? doc.isDriveImport
+                    ? "Importing..."
+                    : "Uploading..."
                   : `${doc.pageCount ?? 0} pages`}
             </p>
           )}
@@ -233,9 +235,7 @@ function SortableDocCard({
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Remove from queue?</AlertDialogTitle>
-              <AlertDialogDescription>
-                "{doc.name}" will be removed from the queue.
-              </AlertDialogDescription>
+              <AlertDialogDescription>"{doc.name}" will be removed from the queue.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -268,7 +268,9 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
       );
     }
     return (
-      <div className={`h-10 w-10 rounded flex-shrink-0 bg-gradient-to-br ${doc.gradient} flex items-center justify-center`}>
+      <div
+        className={`h-10 w-10 rounded flex-shrink-0 bg-gradient-to-br ${doc.gradient} flex items-center justify-center`}
+      >
         <HugeiconsIcon icon={File01Icon} size={16} className="text-white/90" />
       </div>
     );
@@ -302,7 +304,7 @@ const DocumentQueuePanel = ({
 
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const isEmpty = documents.length === 0;
@@ -325,31 +327,21 @@ const DocumentQueuePanel = ({
   }
 
   return (
-    <div className={isMobile ? "flex flex-col" : "w-[170px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
-
+    <div className={isMobile ? "flex flex-col" : "w-[190px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
       <div className={`flex-1 overflow-y-auto p-3 scrollbar-thin ${isMobile ? "max-h-[50vh]" : ""}`}>
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-4 flex flex-col items-center w-full">
               <HugeiconsIcon icon={CloudUploadIcon} size={32} className="text-muted-foreground/30" />
-              <p className="text-xs font-medium text-muted-foreground mt-2">
-                No documents added yet
-              </p>
+              <p className="text-xs font-medium text-muted-foreground mt-2">No documents added yet</p>
               <p className="text-[10px] text-muted-foreground mt-1 text-center">
                 Upload files or choose a template to get started
               </p>
             </div>
           </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={documents.map((d) => d.id)}
-              strategy={verticalListSortingStrategy}
-            >
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={documents.map((d) => d.id)} strategy={verticalListSortingStrategy}>
               <div className="grid grid-cols-1 gap-2">
                 {documents.map((doc) => (
                   <SortableDocCard key={doc.id} doc={doc} onRemove={handleRemove} onPreview={setPreviewDoc} />
@@ -394,7 +386,11 @@ const DocumentQueuePanel = ({
                 <div>
                   <p className="text-xs text-muted-foreground">Type</p>
                   <p className="font-medium mt-0.5">
-                    {previewDoc.isTemplate ? "Template" : previewDoc.isAI ? "AI Generated" : previewDoc.type.split("/").pop()?.toUpperCase() || "File"}
+                    {previewDoc.isTemplate
+                      ? "Template"
+                      : previewDoc.isAI
+                        ? "AI Generated"
+                        : previewDoc.type.split("/").pop()?.toUpperCase() || "File"}
                   </p>
                 </div>
                 <div>
