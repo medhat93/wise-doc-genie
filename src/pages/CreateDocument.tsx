@@ -106,8 +106,8 @@ const fullQuickActions = [
   },
   {
     id: "library",
-    title: "Browse Library",
-    description: "Browse curated templates",
+    title: "Signit Library",
+    description: "Professional templates by Signit",
     icon: DashboardSquare01Icon,
     accent: "bg-brand-indigo/10 text-brand-indigo",
   },
@@ -156,6 +156,7 @@ const CreateDocument = () => {
   const [libCategory, setLibCategory] = useState("All");
 
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiDocType, setAiDocType] = useState("");
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
 
@@ -796,7 +797,7 @@ const CreateDocument = () => {
         onOpenChange={(o) => {
           if (!aiGenerating) {
             setAiDialogOpen(o);
-            if (!o) setAiPrompt("");
+            if (!o) { setAiPrompt(""); setAiDocType(""); }
           }
         }}
       >
@@ -809,13 +810,25 @@ const CreateDocument = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <Textarea
-              placeholder="e.g. Draft a non-disclosure agreement between two companies for a software development partnership..."
-              className="min-h-[150px] resize-none"
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              disabled={aiGenerating}
-            />
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Document Type</Label>
+              <Input
+                placeholder="e.g. NDA, Sales Proposal, Service Contract..."
+                value={aiDocType}
+                onChange={(e) => setAiDocType(e.target.value)}
+                disabled={aiGenerating}
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Describe your document</Label>
+              <Textarea
+                placeholder="e.g. Draft a non-disclosure agreement between two companies for a software development partnership..."
+                className="min-h-[130px] resize-none"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                disabled={aiGenerating}
+              />
+            </div>
 
             <div className="flex flex-wrap gap-2">
               {AI_SUGGESTIONS.map((s) => (
@@ -839,6 +852,7 @@ const CreateDocument = () => {
               onClick={() => {
                 setAiDialogOpen(false);
                 setAiPrompt("");
+                setAiDocType("");
               }}
               disabled={aiGenerating}
             >
