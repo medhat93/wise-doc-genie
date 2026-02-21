@@ -337,17 +337,13 @@ const DocumentQueuePanel = ({
         )}
       </div>
 
-      <div className="border-t p-4 space-y-2 flex-shrink-0">
-        {!isEmpty && (
+      {!isEmpty && (
+        <div className="border-t p-4 flex-shrink-0">
           <p className="text-xs text-muted-foreground text-center">
             {count} document{count !== 1 ? "s" : ""} · {totalPages} pages total
           </p>
-        )}
-        <Button variant="ghost" className="w-full" onClick={onAddFiles}>
-          <HugeiconsIcon icon={Add01Icon} size={16} className="mr-1.5" />
-          {isEmpty ? "Add Documents" : "Add more documents"}
-        </Button>
-      </div>
+        </div>
+      )}
 
       <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
         <DialogContent className="max-w-lg">
