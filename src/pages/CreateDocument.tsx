@@ -789,7 +789,7 @@ const CreateDocument = () => {
               <motion.div
                 initial={{ x: 190 }}
                 animate={{ x: 0 }}
-                exit={{ x: 170 }}
+                exit={{ x: 190 }}
                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
               >
                 <DocumentQueuePanel
