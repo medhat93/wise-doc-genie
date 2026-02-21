@@ -34,6 +34,8 @@ import {
   Image01Icon,
   CheckmarkCircle02Icon,
   CloudIcon,
+  Edit02Icon,
+  SentIcon,
 } from "@hugeicons/core-free-icons";
 import { motion, AnimatePresence } from "framer-motion";
 import AiIcon from "@/components/AiIcon";
@@ -63,6 +65,7 @@ interface DocumentQueuePanelProps {
   onAddFiles: () => void;
   mode?: CreateDocumentMode;
   isMobile?: boolean;
+  onEditDocuments?: () => void;
 }
 
 function getFileIcon(type: string) {
@@ -260,6 +263,7 @@ const DocumentQueuePanel = ({
   onAddFiles,
   mode = "full",
   isMobile = false,
+  onEditDocuments,
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
 
@@ -270,6 +274,7 @@ const DocumentQueuePanel = ({
 
   const isEmpty = documents.length === 0;
   const totalPages = documents.reduce((sum, d) => sum + (d.pageCount ?? 0), 0);
+  const count = documents.length;
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -292,9 +297,9 @@ const DocumentQueuePanel = ({
         <div className="h-14 px-4 flex items-center border-b flex-shrink-0">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm">Document queue</span>
-            {documents.length > 0 && (
+            {count > 0 && (
               <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
-                {documents.length}
+                {count}
               </Badge>
             )}
           </div>
@@ -304,13 +309,13 @@ const DocumentQueuePanel = ({
       <div className={`flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin ${isMobile ? "max-h-[50vh]" : ""}`}>
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-8 flex flex-col items-center w-full">
-              <HugeiconsIcon icon={CloudUploadIcon} size={40} className="text-muted-foreground/40" />
+            <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-6 flex flex-col items-center w-full">
+              <HugeiconsIcon icon={CloudUploadIcon} size={40} className="text-muted-foreground/30" />
               <p className="text-sm font-medium text-muted-foreground mt-3">
-                Add documents to get started
+                No documents added yet
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Upload files, use templates, or start with AI
+              <p className="text-xs text-muted-foreground mt-1 text-center">
+                Upload files, choose a template, or import from a drive to get started
               </p>
             </div>
           </div>
@@ -335,13 +340,32 @@ const DocumentQueuePanel = ({
       <div className="border-t p-4 space-y-2 flex-shrink-0">
         {!isEmpty && (
           <p className="text-xs text-muted-foreground text-center">
-            {documents.length} document{documents.length !== 1 ? "s" : ""} · {totalPages} pages total
+            {count} document{count !== 1 ? "s" : ""} · {totalPages} pages total
           </p>
         )}
         <Button variant="ghost" className="w-full" onClick={onAddFiles}>
           <HugeiconsIcon icon={Add01Icon} size={16} className="mr-1.5" />
-          {isEmpty ? "Add documents" : "Add more documents"}
+          {isEmpty ? "Add Documents" : "Add more documents"}
         </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="default"
+            className="flex-1"
+            disabled={isEmpty}
+            onClick={onEditDocuments}
+          >
+            <HugeiconsIcon icon={Edit02Icon} size={16} className="mr-1.5" />
+            {isEmpty ? "Edit" : count === 1 ? "Edit Document" : `Edit ${count} Documents`}
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1"
+            disabled={isEmpty}
+          >
+            <HugeiconsIcon icon={SentIcon} size={16} className="mr-1.5" />
+            Get Signature
+          </Button>
+        </div>
       </div>
 
       <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
