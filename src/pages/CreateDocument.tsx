@@ -13,6 +13,7 @@ import {
   File01Icon,
   FileAddIcon,
   SparklesIcon,
+
   Loading03Icon,
   Edit02Icon,
   FileValidationIcon,
@@ -53,6 +54,7 @@ import type { CreateDocumentMode } from "@/components/DocumentQueuePanel";
 import DragDropOverlay from "@/components/DragDropOverlay";
 import CategoryFilter from "@/components/CategoryFilter";
 import DriveImportDialog from "@/components/DriveImportDialog";
+import AiIcon from "@/components/AiIcon";
 
 const AI_SUGGESTIONS = [
   "Sales proposal for SaaS product",
@@ -91,8 +93,9 @@ const fullQuickActions = [
     id: "ai",
     title: "Start with AI",
     description: "Describe your document and AI will draft it",
-    icon: SparklesIcon,
+    icon: null as any,
     accent: "bg-gradient-to-br from-violet-500/10 to-blue-500/10 text-violet-600",
+    customIcon: true,
   },
   {
     id: "drive",
@@ -461,7 +464,11 @@ const CreateDocument = () => {
                       <div className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-emerald-500" />
                     )}
                     <div className={`rounded-full p-3 w-fit ${action.accent}`}>
-                      <HugeiconsIcon icon={action.icon} size={20} />
+                      {(action as any).customIcon ? (
+                        <AiIcon size={20} />
+                      ) : (
+                        <HugeiconsIcon icon={action.icon} size={20} />
+                      )}
                     </div>
                     <h3 className="font-semibold text-sm mt-3">{action.title}</h3>
                     <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
@@ -796,7 +803,7 @@ const CreateDocument = () => {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <HugeiconsIcon icon={SparklesIcon} size={16} className="text-violet-500" />
+              <AiIcon size={16} />
               Describe your document
             </DialogTitle>
           </DialogHeader>
@@ -848,7 +855,7 @@ const CreateDocument = () => {
                 </>
               ) : (
                 <>
-                  <HugeiconsIcon icon={SparklesIcon} size={16} className="mr-1.5" />
+                  <AiIcon size={16} className="mr-1.5" />
                   Generate Document
                 </>
               )}

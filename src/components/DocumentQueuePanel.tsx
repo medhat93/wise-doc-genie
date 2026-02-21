@@ -26,10 +26,11 @@ import {
   File01Icon,
   Image01Icon,
   CheckmarkCircle02Icon,
-  SparklesIcon,
+  
   CloudIcon,
 } from "@hugeicons/core-free-icons";
 import { motion, AnimatePresence } from "framer-motion";
+import AiIcon from "@/components/AiIcon";
 import {
   DndContext,
   closestCenter,
@@ -90,7 +91,7 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
   if (doc.isAI) {
     return (
       <div className="h-10 w-10 rounded flex-shrink-0 bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
-        <HugeiconsIcon icon={SparklesIcon} size={16} className="text-white" />
+        <AiIcon size={16} />
       </div>
     );
   }
