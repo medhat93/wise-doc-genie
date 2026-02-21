@@ -2,6 +2,48 @@ import { DriveFile } from "@/types/document";
 
 type DriveFileMap = Record<string, DriveFile[]>;
 
+// Helper to generate bulk files for testing pagination
+function generateBulkFiles(prefix: string, count: number, startIndex: number = 1): DriveFile[] {
+  const types = [
+    { name: "Contract", ext: "pdf", mime: "application/pdf" },
+    { name: "Agreement", ext: "pdf", mime: "application/pdf" },
+    { name: "Invoice", ext: "pdf", mime: "application/pdf" },
+    { name: "Report", ext: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+    { name: "Proposal", ext: "pdf", mime: "application/pdf" },
+    { name: "Summary", ext: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+    { name: "Receipt", ext: "pdf", mime: "application/pdf" },
+    { name: "Letter", ext: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+    { name: "Memo", ext: "pdf", mime: "application/pdf" },
+    { name: "Statement", ext: "pdf", mime: "application/pdf" },
+    { name: "Certificate", ext: "pdf", mime: "application/pdf" },
+    { name: "Spec Sheet", ext: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+    { name: "Brochure", ext: "pdf", mime: "application/pdf" },
+    { name: "Checklist", ext: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+    { name: "Worksheet", ext: "pdf", mime: "application/pdf" },
+    { name: "Guideline", ext: "pdf", mime: "application/pdf" },
+    { name: "Form", ext: "pdf", mime: "application/pdf" },
+    { name: "Notice", ext: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+    { name: "Review", ext: "pdf", mime: "application/pdf" },
+    { name: "Outline", ext: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+  ];
+  const files: DriveFile[] = [];
+  for (let i = 0; i < count; i++) {
+    const t = types[i % types.length];
+    const num = startIndex + i;
+    const day = String((num % 28) + 1).padStart(2, "0");
+    const month = String(((num - 1) % 12) + 1).padStart(2, "0");
+    files.push({
+      id: `${prefix}-${num}`,
+      name: `${t.name} #${String(num).padStart(3, "0")}.${t.ext}`,
+      type: "file",
+      mimeType: t.mime,
+      size: Math.floor(Math.random() * 8_000_000) + 200_000,
+      modifiedDate: `2025-${month}-${day}`,
+    });
+  }
+  return files;
+}
+
 const googleDriveFiles: DriveFileMap = {
   "root": [
     { id: "gf-1", name: "Projects", type: "folder", itemCount: 8, modifiedDate: "2025-01-20" },
@@ -22,11 +64,11 @@ const googleDriveFiles: DriveFileMap = {
     { id: "gf-1-5", name: "Budget Estimate.pdf", type: "file", mimeType: "application/pdf", size: 1048576, modifiedDate: "2025-01-06" },
   ],
   "gf-2": [
-    { id: "gf-2-1", name: "Client A - MSA.pdf", type: "file", mimeType: "application/pdf", size: 1572864, modifiedDate: "2024-12-15" },
-    { id: "gf-2-2", name: "Vendor Agreement v3.docx", type: "file", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", size: 819200, modifiedDate: "2024-12-20" },
-    { id: "gf-2-3", name: "Consulting SOW.pdf", type: "file", mimeType: "application/pdf", size: 1363148, modifiedDate: "2025-01-02" },
-    { id: "gf-2-4", name: "Employment Offer - Draft.docx", type: "file", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", size: 409600, modifiedDate: "2025-01-14" },
-    { id: "gf-2-5", name: "Partnership Terms.pdf", type: "file", mimeType: "application/pdf", size: 2621440, modifiedDate: "2024-11-28" },
+    { id: "gf-2-f1", name: "Active Deals", type: "folder", itemCount: 18, modifiedDate: "2025-01-20" },
+    ...generateBulkFiles("gf-2-file", 35),
+  ],
+  "gf-2-f1": [
+    ...generateBulkFiles("gf-2-f1-file", 18),
   ],
   "gf-3": [
     { id: "gf-3-1", name: "Team Reports", type: "folder", itemCount: 3, modifiedDate: "2025-01-19" },
@@ -47,10 +89,16 @@ const dropboxFiles: DriveFileMap = {
     { id: "df-7", name: "Presentation Deck.pdf", type: "file", mimeType: "application/pdf", size: 5242880, modifiedDate: "2025-01-08" },
   ],
   "df-1": [
-    { id: "df-1-1", name: "Invoices", type: "folder", itemCount: 12, modifiedDate: "2025-01-20" },
+    { id: "df-1-1", name: "Invoices", type: "folder", itemCount: 42, modifiedDate: "2025-01-20" },
     { id: "df-1-2", name: "Contracts", type: "folder", itemCount: 8, modifiedDate: "2025-01-18" },
     { id: "df-1-3", name: "Weekly Report.docx", type: "file", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", size: 245760, modifiedDate: "2025-01-21" },
     { id: "df-1-4", name: "Project Plan.pdf", type: "file", mimeType: "application/pdf", size: 1835008, modifiedDate: "2025-01-14" },
+  ],
+  "df-1-1": [
+    ...generateBulkFiles("df-inv", 42),
+  ],
+  "df-1-2": [
+    ...generateBulkFiles("df-con", 8),
   ],
   "df-2": [
     { id: "df-2-1", name: "Tax Documents", type: "folder", itemCount: 4, modifiedDate: "2025-01-05" },
