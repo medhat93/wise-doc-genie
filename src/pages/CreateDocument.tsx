@@ -558,7 +558,7 @@ const CreateDocument = () => {
     onedrive: <OneDriveLogo size={16} />,
   };
 
-  const baseFilters: { id: TemplateFilter; label: string; icon?: React.ReactNode }[] = isEsign
+  const baseFilters: { id: TemplateFilter; label: string; icon?: React.ReactNode; isNew?: boolean }[] = isEsign
     ? [
         { id: "created", label: "My Templates" },
         { id: "shared", label: "Shared Templates" },
@@ -566,12 +566,12 @@ const CreateDocument = () => {
     : [
         { id: "created", label: "My Templates" },
         { id: "shared", label: "Shared Templates" },
-        { id: "library", label: "Library", icon: <img src={signitLogo} alt="Signit" className="h-3.5" /> },
+        { id: "library", label: "Library", icon: <img src={signitLogo} alt="Signit" className="h-3.5" />, isNew: true },
       ];
 
   const driveFilters = connectedDriveIds.map((id) => {
     const provider = DRIVE_PROVIDERS.find((p) => p.id === id);
-    return { id, label: provider?.name || id, icon: driveLogoMap[id] };
+    return { id, label: provider?.name || id, icon: driveLogoMap[id], isNew: false };
   });
 
   const allFilters = [...baseFilters, ...driveFilters];
@@ -771,7 +771,7 @@ const CreateDocument = () => {
                 {allFilters.map((filter) => (
                   <button
                     key={filter.id}
-                    className={`pb-2 text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                    className={`relative pb-2 text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                       activeFilter === filter.id
                         ? "text-foreground border-b-2 border-primary"
                         : "text-muted-foreground hover:text-foreground"
@@ -783,6 +783,13 @@ const CreateDocument = () => {
                   >
                     {filter.icon && filter.icon}
                     {filter.label}
+                    {filter.isNew && (
+                      <span className="absolute -top-1 -right-2.5 text-amber-500">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/>
+                        </svg>
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
