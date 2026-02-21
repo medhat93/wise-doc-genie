@@ -535,7 +535,7 @@ const CreateDocument = () => {
       <header className="h-auto min-h-[3.5rem] md:h-16 border-b bg-background flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 flex-shrink-0 gap-2 sm:gap-0">
         <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
           <nav className="flex items-center gap-1.5 text-sm">
-            <span className="font-medium text-sm">Start a new document</span>
+            <span className="font-medium text-sm">New document</span>
           </nav>
 
           <Tooltip>
