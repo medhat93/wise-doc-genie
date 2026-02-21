@@ -248,6 +248,12 @@ const CreateDocument = () => {
   const templateSectionRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
 
+  const scrollToTemplateSection = useCallback(() => {
+    if (templateSectionRef.current) {
+      templateSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
+
   const isEsign = mode === "esign";
   const isEmpty = documents.length === 0;
   const allComplete = documents.length > 0 && documents.every((d) => d.status === "complete");
@@ -691,7 +697,10 @@ const CreateDocument = () => {
                         ? "text-foreground border-b-2 border-primary"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
-                    onClick={() => setActiveFilter(filter.id)}
+                    onClick={() => {
+                      setActiveFilter(filter.id);
+                      setTimeout(scrollToTemplateSection, 50);
+                    }}
                   >
                     {filter.label}
                   </button>
@@ -719,7 +728,10 @@ const CreateDocument = () => {
                       placeholder={`Search ${activeFilter === "library" ? "template library" : activeFilter === "shared" ? "shared templates" : "my templates"}...`}
                       className="pl-10"
                       value={currentSearch}
-                      onChange={(e) => setCurrentSearch(e.target.value)}
+                      onChange={(e) => {
+                        setCurrentSearch(e.target.value);
+                        setTimeout(scrollToTemplateSection, 50);
+                      }}
                     />
                   </div>
                   <div className="mt-3">
@@ -727,7 +739,10 @@ const CreateDocument = () => {
                       categories={currentCategories}
                       quickCategories={currentQuickCategories}
                       value={currentCategory}
-                      onChange={setCurrentCategory}
+                      onChange={(val) => {
+                        setCurrentCategory(val);
+                        setTimeout(scrollToTemplateSection, 50);
+                      }}
                     />
                   </div>
 
