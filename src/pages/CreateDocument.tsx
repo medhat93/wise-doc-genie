@@ -773,30 +773,6 @@ const CreateDocument = () => {
             </section>
 
             {/* ─── eSign Drop Zone ─────────────────────────────────────── */}
-            {isEsign && (
-              <section className="mt-10">
-                <div
-                  className={`border-2 border-dashed rounded-2xl min-h-[200px] flex flex-col items-center justify-center transition-colors ${
-                    esignDropHover ? "border-primary bg-primary/5" : "border-muted-foreground/20"
-                  }`}
-                  onDragEnter={(e) => { e.preventDefault(); setEsignDropHover(true); }}
-                  onDragLeave={(e) => { e.preventDefault(); setEsignDropHover(false); }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setEsignDropHover(false);
-                    if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files);
-                  }}
-                >
-                  <HugeiconsIcon icon={CloudUploadIcon} size={56} className={`${esignDropHover ? "text-primary" : "text-muted-foreground/40"} transition-colors`} />
-                  <p className="text-lg font-medium text-muted-foreground mt-4">Drag and drop your documents here</p>
-                  <p className="text-sm text-muted-foreground my-2">or</p>
-                  <Button variant="outline" onClick={() => fileInputRef.current?.click()}>Browse files</Button>
-                  <p className="text-xs text-muted-foreground mt-3">PDF, DOCX, DOC, PNG, JPG — up to 50MB</p>
-                </div>
-              </section>
-            )}
           </div>
         </main>
 
