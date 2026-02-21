@@ -26,6 +26,7 @@ import {
   Image,
   CheckCircle2,
   Sparkles,
+  HardDrive,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -94,19 +95,35 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
   }
 
   if (doc.status === "uploading") {
-    return <Skeleton className="h-10 w-10 rounded flex-shrink-0" />;
+    return (
+      <div className="relative">
+        <Skeleton className="h-10 w-10 rounded flex-shrink-0" />
+        {doc.isDriveImport && (
+          <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
+            <HardDrive className="h-2.5 w-2.5 text-muted-foreground" />
+          </div>
+        )}
+      </div>
+    );
   }
 
   const fileStyle = getFileIcon(doc.type);
   const FileIcon = fileStyle.icon;
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className={`h-10 w-10 rounded flex items-center justify-center flex-shrink-0 ${fileStyle.bg}`}
-    >
-      <FileIcon className={`h-5 w-5 ${fileStyle.color}`} />
-    </motion.div>
+    <div className="relative">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`h-10 w-10 rounded flex items-center justify-center flex-shrink-0 ${fileStyle.bg}`}
+      >
+        <FileIcon className={`h-5 w-5 ${fileStyle.color}`} />
+      </motion.div>
+      {doc.isDriveImport && (
+        <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
+          <HardDrive className="h-2.5 w-2.5 text-muted-foreground" />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -125,7 +142,7 @@ function SortableDocItem({
     : doc.isAI
     ? "AI Generated"
     : doc.status === "uploading"
-    ? "Uploading..."
+    ? (doc.isDriveImport ? `Importing from ${doc.driveProvider || "Drive"}...` : "Uploading...")
     : `${doc.size ? formatSize(doc.size) : ""} · ${doc.pageCount} pages`;
 
   return (
