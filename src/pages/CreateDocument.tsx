@@ -427,26 +427,26 @@ const CreateDocument = () => {
               </Button>
             </>
           )}
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsPanelOpen(!isPanelOpen)}
-            className="relative"
-          >
-            <HugeiconsIcon icon={Files01Icon} size={16} className="mr-1.5" />
-            Document Queue
-            {count > 0 && (
-              <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs ml-2">
-                {count}
-              </Badge>
-            )}
-          </Button>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         <main className="flex-1 overflow-y-auto p-8 scrollbar-thin">
+          {/* Floating Document Queue Toggle */}
+          <button
+            onClick={() => setIsPanelOpen(!isPanelOpen)}
+            className={`fixed top-20 right-4 z-30 flex items-center gap-2 px-3 py-2 rounded-full border shadow-md transition-all hover:shadow-lg bg-background ${
+              isPanelOpen ? "translate-x-[-408px]" : ""
+            }`}
+          >
+            <HugeiconsIcon icon={Files01Icon} size={16} className="text-foreground" />
+            <span className="text-sm font-medium">Queue</span>
+            {count > 0 && (
+              <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
+                {count}
+              </Badge>
+            )}
+          </button>
           <div className={`mx-auto transition-all ${isPanelOpen ? "max-w-4xl" : "max-w-5xl"}`}>
 
             <section>
