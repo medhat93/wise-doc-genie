@@ -149,7 +149,7 @@ Intellectual property ownership`
 const fullQuickActions = [
 {
   id: "upload",
-  title: "Upload document",
+  title: "Upload a document",
   description: "PDF, DOCX, PNG, JPG up to 50MB",
   icon: CloudUploadIcon,
   accent: "bg-primary/10 text-primary",
