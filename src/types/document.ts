@@ -11,6 +11,7 @@ export interface UploadedDocument {
   isTemplate?: boolean;
   isUserTemplate?: boolean;
   isAI?: boolean;
+  aiThinkingStep?: string;
   gradient?: string; // template gradient classes
   // Drive import additions
   isDriveImport?: boolean;

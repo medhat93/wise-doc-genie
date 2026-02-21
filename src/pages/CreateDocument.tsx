@@ -295,6 +295,19 @@ const CreateDocument = () => {
     const docName = deriveAIDocName(aiPrompt);
     const aiDocId = crypto.randomUUID();
 
+    const thinkingSteps = [
+      "Analyzing your prompt...",
+      "Understanding document structure...",
+      "Researching relevant clauses...",
+      "Drafting key sections...",
+      "Writing terms & conditions...",
+      "Reviewing legal language...",
+      "Formatting document layout...",
+      "Finalizing content...",
+      "Running compliance checks...",
+      "Polishing final draft...",
+    ];
+
     // Add to queue immediately in "generating" state
     const aiDoc: UploadedDocument = {
       id: aiDocId,
@@ -303,17 +316,28 @@ const CreateDocument = () => {
       progress: 0,
       status: "uploading" as const,
       isAI: true,
+      aiThinkingStep: thinkingSteps[0],
     };
     setDocuments((prev) => [...prev, aiDoc]);
     setAiDialogOpen(false);
     setAiPrompt("");
 
-    // Simulate AI generation
-    await new Promise((r) => setTimeout(r, 3000));
+    // Cycle through thinking steps
+    for (let i = 1; i < thinkingSteps.length; i++) {
+      await new Promise((r) => setTimeout(r, 1000));
+      setDocuments((prev) =>
+        prev.map((d) =>
+          d.id === aiDocId ? { ...d, aiThinkingStep: thinkingSteps[i] } : d
+        )
+      );
+    }
+
+    // Final wait then mark complete
+    await new Promise((r) => setTimeout(r, 1000));
 
     // Mark as complete
     setDocuments((prev) =>
-      prev.map((d) => d.id === aiDocId ? { ...d, status: "complete" as const, progress: 100 } : d)
+      prev.map((d) => d.id === aiDocId ? { ...d, status: "complete" as const, progress: 100, aiThinkingStep: undefined } : d)
     );
 
     toast({
