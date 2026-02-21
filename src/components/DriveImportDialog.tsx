@@ -316,7 +316,7 @@ const DriveImportDialog = ({
                   onClick={handleImport}
                 >
                   <HugeiconsIcon icon={Download04Icon} size={16} className="mr-1.5" />
-                  Import Selected ({selectedFiles.length})
+                  Import selected ({selectedFiles.length})
                 </Button>
               </div>
 
@@ -442,7 +442,7 @@ const DriveImportDialog = ({
                     onClick={handleImport}
                   >
                     <HugeiconsIcon icon={Download04Icon} size={16} className="mr-1.5" />
-                    Import {selectedFiles.length} File{selectedFiles.length !== 1 ? "s" : ""}
+                    Import {selectedFiles.length} file{selectedFiles.length !== 1 ? "s" : ""}
                   </Button>
                 </div>
               </div>

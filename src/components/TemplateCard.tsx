@@ -52,7 +52,7 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
       )}
       <div className="absolute inset-0 bg-black/40 rounded-t-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
         <Button variant="secondary" size="sm" onClick={() => onUse(template)}>
-          Use Template
+          Use template
         </Button>
       </div>
     </div>
@@ -71,7 +71,7 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
       )}
       <div className="absolute inset-0 bg-black/50 rounded-t-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
         <Button variant="secondary" size="sm" onClick={() => onUse(template)}>
-          Use Template
+          Use template
         </Button>
       </div>
     </div>

@@ -44,7 +44,7 @@ const TemplatePreviewDialog = ({ template, open, onOpenChange, onUse }: Template
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={() => { onUse(template); onOpenChange(false); }}>Create from Template</Button>
+          <Button onClick={() => { onUse(template); onOpenChange(false); }}>Create from template</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
