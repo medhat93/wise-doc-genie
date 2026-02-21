@@ -327,7 +327,7 @@ const DocumentQueuePanel = ({
   }
 
   return (
-    <div className={isMobile ? "flex flex-col" : "w-[190px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
+    <div className={isMobile ? "flex flex-col" : "w-[260px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
       <div className={`flex-1 overflow-y-auto p-3 scrollbar-thin ${isMobile ? "max-h-[50vh]" : ""}`}>
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
