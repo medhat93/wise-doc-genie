@@ -609,13 +609,15 @@ const CreateDocument = () => {
             <section>
               <div
                 className={`grid gap-3 md:gap-4 ${
-                  isEsign ? "grid-cols-2 max-w-lg mx-auto" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
+                  isEsign ? "grid-cols-4 max-w-4xl mx-auto" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
                 }`}
               >
                 {actions.map((action) => (
                   <Card
                     key={action.id}
                     className={`p-5 cursor-pointer transition-all relative group ${
+                      isEsign && action.id === "upload" ? "col-span-3 " : ""
+                    }${
                       action.highlight
                         ? "ring-1 ring-primary/20 hover:shadow-md"
                         : action.id === "library"
