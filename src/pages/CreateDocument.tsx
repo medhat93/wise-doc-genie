@@ -787,9 +787,9 @@ const CreateDocument = () => {
           <AnimatePresence>
             {showQueue && (
               <motion.div
-                initial={{ x: 400 }}
+                initial={{ x: 260 }}
                 animate={{ x: 0 }}
-                exit={{ x: 400 }}
+                exit={{ x: 260 }}
                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
               >
                 <DocumentQueuePanel

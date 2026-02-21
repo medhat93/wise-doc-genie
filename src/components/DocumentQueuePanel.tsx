@@ -81,6 +81,177 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// Vertical thumbnail for the card
+function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
+  if (doc.isTemplate) {
+    if (doc.isUserTemplate || !doc.gradient) {
+      return (
+        <div className="w-full aspect-[4/3] rounded-t-lg bg-muted flex items-center justify-center">
+          <div className="w-[80px] space-y-1.5 p-2 bg-background rounded shadow-sm">
+            <div className="h-[3px] bg-muted-foreground/20 rounded w-full" />
+            <div className="h-[3px] bg-muted-foreground/15 rounded w-4/5" />
+            <div className="h-[3px] bg-muted-foreground/20 rounded w-full" />
+            <div className="h-[3px] bg-muted-foreground/15 rounded w-3/5" />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className={`w-full aspect-[4/3] rounded-t-lg bg-gradient-to-br ${doc.gradient} flex items-center justify-center`}>
+        <div className="w-[80px] space-y-1.5 p-2 bg-white/90 rounded shadow-sm">
+          <div className="h-[3px] bg-gray-200 rounded w-full" />
+          <div className="h-[3px] bg-gray-200 rounded w-4/5" />
+          <div className="h-[3px] bg-gray-200 rounded w-full" />
+          <div className="h-[3px] bg-gray-200 rounded w-3/5" />
+        </div>
+      </div>
+    );
+  }
+
+  if (doc.isAI) {
+    const isGenerating = doc.status === "uploading";
+    return (
+      <div className={`w-full aspect-[4/3] rounded-t-lg bg-muted/50 border-b flex items-center justify-center ${isGenerating ? "animate-pulse" : ""}`}>
+        <AiIcon size={24} className={isGenerating ? "animate-spin" : ""} />
+      </div>
+    );
+  }
+
+  if (doc.status === "uploading") {
+    return (
+      <div className="w-full aspect-[4/3] rounded-t-lg relative">
+        <Skeleton className="w-full h-full rounded-t-lg rounded-b-none" />
+        {doc.isDriveImport && (
+          <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
+            <HugeiconsIcon icon={CloudIcon} size={10} className="text-muted-foreground" />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const fileStyle = getFileIcon(doc.type);
+  return (
+    <div className="relative w-full">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`w-full aspect-[4/3] rounded-t-lg flex items-center justify-center ${fileStyle.bg}`}
+      >
+        <HugeiconsIcon icon={fileStyle.icon} size={28} className={fileStyle.color} />
+      </motion.div>
+      {doc.isDriveImport && (
+        <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
+          <HugeiconsIcon icon={CloudIcon} size={10} className="text-muted-foreground" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SortableDocCard({
+  doc,
+  onRemove,
+  onPreview,
+}: {
+  doc: UploadedDocument;
+  onRemove: (id: string) => void;
+  onPreview: (doc: UploadedDocument) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: doc.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  const isUploading = doc.status === "uploading" && !doc.isTemplate && !doc.isAI;
+
+  return (
+    <Card ref={setNodeRef} style={style} className="group relative overflow-hidden">
+      {/* Drag handle overlay */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-1 left-1 z-10 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded p-0.5"
+      >
+        <HugeiconsIcon icon={DragDropVerticalIcon} size={12} className="text-muted-foreground" />
+      </div>
+
+      {/* Delete button */}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button className="absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded p-0.5">
+            <HugeiconsIcon icon={Delete02Icon} size={12} className="text-destructive" />
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove from queue?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{doc.name}" will be removed from the queue.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => onRemove(doc.id)}>Remove</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Status badge */}
+      {doc.status === "complete" && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 400 }}
+          className="absolute top-1 right-1 z-10"
+        >
+          <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="text-emerald-500" />
+        </motion.div>
+      )}
+
+      {/* Thumbnail */}
+      <div className="cursor-pointer" onClick={() => onPreview(doc)}>
+        <VerticalThumbnail doc={doc} />
+      </div>
+
+      {/* Info */}
+      <div className="p-2">
+        <p className="text-[11px] font-medium truncate leading-tight">{doc.name}</p>
+        {doc.isAI && doc.status === "uploading" ? (
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={doc.aiThinkingStep || "generating"}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.2 }}
+              className="text-[10px] ai-thinking-text truncate mt-0.5"
+            >
+              {doc.aiThinkingStep || "AI is generating..."}
+            </motion.p>
+          </AnimatePresence>
+        ) : (
+          <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+            {doc.isTemplate
+              ? `${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
+              : doc.status === "uploading"
+                ? (doc.isDriveImport ? "Importing..." : "Uploading...")
+                : `${doc.pageCount ?? 0} pages`}
+          </p>
+        )}
+      </div>
+
+      {/* Upload progress */}
+      <AnimatePresence>
+        {isUploading && (
+          <motion.div className="px-2 pb-2" initial={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <Progress value={doc.progress} className="h-1" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
+  );
+}
+
+// Preview dialog thumbnail (reused from old code)
 function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
   if (doc.isTemplate) {
     if (doc.isUserTemplate || !doc.gradient) {
@@ -98,162 +269,18 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
   }
 
   if (doc.isAI) {
-    const isGenerating = doc.status === "uploading";
     return (
-      <div className={`h-10 w-10 rounded flex-shrink-0 bg-white flex items-center justify-center border ${isGenerating ? "animate-pulse" : ""}`}>
-        <AiIcon size={16} className={isGenerating ? "animate-spin" : ""} />
-      </div>
-    );
-  }
-
-  if (doc.status === "uploading") {
-    return (
-      <div className="relative">
-        <Skeleton className="h-10 w-10 rounded flex-shrink-0" />
-        {doc.isDriveImport && (
-          <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
-            <HugeiconsIcon icon={CloudIcon} size={10} className="text-muted-foreground" />
-          </div>
-        )}
+      <div className="h-10 w-10 rounded flex-shrink-0 bg-white flex items-center justify-center border">
+        <AiIcon size={16} />
       </div>
     );
   }
 
   const fileStyle = getFileIcon(doc.type);
   return (
-    <div className="relative">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className={`h-10 w-10 rounded flex items-center justify-center flex-shrink-0 ${fileStyle.bg}`}
-      >
-        <HugeiconsIcon icon={fileStyle.icon} size={20} className={fileStyle.color} />
-      </motion.div>
-      {doc.isDriveImport && (
-        <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
-          <HugeiconsIcon icon={CloudIcon} size={10} className="text-muted-foreground" />
-        </div>
-      )}
+    <div className={`h-10 w-10 rounded flex items-center justify-center flex-shrink-0 ${fileStyle.bg}`}>
+      <HugeiconsIcon icon={fileStyle.icon} size={20} className={fileStyle.color} />
     </div>
-  );
-}
-
-function SortableDocItem({
-  doc,
-  onRemove,
-  onPreview,
-}: {
-  doc: UploadedDocument;
-  onRemove: (id: string) => void;
-  onPreview: (doc: UploadedDocument) => void;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: doc.id });
-  const style = { transform: CSS.Transform.toString(transform), transition };
-
-  const sublabel = doc.isTemplate
-    ? `Template · ${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
-    : doc.isAI
-    ? (doc.status === "uploading" ? (doc.aiThinkingStep || "AI is generating...") : "AI generated")
-    : doc.status === "uploading"
-    ? (doc.isDriveImport ? `Importing from ${doc.driveProvider || "Drive"}...` : "Uploading...")
-    : `${doc.size ? formatSize(doc.size) : ""} · ${doc.pageCount} pages`;
-
-  return (
-    <Card ref={setNodeRef} style={style} className="p-3 group">
-      <div className="flex items-center gap-3">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div {...attributes} {...listeners} className="cursor-grab text-muted-foreground/50">
-              <HugeiconsIcon icon={DragDropVerticalIcon} size={16} />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="left">Drag to reorder</TooltipContent>
-        </Tooltip>
-
-        <QueueItemThumbnail doc={doc} />
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <p className="text-sm font-semibold truncate">{doc.name}</p>
-            {doc.status === "complete" && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 400 }}
-              >
-                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="text-emerald-500 flex-shrink-0" />
-              </motion.div>
-            )}
-          </div>
-          {doc.isAI && doc.status === "uploading" ? (
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={sublabel}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.2 }}
-                className="text-xs ai-thinking-text"
-              >
-                {sublabel}
-              </motion.p>
-            </AnimatePresence>
-          ) : (
-            <p className="text-xs text-muted-foreground">{sublabel}</p>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onPreview(doc)}>
-                <HugeiconsIcon icon={ViewIcon} size={14} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Preview document</TooltipContent>
-          </Tooltip>
-          <AlertDialog>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                    <HugeiconsIcon icon={Delete02Icon} size={14} />
-                  </Button>
-                </AlertDialogTrigger>
-              </TooltipTrigger>
-              <TooltipContent>Remove from queue</TooltipContent>
-            </Tooltip>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Remove from queue?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  "{doc.name}" will be removed from the queue.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onRemove(doc.id)}>Remove</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {doc.status === "uploading" && !doc.isTemplate && !doc.isAI && (
-          <motion.div
-            className="mt-2 ml-7"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <Progress value={doc.progress} className="h-1" />
-            <p className="text-xs text-muted-foreground text-right mt-0.5">
-              {Math.min(doc.progress, 100)}%
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Card>
   );
 }
 
@@ -292,11 +319,11 @@ const DocumentQueuePanel = ({
   }
 
   return (
-    <div className={isMobile ? "flex flex-col" : "w-[400px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
+    <div className={isMobile ? "flex flex-col" : "w-[260px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
       {!isMobile && (
-        <div className="h-14 px-4 flex items-center border-b flex-shrink-0">
+        <div className="h-14 px-3 flex items-center border-b flex-shrink-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm">Document queue</span>
+            <span className="font-semibold text-sm">Queue</span>
             {count > 0 && (
               <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
                 {count}
@@ -306,16 +333,16 @@ const DocumentQueuePanel = ({
         </div>
       )}
 
-      <div className={`flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin ${isMobile ? "max-h-[50vh]" : ""}`}>
+      <div className={`flex-1 overflow-y-auto p-3 scrollbar-thin ${isMobile ? "max-h-[50vh]" : ""}`}>
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-6 flex flex-col items-center w-full">
-              <HugeiconsIcon icon={CloudUploadIcon} size={40} className="text-muted-foreground/30" />
-              <p className="text-sm font-medium text-muted-foreground mt-3">
+            <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-4 flex flex-col items-center w-full">
+              <HugeiconsIcon icon={CloudUploadIcon} size={32} className="text-muted-foreground/30" />
+              <p className="text-xs font-medium text-muted-foreground mt-2">
                 No documents added yet
               </p>
-              <p className="text-xs text-muted-foreground mt-1 text-center">
-                Upload files, choose a template, or import from a drive to get started
+              <p className="text-[10px] text-muted-foreground mt-1 text-center">
+                Upload files or choose a template to get started
               </p>
             </div>
           </div>
@@ -329,18 +356,20 @@ const DocumentQueuePanel = ({
               items={documents.map((d) => d.id)}
               strategy={verticalListSortingStrategy}
             >
-              {documents.map((doc) => (
-                <SortableDocItem key={doc.id} doc={doc} onRemove={handleRemove} onPreview={setPreviewDoc} />
-              ))}
+              <div className="grid grid-cols-2 gap-2">
+                {documents.map((doc) => (
+                  <SortableDocCard key={doc.id} doc={doc} onRemove={handleRemove} onPreview={setPreviewDoc} />
+                ))}
+              </div>
             </SortableContext>
           </DndContext>
         )}
       </div>
 
       {!isEmpty && (
-        <div className="border-t p-4 flex-shrink-0">
-          <p className="text-xs text-muted-foreground text-center">
-            {count} document{count !== 1 ? "s" : ""} · {totalPages} pages total
+        <div className="border-t p-3 flex-shrink-0">
+          <p className="text-[10px] text-muted-foreground text-center">
+            {count} doc{count !== 1 ? "s" : ""} · {totalPages} pages
           </p>
         </div>
       )}
