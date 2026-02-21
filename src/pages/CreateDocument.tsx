@@ -616,8 +616,8 @@ const CreateDocument = () => {
                   action.id === "upload" ? (
                     <div
                       key={action.id}
-                      className={`cursor-pointer transition-all relative group rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 bg-primary/[0.03] hover:bg-primary/[0.06] p-6 flex flex-col items-center justify-center text-center ${
-                        isEsign ? "col-span-3" : ""
+                      className={`cursor-pointer transition-all relative group rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 bg-primary/[0.03] hover:bg-primary/[0.06] p-6 flex flex-col ${
+                        isEsign ? "col-span-3 items-center justify-center text-center" : "items-start justify-center text-left"
                       }`}
                       onClick={() => handleQuickAction(action.id)}
                     >
