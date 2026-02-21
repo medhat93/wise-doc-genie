@@ -96,7 +96,7 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
   if (doc.isAI) {
     const isGenerating = doc.status === "uploading";
     return (
-      <div className={`h-10 w-10 rounded flex-shrink-0 bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center ${isGenerating ? "animate-pulse" : ""}`}>
+      <div className={`h-10 w-10 rounded flex-shrink-0 bg-white flex items-center justify-center border ${isGenerating ? "animate-pulse" : ""}`}>
         <AiIcon size={16} className={isGenerating ? "animate-spin" : ""} />
       </div>
     );
