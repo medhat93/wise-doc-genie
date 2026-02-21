@@ -664,7 +664,9 @@ const CreateDocument = () => {
                   className="text-sm"
                   onClick={() => {
                     setActiveFilter("created");
-                    templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+                    setTimeout(() => {
+                      templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+                    }, 50);
                   }}
                 >
                   View all <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
