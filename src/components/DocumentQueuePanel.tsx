@@ -25,7 +25,6 @@ import {
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Cancel01Icon,
   Add01Icon,
   CloudUploadIcon,
   ViewIcon,
@@ -34,7 +33,6 @@ import {
   File01Icon,
   Image01Icon,
   CheckmarkCircle02Icon,
-  
   CloudIcon,
 } from "@hugeicons/core-free-icons";
 import { motion, AnimatePresence } from "framer-motion";
@@ -62,7 +60,6 @@ export type CreateDocumentMode = "full" | "esign";
 interface DocumentQueuePanelProps {
   documents: UploadedDocument[];
   setDocuments: React.Dispatch<React.SetStateAction<UploadedDocument[]>>;
-  onClose: () => void;
   onAddFiles: () => void;
   mode?: CreateDocumentMode;
 }
@@ -243,7 +240,6 @@ function SortableDocItem({
 const DocumentQueuePanel = ({
   documents,
   setDocuments,
-  onClose,
   onAddFiles,
   mode = "full",
 }: DocumentQueuePanelProps) => {
@@ -274,7 +270,7 @@ const DocumentQueuePanel = ({
 
   return (
     <div className="w-[400px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar">
-      <div className="h-14 px-4 flex items-center justify-between border-b flex-shrink-0">
+      <div className="h-14 px-4 flex items-center border-b flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-sm">Document queue</span>
           {documents.length > 0 && (
@@ -283,14 +279,6 @@ const DocumentQueuePanel = ({
             </Badge>
           )}
         </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-              <HugeiconsIcon icon={Cancel01Icon} size={16} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Close panel</TooltipContent>
-        </Tooltip>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin">
