@@ -325,19 +325,7 @@ const DocumentQueuePanel = ({
   }
 
   return (
-    <div className={isMobile ? "flex flex-col" : "w-[260px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
-      {!isMobile && (
-        <div className="h-14 px-3 flex items-center border-b flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm">Queue</span>
-            {count > 0 && (
-              <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
-                {count}
-              </Badge>
-            )}
-          </div>
-        </div>
-      )}
+    <div className={isMobile ? "flex flex-col" : "w-[170px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
 
       <div className={`flex-1 overflow-y-auto p-3 scrollbar-thin ${isMobile ? "max-h-[50vh]" : ""}`}>
         {isEmpty ? (
@@ -372,13 +360,11 @@ const DocumentQueuePanel = ({
         )}
       </div>
 
-      {!isEmpty && (
-        <div className="border-t p-3 flex-shrink-0">
-          <p className="text-[10px] text-muted-foreground text-center">
-            {count} doc{count !== 1 ? "s" : ""} · {totalPages} pages
-          </p>
-        </div>
-      )}
+      <div className="border-t p-2 flex-shrink-0">
+        <p className="text-[10px] text-muted-foreground text-center">
+          {isEmpty ? "Queue" : `${count} doc${count !== 1 ? "s" : ""} · ${totalPages} pg`}
+        </p>
+      </div>
 
       <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
         <DialogContent className="max-w-lg">
