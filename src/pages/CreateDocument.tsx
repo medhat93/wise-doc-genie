@@ -342,16 +342,9 @@ const CreateDocument = () => {
     if (actionId === "upload") fileInputRef.current?.click();
     if (actionId === "ai") setAiDialogOpen(true);
     if (actionId === "drive") {
-      if (connectedCount === 0) {
-        setDriveConnectMode("connect");
-        setDriveConnectOpen(true);
-      } else if (connectedCount === 1) {
-        setActiveFilter(connectedDriveIds[0]);
-        templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-      } else {
-        setDriveConnectMode("select");
-        setDriveConnectOpen(true);
-      }
+      // Always open the dialog — show connected drives to browse + disconnected ones to connect
+      setDriveConnectMode(connectedCount > 0 ? "select" : "connect");
+      setDriveConnectOpen(true);
     }
     if (actionId === "library") {
       templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
