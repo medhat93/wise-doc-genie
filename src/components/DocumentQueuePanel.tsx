@@ -189,7 +189,7 @@ function SortableDocItem({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.2 }}
-                className="text-xs text-muted-foreground"
+                className="text-xs ai-thinking-text"
               >
                 {sublabel}
               </motion.p>
