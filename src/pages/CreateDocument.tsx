@@ -327,6 +327,7 @@ const CreateDocument = () => {
       isTemplate: true,
       isUserTemplate: template.source === "user",
       gradient: template.gradient,
+      pageCount: template.pageCount,
     };
     setDocuments((prev) => [...prev, queued]);
     setIsPanelOpen(true);

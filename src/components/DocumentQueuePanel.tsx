@@ -139,7 +139,7 @@ function SortableDocItem({
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   const sublabel = doc.isTemplate
-    ? "Template"
+    ? `Template · ${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
     : doc.isAI
     ? "AI Generated"
     : doc.status === "uploading"
