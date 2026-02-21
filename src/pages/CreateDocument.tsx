@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, DragEvent } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -52,6 +53,7 @@ import TemplateCard from "@/components/TemplateCard";
 import TemplatePreviewDialog from "@/components/TemplatePreviewDialog";
 import DocumentQueuePanel from "@/components/DocumentQueuePanel";
 import type { CreateDocumentMode } from "@/components/DocumentQueuePanel";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import DragDropOverlay from "@/components/DragDropOverlay";
 import CategoryFilter from "@/components/CategoryFilter";
 import DriveImportDialog from "@/components/DriveImportDialog";
@@ -142,7 +144,9 @@ const esignRecentTemplates: Template[] = [
 const allMyTemplates = [...userTemplates, ...sharedTemplates];
 
 const CreateDocument = () => {
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState<CreateDocumentMode>("full");
+  const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
   const hasDocuments = documents.length > 0;
   const [isDragActive, setIsDragActive] = useState(false);
@@ -405,18 +409,18 @@ const CreateDocument = () => {
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <header className="h-16 border-b bg-background flex items-center justify-between px-6 flex-shrink-0">
-        <div className="flex items-center gap-4">
+      <header className="h-auto min-h-[3.5rem] md:h-16 border-b bg-background flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 flex-shrink-0 gap-2 sm:gap-0">
+        <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
           <nav className="flex items-center gap-1.5 text-sm">
-            <span className="text-muted-foreground">Documents</span>
-            <HugeiconsIcon icon={ArrowRight02Icon} size={14} className="text-muted-foreground" />
-            <span className="font-medium">{isEsign ? "Send for signature" : "Create new"}</span>
+            <span className="text-muted-foreground hidden sm:inline">Documents</span>
+            <HugeiconsIcon icon={ArrowRight02Icon} size={14} className="text-muted-foreground hidden sm:inline" />
+            <span className="font-medium text-sm">{isEsign ? "Send for signature" : "Create new"}</span>
           </nav>
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-2 ml-4 border rounded-full px-3 py-1 bg-muted/50">
-                <Label htmlFor="mode-toggle" className="text-[10px] text-muted-foreground font-mono cursor-pointer">eSign Mode</Label>
+              <div className="flex items-center gap-2 ml-auto sm:ml-4 border rounded-full px-3 py-1 bg-muted/50">
+                <Label htmlFor="mode-toggle" className="text-[10px] text-muted-foreground font-mono cursor-pointer">eSign</Label>
                 <Switch
                   id="mode-toggle"
                   checked={isEsign}
@@ -429,7 +433,13 @@ const CreateDocument = () => {
           </Tooltip>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          {hasDocuments && isMobile && (
+            <Button variant="outline" size="sm" onClick={() => setMobileQueueOpen(true)} className="mr-auto sm:mr-0">
+              <HugeiconsIcon icon={Files01Icon} size={16} className="mr-1.5" />
+              Queue ({count})
+            </Button>
+          )}
           {isEsign ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -440,7 +450,8 @@ const CreateDocument = () => {
                   className={isEmpty || !allComplete ? "opacity-50" : ""}
                 >
                   <HugeiconsIcon icon={SentIcon} size={16} className="mr-1.5" />
-                  Send for signature
+                  <span className="hidden sm:inline">Send for signature</span>
+                  <span className="sm:hidden">Send</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Send documents for eSignature</TooltipContent>
@@ -453,10 +464,10 @@ const CreateDocument = () => {
                     variant="outline"
                     size="sm"
                     disabled={isEmpty || !allComplete}
-                    className={isEmpty || !allComplete ? "opacity-50" : ""}
+                    className={`${isEmpty || !allComplete ? "opacity-50" : ""}`}
                   >
-                    <HugeiconsIcon icon={FileValidationIcon} size={16} className="mr-1.5" />
-                    Get signature
+                    <HugeiconsIcon icon={FileValidationIcon} size={16} className="sm:mr-1.5" />
+                    <span className="hidden sm:inline">Get signature</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Request signatures on your documents</TooltipContent>
@@ -469,8 +480,9 @@ const CreateDocument = () => {
                     disabled={isEmpty || !allComplete}
                     className={isEmpty || !allComplete ? "opacity-50" : ""}
                   >
-                    <HugeiconsIcon icon={Edit02Icon} size={16} className="mr-1.5" />
-                    {editLabel}
+                    <HugeiconsIcon icon={Edit02Icon} size={16} className="sm:mr-1.5" />
+                    <span className="hidden sm:inline">{editLabel}</span>
+                    <span className="sm:hidden">Edit</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Open documents in the editor</TooltipContent>
@@ -481,14 +493,14 @@ const CreateDocument = () => {
       </header>
 
       <div className="flex flex-1 overflow-hidden relative">
-        <main className="flex-1 overflow-y-auto p-8 scrollbar-thin">
-          <div className={`mx-auto transition-all ${hasDocuments ? "max-w-4xl" : "max-w-5xl"}`}>
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin">
+          <div className={`mx-auto transition-all ${hasDocuments && !isMobile ? "max-w-4xl" : "max-w-5xl"}`}>
 
             <section>
-              <div className={`grid gap-4 ${
+              <div className={`grid gap-3 md:gap-4 ${
                 isEsign
                   ? "grid-cols-2 max-w-lg mx-auto"
-                  : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+                  : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
               }`}>
                 {actions.map((action) => (
                   <Card
@@ -796,23 +808,41 @@ const CreateDocument = () => {
           </div>
         </main>
 
-        <AnimatePresence>
-          {hasDocuments && (
-            <motion.div
-              initial={{ x: 400 }}
-              animate={{ x: 0 }}
-              exit={{ x: 400 }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            >
+        {/* Desktop queue panel */}
+        {!isMobile && (
+          <AnimatePresence>
+            {hasDocuments && (
+              <motion.div
+                initial={{ x: 400 }}
+                animate={{ x: 0 }}
+                exit={{ x: 400 }}
+                transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              >
+                <DocumentQueuePanel
+                  documents={documents}
+                  setDocuments={setDocuments}
+                  onAddFiles={() => fileInputRef.current?.click()}
+                  mode={mode}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+
+        {/* Mobile queue drawer */}
+        {isMobile && (
+          <Drawer open={mobileQueueOpen} onOpenChange={setMobileQueueOpen}>
+            <DrawerContent className="max-h-[85vh]">
               <DocumentQueuePanel
                 documents={documents}
                 setDocuments={setDocuments}
                 onAddFiles={() => fileInputRef.current?.click()}
                 mode={mode}
+                isMobile
               />
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </DrawerContent>
+          </Drawer>
+        )}
       </div>
 
       <input

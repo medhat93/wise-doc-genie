@@ -62,6 +62,7 @@ interface DocumentQueuePanelProps {
   setDocuments: React.Dispatch<React.SetStateAction<UploadedDocument[]>>;
   onAddFiles: () => void;
   mode?: CreateDocumentMode;
+  isMobile?: boolean;
 }
 
 function getFileIcon(type: string) {
@@ -258,6 +259,7 @@ const DocumentQueuePanel = ({
   setDocuments,
   onAddFiles,
   mode = "full",
+  isMobile = false,
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
 
@@ -285,19 +287,21 @@ const DocumentQueuePanel = ({
   }
 
   return (
-    <div className="w-[400px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar">
-      <div className="h-14 px-4 flex items-center border-b flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm">Document queue</span>
-          {documents.length > 0 && (
-            <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
-              {documents.length}
-            </Badge>
-          )}
+    <div className={isMobile ? "flex flex-col" : "w-[400px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
+      {!isMobile && (
+        <div className="h-14 px-4 flex items-center border-b flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-sm">Document queue</span>
+            {documents.length > 0 && (
+              <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
+                {documents.length}
+              </Badge>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin">
+      <div className={`flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin ${isMobile ? "max-h-[50vh]" : ""}`}>
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-8 flex flex-col items-center w-full">
