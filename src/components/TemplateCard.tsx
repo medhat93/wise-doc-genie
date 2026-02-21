@@ -2,7 +2,6 @@ import { Template, categoryBadgeMap } from "@/data/templates";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ViewIcon, Add01Icon, DashboardSquare01Icon, UserIcon, Share01Icon } from "@hugeicons/core-free-icons";
@@ -13,7 +12,6 @@ interface TemplateCardProps {
   onPreview: (template: Template) => void;
   onUse: (template: Template) => void;
   tall?: boolean;
-  showSourceBadge?: boolean;
 }
 
 const DocumentLines = () => (
@@ -34,26 +32,39 @@ const MutedDocumentLines = () => (
   </div>
 );
 
-const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: TemplateCardProps) => {
+const TemplateCard = ({ template, onPreview, onUse, tall }: TemplateCardProps) => {
   const badgeLabel = categoryBadgeMap[template.name] || template.category || null;
   const isUserTemplate = template.source === "user";
+  const isLibrary = template.source === "library";
 
-  const sourceBadge = isUserTemplate ? (
-    showSourceBadge && (
-      <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-background border flex items-center justify-center">
-        <HugeiconsIcon icon={UserIcon} size={12} className="text-muted-foreground" />
-      </div>
-    )
+  // Determine source icon + tooltip for top-right corner
+  const sourceIndicator = isLibrary ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white flex items-center justify-center z-10">
+          <img src={signitLogo} alt="Signit" className="h-3 w-3 object-contain" />
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>Signit template library</TooltipContent>
+    </Tooltip>
+  ) : template.isShared ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-background border flex items-center justify-center z-10">
+          <HugeiconsIcon icon={Share01Icon} size={12} className="text-muted-foreground" />
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>{template.sharedBy ? `Shared by ${template.sharedBy}` : "Shared with you"}</TooltipContent>
+    </Tooltip>
   ) : (
-    showSourceBadge ? (
-      <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white backdrop-blur-sm flex items-center justify-center">
-        <HugeiconsIcon icon={DashboardSquare01Icon} size={12} className="text-white" />
-      </div>
-    ) : (
-      <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white flex items-center justify-center">
-        <img src={signitLogo} alt="Signit" className="h-3 w-3 object-contain" />
-      </div>
-    )
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-background border flex items-center justify-center z-10">
+          <HugeiconsIcon icon={UserIcon} size={12} className="text-muted-foreground" />
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>{template.subtitle || "Created by you"}</TooltipContent>
+    </Tooltip>
   );
 
   const thumbnailBg = isUserTemplate
@@ -67,12 +78,7 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
         className={`relative ${thumbnailBg} ${tall ? "h-[140px]" : "h-[120px]"} rounded-t-lg flex items-start justify-center`}
       >
         {isUserTemplate ? <MutedDocumentLines /> : <DocumentLines />}
-        {sourceBadge}
-        {template.isShared && (
-          <div className="absolute top-2 left-2 h-5 w-5 rounded-full bg-background border flex items-center justify-center">
-            <HugeiconsIcon icon={Share01Icon} size={12} className="text-muted-foreground" />
-          </div>
-        )}
+        {sourceIndicator}
         {/* Preview overlay on hover */}
         <div className="absolute inset-0 bg-black/50 rounded-t-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
@@ -104,17 +110,6 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
                   {template.description}
                 </TooltipContent>
               </Tooltip>
-            )}
-            {tall && template.isShared && template.sharedBy && (
-              <div className="flex items-center gap-1.5 mt-1">
-                <Avatar className="h-4 w-4">
-                  <AvatarFallback className="text-[8px] bg-muted">{template.sharedByInitials}</AvatarFallback>
-                </Avatar>
-                <p className="text-xs text-muted-foreground">Shared by {template.sharedBy}</p>
-              </div>
-            )}
-            {tall && !template.isShared && template.subtitle && (
-              <p className="text-xs text-muted-foreground/70 mt-0.5">{template.subtitle}</p>
             )}
           </div>
           {/* Always-visible Add button */}
