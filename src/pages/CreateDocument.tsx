@@ -96,7 +96,7 @@ const fullQuickActions = [
     title: "Start with AI",
     description: "Describe your document and AI will draft it",
     icon: null as any,
-    accent: "bg-gradient-to-br from-violet-500/10 to-blue-500/10 text-violet-600",
+    accent: "bg-white border text-violet-600",
     customIcon: true,
   },
   {
