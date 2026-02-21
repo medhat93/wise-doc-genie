@@ -1,23 +1,23 @@
 import { useState, useRef, useCallback, useEffect, DragEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Upload,
-  HardDrive,
-  LayoutGrid,
-  FileStack,
-  ArrowRight,
-  Search,
-  ChevronRight,
-  FolderOpen,
-  FileText,
-  FilePlus,
-  Sparkles,
-  Loader2,
-  UploadCloud,
-  PenLine,
-  FileSignature,
-  Send,
-} from "lucide-react";
+  CloudUploadIcon,
+  CloudIcon,
+  DashboardSquare01Icon,
+  Files01Icon,
+  ArrowRight01Icon,
+  Search01Icon,
+  ArrowRight02Icon,
+  Folder01Icon,
+  File01Icon,
+  FileAddIcon,
+  SparklesIcon,
+  Loading03Icon,
+  Edit02Icon,
+  FileValidationIcon,
+  SentIcon,
+} from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -75,7 +75,7 @@ const fullQuickActions = [
     id: "upload",
     title: "Upload Document",
     description: "PDF, DOCX, PNG, JPG up to 50MB",
-    icon: Upload,
+    icon: CloudUploadIcon,
     accent: "bg-primary/10 text-primary",
     highlight: true,
     sub: "or drag & drop anywhere",
@@ -84,29 +84,29 @@ const fullQuickActions = [
     id: "blank",
     title: "Start from Blank",
     description: "Open empty document editor",
-    icon: FilePlus,
+    icon: FileAddIcon,
     accent: "bg-slate-500/10 text-slate-600",
   },
   {
     id: "ai",
     title: "Start with AI",
     description: "Describe your document and AI will draft it",
-    icon: Sparkles,
+    icon: SparklesIcon,
     accent: "bg-gradient-to-br from-violet-500/10 to-blue-500/10 text-violet-600",
   },
   {
     id: "drive",
     title: "Import from Drive",
     description: "Google Drive, OneDrive, Dropbox",
-    icon: HardDrive,
+    icon: CloudIcon,
     accent: "bg-orange-500/10 text-orange-600",
   },
   {
     id: "library",
     title: "Browse Library",
     description: "Browse curated templates",
-    icon: LayoutGrid,
-    accent: "bg-violet-500/10 text-violet-600",
+    icon: DashboardSquare01Icon,
+    accent: "bg-brand-indigo/10 text-brand-indigo",
   },
 ];
 
@@ -373,7 +373,7 @@ const CreateDocument = () => {
         <div className="flex items-center gap-4">
           <nav className="flex items-center gap-1.5 text-sm">
             <span className="text-muted-foreground">Documents</span>
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            <HugeiconsIcon icon={ArrowRight02Icon} size={14} className="text-muted-foreground" />
             <span className="font-medium">{isEsign ? "Send for Signature" : "Create New"}</span>
           </nav>
 
@@ -396,7 +396,7 @@ const CreateDocument = () => {
               disabled={isEmpty || !allComplete}
               className={isEmpty || !allComplete ? "opacity-50" : ""}
             >
-              <Send className="h-4 w-4 mr-1.5" />
+              <HugeiconsIcon icon={SentIcon} size={16} className="mr-1.5" />
               Send for Signature
             </Button>
           ) : (
@@ -407,7 +407,7 @@ const CreateDocument = () => {
                 disabled={isEmpty || !allComplete}
                 className={isEmpty || !allComplete ? "opacity-50" : ""}
               >
-                <FileSignature className="h-4 w-4 mr-1.5" />
+                <HugeiconsIcon icon={FileValidationIcon} size={16} className="mr-1.5" />
                 Get Signature
               </Button>
               <Button
@@ -416,7 +416,7 @@ const CreateDocument = () => {
                 disabled={isEmpty || !allComplete}
                 className={isEmpty || !allComplete ? "opacity-50" : ""}
               >
-                <PenLine className="h-4 w-4 mr-1.5" />
+                <HugeiconsIcon icon={Edit02Icon} size={16} className="mr-1.5" />
                 {editLabel}
               </Button>
             </>
@@ -428,7 +428,7 @@ const CreateDocument = () => {
             onClick={() => setIsPanelOpen(!isPanelOpen)}
             className="relative"
           >
-            <FileStack className="h-4 w-4 mr-1.5" />
+            <HugeiconsIcon icon={Files01Icon} size={16} className="mr-1.5" />
             Document Queue
             {count > 0 && (
               <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs ml-2">
@@ -461,7 +461,7 @@ const CreateDocument = () => {
                       <div className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-emerald-500" />
                     )}
                     <div className={`rounded-full p-3 w-fit ${action.accent}`}>
-                      <action.icon className="h-5 w-5" />
+                      <HugeiconsIcon icon={action.icon} size={20} />
                     </div>
                     <h3 className="font-semibold text-sm mt-3">{action.title}</h3>
                     <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
@@ -483,7 +483,7 @@ const CreateDocument = () => {
                     templateSectionRef.current?.scrollIntoView({ behavior: "smooth" })
                   }
                 >
-                  View All <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                  View All <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
                 </Button>
               </div>
               <ScrollArea className="mt-4 w-full">
@@ -510,7 +510,7 @@ const CreateDocument = () => {
               {isEsign ? (
                 <>
                   <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <FolderOpen className="h-5 w-5" />
+                    <HugeiconsIcon icon={Folder01Icon} size={20} />
                     My Templates
                     <span className="text-muted-foreground font-normal text-sm">({allMyTemplates.length})</span>
                   </h3>
@@ -535,7 +535,7 @@ const CreateDocument = () => {
                   </div>
 
                   <div className="relative max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       placeholder="Search my templates..."
                       className="pl-10"
@@ -566,7 +566,7 @@ const CreateDocument = () => {
                     </div>
                   ) : (
                     <div className="mt-16 flex flex-col items-center text-center">
-                      <FileText className="h-12 w-12 text-muted-foreground/30" />
+                      <HugeiconsIcon icon={File01Icon} size={48} className="text-muted-foreground/30" />
                       <p className="text-sm font-medium text-muted-foreground mt-4">
                         No templates found
                       </p>
@@ -583,7 +583,7 @@ const CreateDocument = () => {
                       value="my-templates"
                       className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
                     >
-                      <FolderOpen className="h-4 w-4" />
+                      <HugeiconsIcon icon={Folder01Icon} size={16} />
                       My Templates
                       <span className="text-muted-foreground">({allMyTemplates.length})</span>
                     </TabsTrigger>
@@ -591,9 +591,9 @@ const CreateDocument = () => {
                       value="library"
                       className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
                     >
-                      <LayoutGrid className="h-4 w-4" />
+                      <HugeiconsIcon icon={DashboardSquare01Icon} size={16} />
                       Template Library
-                      <Sparkles className="h-3 w-3 text-amber-500" />
+                      <HugeiconsIcon icon={SparklesIcon} size={12} className="text-amber-500" />
                     </TabsTrigger>
                   </TabsList>
 
@@ -618,7 +618,7 @@ const CreateDocument = () => {
                     </div>
 
                     <div className="relative max-w-md">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         placeholder="Search my templates..."
                         className="pl-10"
@@ -649,7 +649,7 @@ const CreateDocument = () => {
                       </div>
                     ) : (
                       <div className="mt-16 flex flex-col items-center text-center">
-                        <FileText className="h-12 w-12 text-muted-foreground/30" />
+                        <HugeiconsIcon icon={File01Icon} size={48} className="text-muted-foreground/30" />
                         <p className="text-sm font-medium text-muted-foreground mt-4">
                           No templates yet
                         </p>
@@ -662,7 +662,7 @@ const CreateDocument = () => {
                           className="mt-3"
                           onClick={() => setActiveTab("library")}
                         >
-                          Browse Template Library <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                          Browse Template Library <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
                         </Button>
                       </div>
                     )}
@@ -670,7 +670,7 @@ const CreateDocument = () => {
 
                   <TabsContent value="library" className="mt-4">
                     <div className="relative max-w-md">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         placeholder="Search template library..."
                         className="pl-10"
@@ -726,7 +726,7 @@ const CreateDocument = () => {
                     if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files);
                   }}
                 >
-                  <UploadCloud className={`h-14 w-14 ${esignDropHover ? "text-primary" : "text-muted-foreground/40"} transition-colors`} />
+                  <HugeiconsIcon icon={CloudUploadIcon} size={56} className={`${esignDropHover ? "text-primary" : "text-muted-foreground/40"} transition-colors`} />
                   <p className="text-lg font-medium text-muted-foreground mt-4">
                     Drag and drop your documents here
                   </p>
@@ -796,7 +796,7 @@ const CreateDocument = () => {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-violet-500" />
+              <HugeiconsIcon icon={SparklesIcon} size={16} className="text-violet-500" />
               Describe your document
             </DialogTitle>
           </DialogHeader>
@@ -843,12 +843,12 @@ const CreateDocument = () => {
             >
               {aiGenerating ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                  <HugeiconsIcon icon={Loading03Icon} size={16} className="mr-1.5 animate-spin" />
                   Generating...
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-4 w-4 mr-1.5" />
+                  <HugeiconsIcon icon={SparklesIcon} size={16} className="mr-1.5" />
                   Generate Document
                 </>
               )}
