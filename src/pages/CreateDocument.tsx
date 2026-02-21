@@ -45,13 +45,14 @@ import {
   quickFilterCategories,
   Template,
 } from "@/data/templates";
-import { UploadedDocument } from "@/types/document";
+import { UploadedDocument, DriveFile } from "@/types/document";
 import TemplateCard from "@/components/TemplateCard";
 import TemplatePreviewDialog from "@/components/TemplatePreviewDialog";
 import DocumentQueuePanel from "@/components/DocumentQueuePanel";
 import type { CreateDocumentMode } from "@/components/DocumentQueuePanel";
 import DragDropOverlay from "@/components/DragDropOverlay";
 import CategoryFilter from "@/components/CategoryFilter";
+import DriveImportDialog from "@/components/DriveImportDialog";
 
 const AI_SUGGESTIONS = [
   "Sales proposal for SaaS product",
@@ -147,6 +148,15 @@ const CreateDocument = () => {
 
   const [esignDropHover, setEsignDropHover] = useState(false);
 
+  // Drive import state
+  const [driveDialogOpen, setDriveDialogOpen] = useState(false);
+  const [connectedProviders, setConnectedProviders] = useState<Record<string, boolean>>({
+    google_drive: false,
+    dropbox: true,
+    onedrive: false,
+  });
+  const hasAnyConnected = Object.values(connectedProviders).some(Boolean);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const templateSectionRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
@@ -230,11 +240,40 @@ const CreateDocument = () => {
       toast({ title: "Opening blank editor...", description: "Redirecting to the document editor." });
     }
     if (actionId === "ai") setAiDialogOpen(true);
+    if (actionId === "drive") setDriveDialogOpen(true);
     if (actionId === "library") {
       templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
       setActiveTab("library");
     }
   };
+
+  // Drive import handler
+  const handleDriveImport = useCallback((files: DriveFile[], providerName: string) => {
+    const getMimeType = (mimeType?: string) => {
+      if (!mimeType) return "application/octet-stream";
+      return mimeType;
+    };
+
+    const newDocs: UploadedDocument[] = files.map((file) => ({
+      id: crypto.randomUUID(),
+      name: file.name,
+      size: file.size,
+      type: getMimeType(file.mimeType),
+      progress: 0,
+      status: "uploading" as const,
+      pageCount: Math.floor(Math.random() * 15) + 1,
+      isDriveImport: true,
+      driveProvider: providerName,
+    }));
+
+    setDocuments((prev) => [...prev, ...newDocs]);
+    setIsPanelOpen(true);
+
+    toast({
+      title: `Importing from ${providerName}`,
+      description: `${files.length} file${files.length !== 1 ? "s" : ""} are being imported.`,
+    });
+  }, []);
 
   const handleAIGenerate = async () => {
     if (!aiPrompt.trim()) return;
@@ -403,11 +442,14 @@ const CreateDocument = () => {
                 {actions.map((action) => (
                   <Card
                     key={action.id}
-                    className={`p-5 cursor-pointer hover:shadow-md transition-shadow ${
+                    className={`p-5 cursor-pointer hover:shadow-md transition-shadow relative ${
                       action.highlight ? "ring-1 ring-primary/20" : ""
                     }`}
                     onClick={() => handleQuickAction(action.id)}
                   >
+                    {action.id === "drive" && hasAnyConnected && (
+                      <div className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-emerald-500" />
+                    )}
                     <div className={`rounded-full p-3 w-fit ${action.accent}`}>
                       <action.icon className="h-5 w-5" />
                     </div>
@@ -734,6 +776,15 @@ const CreateDocument = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Drive Import Dialog */}
+      <DriveImportDialog
+        open={driveDialogOpen}
+        onOpenChange={setDriveDialogOpen}
+        connectedProviders={connectedProviders}
+        setConnectedProviders={setConnectedProviders}
+        onImportFiles={handleDriveImport}
+      />
     </div>
   );
 };
