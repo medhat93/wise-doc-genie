@@ -662,7 +662,10 @@ const CreateDocument = () => {
                 <Button
                   variant="link"
                   className="text-sm"
-                  onClick={() => templateSectionRef.current?.scrollIntoView({ behavior: "smooth" })}
+                  onClick={() => {
+                    setActiveFilter("created");
+                    templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+                  }}
                 >
                   View all <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
                 </Button>
