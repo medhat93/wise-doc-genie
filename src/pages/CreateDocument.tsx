@@ -291,18 +291,30 @@ const CreateDocument = () => {
   const handleAIGenerate = async () => {
     if (!aiPrompt.trim()) return;
     setAiGenerating(true);
-    await new Promise((r) => setTimeout(r, 2000));
 
     const docName = deriveAIDocName(aiPrompt);
+    const aiDocId = crypto.randomUUID();
+
+    // Add to queue immediately in "generating" state
     const aiDoc: UploadedDocument = {
-      id: crypto.randomUUID(),
+      id: aiDocId,
       name: docName,
       type: "application/ai",
-      progress: 100,
-      status: "complete",
+      progress: 0,
+      status: "uploading" as const,
       isAI: true,
     };
     setDocuments((prev) => [...prev, aiDoc]);
+    setAiDialogOpen(false);
+    setAiPrompt("");
+
+    // Simulate AI generation
+    await new Promise((r) => setTimeout(r, 3000));
+
+    // Mark as complete
+    setDocuments((prev) =>
+      prev.map((d) => d.id === aiDocId ? { ...d, status: "complete" as const, progress: 100 } : d)
+    );
 
     toast({
       title: "AI document created",
@@ -310,8 +322,6 @@ const CreateDocument = () => {
     });
 
     setAiGenerating(false);
-    setAiDialogOpen(false);
-    setAiPrompt("");
   };
 
   const handleUseTemplate = useCallback((template: Template) => {

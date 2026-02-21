@@ -94,9 +94,10 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
   }
 
   if (doc.isAI) {
+    const isGenerating = doc.status === "uploading";
     return (
-      <div className="h-10 w-10 rounded flex-shrink-0 bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
-        <AiIcon size={16} />
+      <div className={`h-10 w-10 rounded flex-shrink-0 bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center ${isGenerating ? "animate-pulse" : ""}`}>
+        <AiIcon size={16} className={isGenerating ? "animate-spin" : ""} />
       </div>
     );
   }
@@ -148,7 +149,7 @@ function SortableDocItem({
   const sublabel = doc.isTemplate
     ? `Template · ${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
     : doc.isAI
-    ? "AI Generated"
+    ? (doc.status === "uploading" ? "AI is generating..." : "AI generated")
     : doc.status === "uploading"
     ? (doc.isDriveImport ? `Importing from ${doc.driveProvider || "Drive"}...` : "Uploading...")
     : `${doc.size ? formatSize(doc.size) : ""} · ${doc.pageCount} pages`;
