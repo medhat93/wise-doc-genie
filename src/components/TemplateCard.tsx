@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Eye, Plus, LayoutGrid, User, Share2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ViewIcon, Add01Icon, DashboardSquare01Icon, UserIcon, Share01Icon } from "@hugeicons/core-free-icons";
 
 interface TemplateCardProps {
   template: Template;
@@ -40,12 +41,12 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
       <MutedDocumentLines />
       {showSourceBadge && (
         <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-background border flex items-center justify-center">
-          <User className="h-3 w-3 text-muted-foreground" />
+          <HugeiconsIcon icon={UserIcon} size={12} className="text-muted-foreground" />
         </div>
       )}
       {template.isShared && (
         <div className="absolute top-2 left-2 h-5 w-5 rounded-full bg-background border flex items-center justify-center">
-          <Share2 className="h-3 w-3 text-muted-foreground" />
+          <HugeiconsIcon icon={Share01Icon} size={12} className="text-muted-foreground" />
         </div>
       )}
       <div className="absolute inset-0 bg-black/40 rounded-t-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -59,11 +60,11 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
       <DocumentLines />
       {showSourceBadge && (
         <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-          <LayoutGrid className="h-3 w-3 text-white" />
+          <HugeiconsIcon icon={DashboardSquare01Icon} size={12} className="text-white" />
         </div>
       )}
       {!showSourceBadge && (
-        <div className="absolute top-2 right-2 text-[10px] text-white/60 bg-black/20 rounded px-1.5 py-0.5">
+        <div className="absolute top-2 right-2 text-[10px] font-medium text-brand-indigo bg-black/20 rounded-md px-1.5 py-0.5">
           Signit
         </div>
       )}
@@ -79,7 +80,7 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
     <Card className="group relative overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
       {previewArea}
       <div className="p-3">
-        <p className="font-medium text-sm">{template.name}</p>
+        <p className="font-semibold text-sm">{template.name}</p>
         {tall && (
           <>
             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{template.description}</p>
@@ -101,10 +102,10 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
       {tall && (
         <div className="px-3 pb-3 flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => onPreview(template)}>
-            <Eye className="h-3.5 w-3.5 mr-1" /> Preview
+            <HugeiconsIcon icon={ViewIcon} size={14} className="mr-1" /> Preview
           </Button>
           <Button variant="default" size="sm" onClick={() => onUse(template)}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> Use
+            <HugeiconsIcon icon={Add01Icon} size={14} className="mr-1" /> Use
           </Button>
         </div>
       )}
