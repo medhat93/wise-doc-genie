@@ -537,7 +537,7 @@ const CreateDocument = () => {
           <nav className="flex items-center gap-1.5 text-sm">
             <span className="text-muted-foreground hidden sm:inline">Documents</span>
             <HugeiconsIcon icon={ArrowRight02Icon} size={14} className="text-muted-foreground hidden sm:inline" />
-            <span className="font-medium text-sm">{isEsign ? "Send for signature" : "Create new"}</span>
+            <span className="font-medium text-sm">{isEsign ? "Send for signature" : "Start a new document"}</span>
           </nav>
 
           <Tooltip>
