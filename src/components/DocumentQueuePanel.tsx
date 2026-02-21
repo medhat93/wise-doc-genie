@@ -276,7 +276,7 @@ const DocumentQueuePanel = ({
     <div className="w-[400px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar">
       <div className="h-14 px-4 flex items-center justify-between border-b flex-shrink-0">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm">Document Queue</span>
+          <span className="font-semibold text-sm">Document queue</span>
           {documents.length > 0 && (
             <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
               {documents.length}
@@ -332,7 +332,7 @@ const DocumentQueuePanel = ({
         )}
         <Button variant="ghost" className="w-full" onClick={onAddFiles}>
           <HugeiconsIcon icon={Add01Icon} size={16} className="mr-1.5" />
-          {isEmpty ? "Add Documents" : "Add More Documents"}
+          {isEmpty ? "Add documents" : "Add more documents"}
         </Button>
       </div>
 

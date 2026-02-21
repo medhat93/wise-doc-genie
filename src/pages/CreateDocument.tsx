@@ -77,7 +77,7 @@ function deriveAIDocName(prompt: string): string {
 const fullQuickActions = [
   {
     id: "upload",
-    title: "Upload Document",
+    title: "Upload document",
     description: "PDF, DOCX, PNG, JPG up to 50MB",
     icon: CloudUploadIcon,
     accent: "bg-primary/10 text-primary",
@@ -86,7 +86,7 @@ const fullQuickActions = [
   },
   {
     id: "blank",
-    title: "Start from Blank",
+    title: "Start from blank",
     description: "Open empty document editor",
     icon: FileAddIcon,
     accent: "bg-slate-500/10 text-slate-600",
@@ -108,7 +108,7 @@ const fullQuickActions = [
   },
   {
     id: "library",
-    title: "Signit Library",
+    title: "Signit library",
     description: "Professional templates by Signit",
     icon: DashboardSquare01Icon,
     accent: "bg-brand-indigo/10 text-brand-indigo",
@@ -181,7 +181,7 @@ const CreateDocument = () => {
   const isEmpty = documents.length === 0;
   const allComplete = documents.length > 0 && documents.every((d) => d.status === "complete");
   const count = documents.length;
-  const editLabel = count === 0 ? "Edit" : count === 1 ? "Edit Document" : `Edit ${count} Documents`;
+  const editLabel = count === 0 ? "Edit" : count === 1 ? "Edit document" : `Edit ${count} documents`;
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -381,7 +381,7 @@ const CreateDocument = () => {
           <nav className="flex items-center gap-1.5 text-sm">
             <span className="text-muted-foreground">Documents</span>
             <HugeiconsIcon icon={ArrowRight02Icon} size={14} className="text-muted-foreground" />
-            <span className="font-medium">{isEsign ? "Send for Signature" : "Create New"}</span>
+            <span className="font-medium">{isEsign ? "Send for signature" : "Create new"}</span>
           </nav>
 
           <Tooltip>
@@ -411,7 +411,7 @@ const CreateDocument = () => {
                   className={isEmpty || !allComplete ? "opacity-50" : ""}
                 >
                   <HugeiconsIcon icon={SentIcon} size={16} className="mr-1.5" />
-                  Send for Signature
+                  Send for signature
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Send documents for eSignature</TooltipContent>
@@ -427,7 +427,7 @@ const CreateDocument = () => {
                     className={isEmpty || !allComplete ? "opacity-50" : ""}
                   >
                     <HugeiconsIcon icon={FileValidationIcon} size={16} className="mr-1.5" />
-                    Get Signature
+                    Get signature
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Request signatures on your documents</TooltipContent>
@@ -519,7 +519,7 @@ const CreateDocument = () => {
 
             <section className="mt-10">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Recent Templates</h3>
+                <h3 className="text-lg font-semibold">Recent templates</h3>
                 <Button
                   variant="link"
                   className="text-sm"
@@ -527,7 +527,7 @@ const CreateDocument = () => {
                     templateSectionRef.current?.scrollIntoView({ behavior: "smooth" })
                   }
                 >
-                  View All <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
+                  View all <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
                 </Button>
               </div>
               <ScrollArea className="mt-4 w-full">
@@ -555,7 +555,7 @@ const CreateDocument = () => {
                 <>
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <HugeiconsIcon icon={Folder01Icon} size={20} />
-                    My Templates
+                    My templates
                     <span className="text-muted-foreground font-normal text-sm">({allMyTemplates.length})</span>
                   </h3>
 
@@ -570,10 +570,10 @@ const CreateDocument = () => {
                         All
                       </ToggleGroupItem>
                       <ToggleGroupItem value="created" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                        Created by Me
+                         Created by me
                       </ToggleGroupItem>
                       <ToggleGroupItem value="shared" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                        Shared with Me ({sharedTemplates.length})
+                         Shared with me ({sharedTemplates.length})
                       </ToggleGroupItem>
                     </ToggleGroup>
                   </div>
@@ -628,7 +628,7 @@ const CreateDocument = () => {
                       className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
                     >
                       <HugeiconsIcon icon={Folder01Icon} size={16} />
-                      My Templates
+                      My templates
                       <span className="text-muted-foreground">({allMyTemplates.length})</span>
                     </TabsTrigger>
                     <TabsTrigger
@@ -636,7 +636,7 @@ const CreateDocument = () => {
                       className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
                     >
                       <img src={signitLogo} alt="Signit" className="h-4 w-auto" />
-                      Signit Library
+                      Signit library
                     </TabsTrigger>
                   </TabsList>
 
@@ -652,10 +652,10 @@ const CreateDocument = () => {
                           All
                         </ToggleGroupItem>
                         <ToggleGroupItem value="created" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                          Created by Me
+                          Created by me
                         </ToggleGroupItem>
                         <ToggleGroupItem value="shared" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                          Shared with Me ({sharedTemplates.length})
+                          Shared with me ({sharedTemplates.length})
                         </ToggleGroupItem>
                       </ToggleGroup>
                     </div>
@@ -705,7 +705,7 @@ const CreateDocument = () => {
                           className="mt-3"
                           onClick={() => setActiveTab("library")}
                         >
-                          Browse Template Library <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
+                          Browse template library <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
                         </Button>
                       </div>
                     )}
@@ -775,7 +775,7 @@ const CreateDocument = () => {
                   </p>
                   <p className="text-sm text-muted-foreground my-2">or</p>
                   <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                    Browse Files
+                    Browse files
                   </Button>
                   <p className="text-xs text-muted-foreground mt-3">
                     PDF, DOCX, DOC, PNG, JPG — up to 50MB
@@ -846,7 +846,7 @@ const CreateDocument = () => {
 
           <div className="space-y-4 py-2">
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Document Type</Label>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Document type</Label>
               <Input
                 placeholder="e.g. NDA, Sales Proposal, Service Contract..."
                 value={aiDocType}
@@ -905,7 +905,7 @@ const CreateDocument = () => {
               ) : (
                 <>
                   <AiIcon size={16} className="mr-1.5" />
-                  Generate Document
+                  Generate document
                 </>
               )}
             </Button>
