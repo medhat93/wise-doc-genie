@@ -60,7 +60,7 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
     <div className={`relative bg-gradient-to-br ${template.gradient} ${tall ? "h-[160px]" : "h-[140px]"} rounded-t-lg`}>
       <DocumentLines />
       {showSourceBadge && (
-        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white backdrop-blur-sm flex items-center justify-center">
           <HugeiconsIcon icon={DashboardSquare01Icon} size={12} className="text-white" />
         </div>
       )}
