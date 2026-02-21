@@ -167,7 +167,7 @@ const fullQuickActions = [
   },
   {
     id: "library",
-    title: "Template Library",
+    title: "Start from Signit library",
     description: "Browse all templates",
     icon: DashboardSquare01Icon,
     accent: "bg-brand-indigo/10 text-brand-indigo",
