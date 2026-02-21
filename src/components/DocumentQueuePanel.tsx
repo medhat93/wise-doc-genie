@@ -347,25 +347,6 @@ const DocumentQueuePanel = ({
           <HugeiconsIcon icon={Add01Icon} size={16} className="mr-1.5" />
           {isEmpty ? "Add Documents" : "Add more documents"}
         </Button>
-        <div className="flex gap-2">
-          <Button
-            variant="default"
-            className="flex-1"
-            disabled={isEmpty}
-            onClick={onEditDocuments}
-          >
-            <HugeiconsIcon icon={Edit02Icon} size={16} className="mr-1.5" />
-            {isEmpty ? "Edit" : count === 1 ? "Edit Document" : `Edit ${count} Documents`}
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1"
-            disabled={isEmpty}
-          >
-            <HugeiconsIcon icon={SentIcon} size={16} className="mr-1.5" />
-            Get Signature
-          </Button>
-        </div>
       </div>
 
       <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
