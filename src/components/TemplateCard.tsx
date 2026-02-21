@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ViewIcon, Add01Icon, DashboardSquare01Icon, UserIcon, Share01Icon } from "@hugeicons/core-free-icons";
 
@@ -104,12 +105,22 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
       </div>
       {tall && (
         <div className="px-3 pb-3 flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => onPreview(template)}>
-            <HugeiconsIcon icon={ViewIcon} size={14} className="mr-1" /> Preview
-          </Button>
-          <Button variant="default" size="sm" onClick={() => onUse(template)}>
-            <HugeiconsIcon icon={Add01Icon} size={14} className="mr-1" /> Use
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => onPreview(template)}>
+                <HugeiconsIcon icon={ViewIcon} size={14} className="mr-1" /> Preview
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Preview this template</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="default" size="sm" onClick={() => onUse(template)}>
+                <HugeiconsIcon icon={Add01Icon} size={14} className="mr-1" /> Use
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add to document queue</TooltipContent>
+          </Tooltip>
         </div>
       )}
     </Card>

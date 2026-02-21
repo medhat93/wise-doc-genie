@@ -36,6 +36,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 import {
   libraryTemplates,
@@ -383,48 +384,68 @@ const CreateDocument = () => {
             <span className="font-medium">{isEsign ? "Send for Signature" : "Create New"}</span>
           </nav>
 
-          <div className="flex items-center gap-2 ml-4 border rounded-full px-3 py-1 bg-muted/50">
-            <Label htmlFor="mode-toggle" className="text-[10px] text-muted-foreground font-mono cursor-pointer">eSign Mode</Label>
-            <Switch
-              id="mode-toggle"
-              checked={isEsign}
-              onCheckedChange={(checked) => setMode(checked ? "esign" : "full")}
-              className="scale-75"
-            />
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2 ml-4 border rounded-full px-3 py-1 bg-muted/50">
+                <Label htmlFor="mode-toggle" className="text-[10px] text-muted-foreground font-mono cursor-pointer">eSign Mode</Label>
+                <Switch
+                  id="mode-toggle"
+                  checked={isEsign}
+                  onCheckedChange={(checked) => setMode(checked ? "esign" : "full")}
+                  className="scale-75"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>Toggle between full creation and eSign-only mode</TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="flex items-center gap-2">
           {isEsign ? (
-            <Button
-              variant="default"
-              size="sm"
-              disabled={isEmpty || !allComplete}
-              className={isEmpty || !allComplete ? "opacity-50" : ""}
-            >
-              <HugeiconsIcon icon={SentIcon} size={16} className="mr-1.5" />
-              Send for Signature
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={isEmpty || !allComplete}
+                  className={isEmpty || !allComplete ? "opacity-50" : ""}
+                >
+                  <HugeiconsIcon icon={SentIcon} size={16} className="mr-1.5" />
+                  Send for Signature
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Send documents for eSignature</TooltipContent>
+            </Tooltip>
           ) : (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isEmpty || !allComplete}
-                className={isEmpty || !allComplete ? "opacity-50" : ""}
-              >
-                <HugeiconsIcon icon={FileValidationIcon} size={16} className="mr-1.5" />
-                Get Signature
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                disabled={isEmpty || !allComplete}
-                className={isEmpty || !allComplete ? "opacity-50" : ""}
-              >
-                <HugeiconsIcon icon={Edit02Icon} size={16} className="mr-1.5" />
-                {editLabel}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isEmpty || !allComplete}
+                    className={isEmpty || !allComplete ? "opacity-50" : ""}
+                  >
+                    <HugeiconsIcon icon={FileValidationIcon} size={16} className="mr-1.5" />
+                    Get Signature
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Request signatures on your documents</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    disabled={isEmpty || !allComplete}
+                    className={isEmpty || !allComplete ? "opacity-50" : ""}
+                  >
+                    <HugeiconsIcon icon={Edit02Icon} size={16} className="mr-1.5" />
+                    {editLabel}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Open documents in the editor</TooltipContent>
+              </Tooltip>
             </>
           )}
         </div>
@@ -433,19 +454,24 @@ const CreateDocument = () => {
       <div className="flex flex-1 overflow-hidden relative">
         <main className="flex-1 overflow-y-auto p-8 scrollbar-thin">
           {/* Floating Document Queue Toggle */}
-          <button
-            onClick={() => setIsPanelOpen(!isPanelOpen)}
-            className={`fixed top-20 right-4 z-30 flex items-center gap-1.5 p-2 rounded-full border shadow-md transition-all hover:shadow-lg bg-background ${
-              isPanelOpen ? "translate-x-[-408px]" : ""
-            }`}
-          >
-            <HugeiconsIcon icon={Files01Icon} size={16} className="text-foreground" />
-            {count > 0 && (
-              <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
-                {count}
-              </Badge>
-            )}
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setIsPanelOpen(!isPanelOpen)}
+                className={`fixed top-20 right-4 z-30 flex items-center gap-1.5 p-2 rounded-full border shadow-md transition-all hover:shadow-lg bg-background ${
+                  isPanelOpen ? "translate-x-[-408px]" : ""
+                }`}
+              >
+                <HugeiconsIcon icon={Files01Icon} size={16} className="text-foreground" />
+                {count > 0 && (
+                  <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
+                    {count}
+                  </Badge>
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left">{isPanelOpen ? "Hide document queue" : "Show document queue"}</TooltipContent>
+          </Tooltip>
           <div className={`mx-auto transition-all ${isPanelOpen ? "max-w-4xl" : "max-w-5xl"}`}>
 
             <section>

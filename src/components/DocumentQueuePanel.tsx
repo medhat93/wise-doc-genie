@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Cancel01Icon,
@@ -158,9 +159,14 @@ function SortableDocItem({
   return (
     <Card ref={setNodeRef} style={style} className="p-3 group">
       <div className="flex items-center gap-3">
-        <div {...attributes} {...listeners} className="cursor-grab text-muted-foreground/50">
-          <HugeiconsIcon icon={DragDropVerticalIcon} size={16} />
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div {...attributes} {...listeners} className="cursor-grab text-muted-foreground/50">
+              <HugeiconsIcon icon={DragDropVerticalIcon} size={16} />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="left">Drag to reorder</TooltipContent>
+        </Tooltip>
 
         <QueueItemThumbnail doc={doc} />
 
@@ -181,15 +187,25 @@ function SortableDocItem({
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onPreview(doc)}>
-            <HugeiconsIcon icon={ViewIcon} size={14} />
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                <HugeiconsIcon icon={Delete02Icon} size={14} />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onPreview(doc)}>
+                <HugeiconsIcon icon={ViewIcon} size={14} />
               </Button>
-            </AlertDialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>Preview document</TooltipContent>
+          </Tooltip>
+          <AlertDialog>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                    <HugeiconsIcon icon={Delete02Icon} size={14} />
+                  </Button>
+                </AlertDialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Remove from queue</TooltipContent>
+            </Tooltip>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Remove from queue?</AlertDialogTitle>
@@ -267,9 +283,14 @@ const DocumentQueuePanel = ({
             </Badge>
           )}
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-          <HugeiconsIcon icon={Cancel01Icon} size={16} />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+              <HugeiconsIcon icon={Cancel01Icon} size={16} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Close panel</TooltipContent>
+        </Tooltip>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin">
