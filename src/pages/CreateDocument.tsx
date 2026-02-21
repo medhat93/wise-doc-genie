@@ -631,9 +631,6 @@ const CreateDocument = () => {
                     }`}
                     onClick={() => handleQuickAction(action.id)}
                   >
-                    {action.id === "drive" && connectedCount > 0 && (
-                      <div className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-emerald-500" />
-                    )}
                     {action.id === "library" ? (
                       <div className="rounded-full p-2.5 w-fit bg-brand-indigo/10">
                         <img src={signitLogo} alt="Signit" className="h-5 w-auto" />
@@ -703,12 +700,6 @@ const CreateDocument = () => {
                     }`}
                     onClick={() => setActiveFilter(filter.id)}
                   >
-                    {filter.dotColor && (
-                      <div
-                        className="h-2 w-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: filter.dotColor }}
-                      />
-                    )}
                     {filter.label}
                   </button>
                 ))}
