@@ -38,92 +38,103 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
   const badgeLabel = categoryBadgeMap[template.name] || template.category;
   const isUserTemplate = template.source === "user";
 
-  const previewArea = isUserTemplate ? (
-    <div className={`relative bg-muted ${tall ? "h-[160px]" : "h-[140px]"} rounded-t-lg flex items-start justify-center`}>
-      <MutedDocumentLines />
-      {showSourceBadge && (
-        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-background border flex items-center justify-center">
-          <HugeiconsIcon icon={UserIcon} size={12} className="text-muted-foreground" />
-        </div>
-      )}
-      {template.isShared && (
-        <div className="absolute top-2 left-2 h-5 w-5 rounded-full bg-background border flex items-center justify-center">
-          <HugeiconsIcon icon={Share01Icon} size={12} className="text-muted-foreground" />
-        </div>
-      )}
-      <div className="absolute inset-0 bg-black/40 rounded-t-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button variant="secondary" size="sm" onClick={() => onUse(template)}>
-          Use template
-        </Button>
+  const sourceBadge = isUserTemplate ? (
+    showSourceBadge && (
+      <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-background border flex items-center justify-center">
+        <HugeiconsIcon icon={UserIcon} size={12} className="text-muted-foreground" />
       </div>
-    </div>
+    )
   ) : (
-    <div className={`relative bg-gradient-to-br ${template.gradient} ${tall ? "h-[160px]" : "h-[140px]"} rounded-t-lg`}>
-      <DocumentLines />
-      {showSourceBadge && (
-        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white backdrop-blur-sm flex items-center justify-center">
-          <HugeiconsIcon icon={DashboardSquare01Icon} size={12} className="text-white" />
-        </div>
-      )}
-      {!showSourceBadge && (
-        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white flex items-center justify-center">
-          <img src={signitLogo} alt="Signit" className="h-3 w-3 object-contain" />
-        </div>
-      )}
-      <div className="absolute inset-0 bg-black/50 rounded-t-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button variant="secondary" size="sm" onClick={() => onUse(template)}>
-          Use template
-        </Button>
+    showSourceBadge ? (
+      <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white backdrop-blur-sm flex items-center justify-center">
+        <HugeiconsIcon icon={DashboardSquare01Icon} size={12} className="text-white" />
       </div>
-    </div>
+    ) : (
+      <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white flex items-center justify-center">
+        <img src={signitLogo} alt="Signit" className="h-3 w-3 object-contain" />
+      </div>
+    )
   );
+
+  const thumbnailBg = isUserTemplate
+    ? "bg-muted"
+    : `bg-gradient-to-br ${template.gradient}`;
 
   return (
     <Card className="group relative overflow-hidden cursor-pointer hover:shadow-md transition-shadow h-full flex flex-col">
-      {previewArea}
-      <div className="p-3 flex-1">
-        <p className="font-semibold text-sm">{template.name}</p>
-        {tall && (
-          <>
-            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{template.description}</p>
-            {template.isShared && template.sharedBy && (
-              <div className="flex items-center gap-1.5 mt-1">
-                <Avatar className="h-4 w-4">
-                  <AvatarFallback className="text-[8px] bg-muted">{template.sharedByInitials}</AvatarFallback>
-                </Avatar>
-                <p className="text-xs text-muted-foreground">Shared by {template.sharedBy}</p>
-              </div>
-            )}
-            {!template.isShared && template.subtitle && (
-              <p className="text-xs text-muted-foreground/70 mt-0.5">{template.subtitle}</p>
-            )}
-          </>
+      {/* Thumbnail with preview on hover */}
+      <div
+        className={`relative ${thumbnailBg} ${tall ? "h-[140px]" : "h-[120px]"} rounded-t-lg flex items-start justify-center`}
+      >
+        {isUserTemplate ? <MutedDocumentLines /> : <DocumentLines />}
+        {sourceBadge}
+        {template.isShared && (
+          <div className="absolute top-2 left-2 h-5 w-5 rounded-full bg-background border flex items-center justify-center">
+            <HugeiconsIcon icon={Share01Icon} size={12} className="text-muted-foreground" />
+          </div>
         )}
-        <div className="flex items-center gap-2 mt-1.5">
-          <Badge variant="secondary" className="text-xs">{badgeLabel}</Badge>
-          <span className="text-xs text-muted-foreground">{template.pageCount} {template.pageCount === 1 ? "page" : "pages"}</span>
+        {/* Preview overlay on hover */}
+        <div className="absolute inset-0 bg-black/50 rounded-t-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="gap-1.5"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview(template);
+            }}
+          >
+            <HugeiconsIcon icon={ViewIcon} size={14} />
+            Preview
+          </Button>
         </div>
       </div>
-      {tall && (
-        <div className="px-3 pb-3 flex items-center gap-2">
+
+      {/* Info + Add button */}
+      <div className="p-3 flex-1 flex flex-col">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm truncate">{template.name}</p>
+            {tall && (
+              <>
+                <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{template.description}</p>
+                {template.isShared && template.sharedBy && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Avatar className="h-4 w-4">
+                      <AvatarFallback className="text-[8px] bg-muted">{template.sharedByInitials}</AvatarFallback>
+                    </Avatar>
+                    <p className="text-xs text-muted-foreground">Shared by {template.sharedBy}</p>
+                  </div>
+                )}
+                {!template.isShared && template.subtitle && (
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">{template.subtitle}</p>
+                )}
+              </>
+            )}
+          </div>
+          {/* Always-visible Add button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => onPreview(template)}>
-                <HugeiconsIcon icon={ViewIcon} size={14} className="mr-1" /> Preview
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Preview this template</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="default" size="sm" onClick={() => onUse(template)}>
-                <HugeiconsIcon icon={Add01Icon} size={14} className="mr-1" /> Use
+              <Button
+                variant="default"
+                size="icon"
+                className="h-7 w-7 rounded-full flex-shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUse(template);
+                }}
+              >
+                <HugeiconsIcon icon={Add01Icon} size={14} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Add to document queue</TooltipContent>
           </Tooltip>
         </div>
-      )}
+        <div className="flex items-center gap-2 mt-1.5">
+          <Badge variant="secondary" className="text-xs">{badgeLabel}</Badge>
+          <span className="text-xs text-muted-foreground">{template.pageCount} {template.pageCount === 1 ? "page" : "pages"}</span>
+        </div>
+      </div>
     </Card>
   );
 };
