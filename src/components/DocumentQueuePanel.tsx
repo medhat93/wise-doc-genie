@@ -112,7 +112,7 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
     const isGenerating = doc.status === "uploading";
     return (
       <div className={`w-full aspect-[4/3] rounded-t-lg bg-muted/50 border-b flex items-center justify-center ${isGenerating ? "animate-pulse" : ""}`}>
-        <AiIcon size={24} className={isGenerating ? "animate-spin" : ""} />
+        <AiIcon size={32} className={isGenerating ? "animate-spin" : ""} />
       </div>
     );
   }
@@ -138,7 +138,7 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
         animate={{ opacity: 1, scale: 1 }}
         className={`w-full aspect-[4/3] rounded-t-lg flex items-center justify-center ${fileStyle.bg}`}
       >
-        <HugeiconsIcon icon={fileStyle.icon} size={28} className={fileStyle.color} />
+        <HugeiconsIcon icon={fileStyle.icon} size={36} className={fileStyle.color} />
       </motion.div>
       {doc.isDriveImport && (
         <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
@@ -187,9 +187,9 @@ function SortableDocCard({
       <VerticalThumbnail doc={doc} />
 
       {/* Info + delete row */}
-      <div className="p-2 flex items-start gap-1.5">
+      <div className="p-2.5 flex items-start gap-1.5">
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-medium truncate leading-tight">{doc.name}</p>
+          <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
           {doc.isAI && doc.status === "uploading" ? (
             <AnimatePresence mode="wait">
               <motion.p
@@ -198,13 +198,13 @@ function SortableDocCard({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.2 }}
-                className="text-[10px] ai-thinking-text truncate mt-0.5"
+                className="text-[11px] ai-thinking-text truncate mt-0.5"
               >
                 {doc.aiThinkingStep || "AI is generating..."}
               </motion.p>
             </AnimatePresence>
           ) : (
-            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+            <p className="text-[11px] text-muted-foreground truncate mt-0.5">
               {doc.isTemplate
                 ? `${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
                 : doc.status === "uploading"
@@ -222,7 +222,7 @@ function SortableDocCard({
               onClick={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <HugeiconsIcon icon={Delete02Icon} size={12} className="text-destructive" />
+              <HugeiconsIcon icon={Delete02Icon} size={14} className="text-destructive" />
             </button>
           </AlertDialogTrigger>
           <AlertDialogContent>
