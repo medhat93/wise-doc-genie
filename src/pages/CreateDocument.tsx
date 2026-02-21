@@ -18,8 +18,8 @@ import {
   FileValidationIcon,
   SentIcon,
   Cancel01Icon,
-  FileAddIcon,
-} from "@hugeicons/core-free-icons";
+  FileAddIcon } from
+"@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -38,8 +38,8 @@ import {
   libraryCategories,
   myTemplateCategories,
   quickFilterCategories,
-  Template,
-} from "@/data/templates";
+  Template } from
+"@/data/templates";
 import { UploadedDocument, DriveFile, DRIVE_PROVIDERS } from "@/types/document";
 import TemplateCard from "@/components/TemplateCard";
 import TemplatePreviewDialog from "@/components/TemplatePreviewDialog";
@@ -56,9 +56,9 @@ import signitLogo from "@/assets/signit-logo.png";
 // ─── AI Suggestion Templates ──────────────────────────────────────────────────
 
 const AI_SUGGESTIONS = [
-  {
-    label: "Sales Proposal",
-    template: `Draft a professional sales proposal for [Company Name] offering [Product/Service].
+{
+  label: "Sales Proposal",
+  template: `Draft a professional sales proposal for [Company Name] offering [Product/Service].
 
 Key details to include:
 
@@ -70,11 +70,11 @@ Pricing structure: [Fixed / Tiered / Custom]
 
 Timeline: [Duration]
 
-Terms and conditions`,
-  },
-  {
-    label: "Non-Disclosure Agreement",
-    template: `Draft a mutual non-disclosure agreement between [Party A] and [Party B] for the purpose of [Business Purpose].
+Terms and conditions`
+},
+{
+  label: "Non-Disclosure Agreement",
+  template: `Draft a mutual non-disclosure agreement between [Party A] and [Party B] for the purpose of [Business Purpose].
 
 Key details to include:
 
@@ -86,11 +86,11 @@ Duration of confidentiality: [1 year / 2 years / Indefinite]
 
 Permitted disclosures and exceptions
 
-Governing jurisdiction: [State/Country]`,
-  },
-  {
-    label: "Service Contract",
-    template: `Draft a service agreement between [Service Provider] and [Client] for [Type of Service].
+Governing jurisdiction: [State/Country]`
+},
+{
+  label: "Service Contract",
+  template: `Draft a service agreement between [Service Provider] and [Client] for [Type of Service].
 
 Key details to include:
 
@@ -102,11 +102,11 @@ Contract duration: [Start Date] to [End Date]
 
 Termination and cancellation policy
 
-Liability and indemnification clauses`,
-  },
-  {
-    label: "Employment Offer Letter",
-    template: `Draft an employment offer letter for the position of [Job Title] at [Company Name].
+Liability and indemnification clauses`
+},
+{
+  label: "Employment Offer Letter",
+  template: `Draft an employment offer letter for the position of [Job Title] at [Company Name].
 
 Key details to include:
 
@@ -118,11 +118,11 @@ Employment type: [Full-time / Part-time / Contract]
 
 Benefits and perks overview
 
-Reporting structure and location`,
-  },
-  {
-    label: "Consulting Agreement",
-    template: `Draft a consulting agreement between [Consultant Name/Firm] and [Client Company] for [Consulting Area].
+Reporting structure and location`
+},
+{
+  label: "Consulting Agreement",
+  template: `Draft a consulting agreement between [Consultant Name/Firm] and [Client Company] for [Consulting Area].
 
 Key details to include:
 
@@ -134,68 +134,68 @@ Estimated duration: [Timeline]
 
 Deliverables and milestones
 
-Intellectual property ownership`,
-  },
-];
+Intellectual property ownership`
+}];
+
 
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 
 const fullQuickActions = [
-  {
-    id: "upload",
-    title: "Upload a document",
-    description: "PDF, DOCX, PNG, JPG up to 50MB",
-    icon: CloudUploadIcon,
-    accent: "bg-primary/10 text-primary",
-    highlight: true,
-    sub: "or drag & drop anywhere",
-  },
-  {
-    id: "ai",
-    title: "Start with AI",
-    description: "Describe your document and AI will draft it",
-    icon: null as any,
-    accent: "bg-white border text-violet-600",
-    customIcon: true,
-  },
-  {
-    id: "drive",
-    title: "Import from Cloud",
-    description: "Google Drive, OneDrive, Dropbox",
-    icon: CloudIcon,
-    accent: "bg-orange-500/10 text-orange-600",
-  },
-  {
-    id: "library",
-    title: "Template Library",
-    description: "Browse all templates",
-    icon: DashboardSquare01Icon,
-    accent: "bg-brand-indigo/10 text-brand-indigo",
-  },
-];
+{
+  id: "upload",
+  title: "Upload a document",
+  description: "PDF, DOCX, PNG, JPG up to 50MB",
+  icon: CloudUploadIcon,
+  accent: "bg-primary/10 text-primary",
+  highlight: true,
+  sub: "or drag & drop anywhere"
+},
+{
+  id: "ai",
+  title: "Start with AI",
+  description: "Describe your document and AI will draft it",
+  icon: null as any,
+  accent: "bg-white border text-violet-600",
+  customIcon: true
+},
+{
+  id: "drive",
+  title: "Import from Cloud",
+  description: "Google Drive, OneDrive, Dropbox",
+  icon: CloudIcon,
+  accent: "bg-orange-500/10 text-orange-600"
+},
+{
+  id: "library",
+  title: "Template Library",
+  description: "Browse all templates",
+  icon: DashboardSquare01Icon,
+  accent: "bg-brand-indigo/10 text-brand-indigo"
+}];
+
 
 const esignQuickActions = [fullQuickActions[0], fullQuickActions[2]];
 
 // ─── Recent Templates ─────────────────────────────────────────────────────────
 
 const recentTemplates: Template[] = [
-  libraryTemplates[0],
-  userTemplates[0],
-  libraryTemplates[1],
-  userTemplates[4],
-  libraryTemplates[2],
-  libraryTemplates[3],
-];
+libraryTemplates[0],
+userTemplates[0],
+libraryTemplates[1],
+userTemplates[4],
+libraryTemplates[2],
+libraryTemplates[3]];
+
 
 const esignRecentTemplates: Template[] = [
-  userTemplates[0],
-  userTemplates[1],
-  userTemplates[2],
-  userTemplates[3],
-  userTemplates[4],
-  userTemplates[5],
-  sharedTemplates[0],
-];
+userTemplates[0],
+userTemplates[1],
+userTemplates[2],
+userTemplates[3],
+userTemplates[4],
+userTemplates[5],
+sharedTemplates[0]];
+
 
 const allMyTemplates = [...userTemplates, ...sharedTemplates];
 
@@ -241,7 +241,7 @@ const CreateDocument = () => {
   const [connectedProviders, setConnectedProviders] = useState<Record<string, boolean>>({
     google_drive: false,
     dropbox: true,
-    onedrive: false,
+    onedrive: false
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -253,9 +253,9 @@ const CreateDocument = () => {
   const allComplete = documents.length > 0 && documents.every((d) => d.status === "complete");
   const count = documents.length;
 
-  const connectedDriveIds = Object.entries(connectedProviders)
-    .filter(([, v]) => v)
-    .map(([k]) => k);
+  const connectedDriveIds = Object.entries(connectedProviders).
+  filter(([, v]) => v).
+  map(([k]) => k);
   const connectedCount = connectedDriveIds.length;
 
   // ─── File handling ────────────────────────────────────────────────────────
@@ -270,7 +270,7 @@ const CreateDocument = () => {
       type: file.type,
       progress: 0,
       status: "uploading" as const,
-      pageCount: Math.floor(Math.random() * 20) + 1,
+      pageCount: Math.floor(Math.random() * 20) + 1
     }));
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
@@ -285,15 +285,15 @@ const CreateDocument = () => {
       const timer = setTimeout(() => {
         const interval = setInterval(() => {
           setDocuments((prev) =>
-            prev.map((d) => {
-              if (d.id !== doc.id) return d;
-              const newProgress = d.progress + Math.floor(Math.random() * 11) + 5;
-              if (newProgress >= 100) {
-                clearInterval(interval);
-                return { ...d, progress: 100, status: "complete" as const };
-              }
-              return { ...d, progress: newProgress };
-            }),
+          prev.map((d) => {
+            if (d.id !== doc.id) return d;
+            const newProgress = d.progress + Math.floor(Math.random() * 11) + 5;
+            if (newProgress >= 100) {
+              clearInterval(interval);
+              return { ...d, progress: 100, status: "complete" as const };
+            }
+            return { ...d, progress: newProgress };
+          })
           );
         }, 200);
         intervals.push(interval);
@@ -366,13 +366,13 @@ const CreateDocument = () => {
       status: "uploading" as const,
       pageCount: Math.floor(Math.random() * 15) + 1,
       isDriveImport: true,
-      driveProvider: providerName,
+      driveProvider: providerName
     }));
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
     toast({
       title: `Importing from ${providerName}`,
-      description: `${files.length} file${files.length !== 1 ? "s" : ""} are being imported.`,
+      description: `${files.length} file${files.length !== 1 ? "s" : ""} are being imported.`
     });
   }, []);
 
@@ -403,7 +403,7 @@ const CreateDocument = () => {
     setAiSelectedSuggestion(null);
     toast({
       title: "Opening editor with AI draft...",
-      description: "Your document is being generated.",
+      description: "Your document is being generated."
     });
     navigate(`/editor?ai=true&type=${encodeURIComponent(docType)}`);
   };
@@ -411,7 +411,7 @@ const CreateDocument = () => {
   const handleStartBlank = () => {
     toast({
       title: "Opening blank editor...",
-      description: "Starting a new document.",
+      description: "Starting a new document."
     });
     navigate("/editor");
   };
@@ -428,13 +428,13 @@ const CreateDocument = () => {
       isTemplate: true,
       isUserTemplate: template.source === "user",
       gradient: template.gradient,
-      pageCount: template.pageCount,
+      pageCount: template.pageCount
     };
     setDocuments((prev) => [...prev, queued]);
     setQueueManuallyOpened(true);
     toast({
       title: "Template added to queue",
-      description: `"${template.name}" is ready in your document queue.`,
+      description: `"${template.name}" is ready in your document queue.`
     });
   }, []);
 
@@ -444,9 +444,9 @@ const CreateDocument = () => {
       return userTemplates.filter((t) => {
         const matchCat = myCategory === "All" || t.category === myCategory;
         const matchSearch =
-          mySearchQuery === "" ||
-          t.name.toLowerCase().includes(mySearchQuery.toLowerCase()) ||
-          t.description.toLowerCase().includes(mySearchQuery.toLowerCase());
+        mySearchQuery === "" ||
+        t.name.toLowerCase().includes(mySearchQuery.toLowerCase()) ||
+        t.description.toLowerCase().includes(mySearchQuery.toLowerCase());
         return matchCat && matchSearch;
       });
     }
@@ -454,9 +454,9 @@ const CreateDocument = () => {
       return sharedTemplates.filter((t) => {
         const matchCat = sharedCategory === "All" || t.category === sharedCategory;
         const matchSearch =
-          sharedSearchQuery === "" ||
-          t.name.toLowerCase().includes(sharedSearchQuery.toLowerCase()) ||
-          t.description.toLowerCase().includes(sharedSearchQuery.toLowerCase());
+        sharedSearchQuery === "" ||
+        t.name.toLowerCase().includes(sharedSearchQuery.toLowerCase()) ||
+        t.description.toLowerCase().includes(sharedSearchQuery.toLowerCase());
         return matchCat && matchSearch;
       });
     }
@@ -464,9 +464,9 @@ const CreateDocument = () => {
       return libraryTemplates.filter((t) => {
         const matchCat = libCategory === "All" || t.category === libCategory;
         const matchSearch =
-          libSearchQuery === "" ||
-          t.name.toLowerCase().includes(libSearchQuery.toLowerCase()) ||
-          t.description.toLowerCase().includes(libSearchQuery.toLowerCase());
+        libSearchQuery === "" ||
+        t.name.toLowerCase().includes(libSearchQuery.toLowerCase()) ||
+        t.description.toLowerCase().includes(libSearchQuery.toLowerCase());
         return matchCat && matchSearch;
       });
     }
@@ -477,17 +477,17 @@ const CreateDocument = () => {
   const filteredTemplates = isDriveFilter ? [] : getFilteredTemplates();
 
   const currentSearch =
-    activeFilter === "created" ? mySearchQuery : activeFilter === "shared" ? sharedSearchQuery : libSearchQuery;
+  activeFilter === "created" ? mySearchQuery : activeFilter === "shared" ? sharedSearchQuery : libSearchQuery;
   const setCurrentSearch =
-    activeFilter === "created"
-      ? setMySearchQuery
-      : activeFilter === "shared"
-        ? setSharedSearchQuery
-        : setLibSearchQuery;
+  activeFilter === "created" ?
+  setMySearchQuery :
+  activeFilter === "shared" ?
+  setSharedSearchQuery :
+  setLibSearchQuery;
   const currentCategory =
-    activeFilter === "created" ? myCategory : activeFilter === "shared" ? sharedCategory : libCategory;
+  activeFilter === "created" ? myCategory : activeFilter === "shared" ? sharedCategory : libCategory;
   const setCurrentCategory =
-    activeFilter === "created" ? setMyCategory : activeFilter === "shared" ? setSharedCategory : setLibCategory;
+  activeFilter === "created" ? setMyCategory : activeFilter === "shared" ? setSharedCategory : setLibCategory;
   const currentCategories = activeFilter === "library" ? libraryCategories : myTemplateCategories;
   const currentQuickCategories = activeFilter === "library" ? quickFilterCategories : myTemplateCategories.slice(0, 4);
 
@@ -499,16 +499,16 @@ const CreateDocument = () => {
   const actions = isEsign ? esignQuickActions : fullQuickActions;
 
   // Build filter tabs
-  const baseFilters: { id: TemplateFilter; label: string; dotColor?: string }[] = isEsign
-    ? [
-        { id: "created", label: "My Templates" },
-        { id: "shared", label: "Shared Templates" },
-      ]
-    : [
-        { id: "created", label: "My Templates" },
-        { id: "shared", label: "Shared Templates" },
-        { id: "library", label: "Signit Library" },
-      ];
+  const baseFilters: {id: TemplateFilter;label: string;dotColor?: string;}[] = isEsign ?
+  [
+  { id: "created", label: "My Templates" },
+  { id: "shared", label: "Shared Templates" }] :
+
+  [
+  { id: "created", label: "My Templates" },
+  { id: "shared", label: "Shared Templates" },
+  { id: "library", label: "Signit Library" }];
+
 
   const driveFilters = connectedDriveIds.map((id) => {
     const provider = DRIVE_PROVIDERS.find((p) => p.id === id);
@@ -520,7 +520,7 @@ const CreateDocument = () => {
   // ─── Edit button label ────────────────────────────────────────────────────
 
   const editButtonLabel =
-    count === 0 ? "Start a Blank Document" : count === 1 ? "Edit Document" : `Edit ${count} Documents`;
+  count === 0 ? "Start a Blank Document" : count === 1 ? "Edit Document" : `Edit ${count} Documents`;
   const editButtonIcon = count === 0 ? FileAddIcon : Edit02Icon;
 
   return (
@@ -529,15 +529,15 @@ const CreateDocument = () => {
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
-      onDrop={handleDrop}
-    >
+      onDrop={handleDrop}>
+
       {/* ─── Header ──────────────────────────────────────────────────────── */}
       <header className="h-auto min-h-[3.5rem] md:h-16 border-b bg-background flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 flex-shrink-0 gap-2 sm:gap-0">
         <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
           <nav className="flex items-center gap-1.5 text-sm">
             <span className="text-muted-foreground hidden sm:inline">Documents</span>
-            <HugeiconsIcon icon={ArrowRight02Icon} size={14} className="text-muted-foreground hidden sm:inline" />
-            <span className="font-medium text-sm">{isEsign ? "Send for signature" : "Start a new document"}</span>
+            
+            <span className="font-medium text-sm">{isEsign ? "Send for signature" : "Create new"}</span>
           </nav>
 
           <Tooltip>
@@ -550,8 +550,8 @@ const CreateDocument = () => {
                   id="mode-toggle"
                   checked={isEsign}
                   onCheckedChange={(checked) => setMode(checked ? "esign" : "full")}
-                  className="scale-75"
-                />
+                  className="scale-75" />
+
               </div>
             </TooltipTrigger>
             <TooltipContent>Toggle between full creation and eSign-only mode</TooltipContent>
@@ -559,30 +559,30 @@ const CreateDocument = () => {
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          {hasDocuments && isMobile && (
-            <Button variant="outline" size="sm" onClick={() => setMobileQueueOpen(true)} className="mr-auto sm:mr-0">
+          {hasDocuments && isMobile &&
+          <Button variant="outline" size="sm" onClick={() => setMobileQueueOpen(true)} className="mr-auto sm:mr-0">
               <HugeiconsIcon icon={Files01Icon} size={16} className="mr-1.5" />
               Queue ({count})
             </Button>
-          )}
-          {isEsign ? (
-            <Tooltip>
+          }
+          {isEsign ?
+          <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant="default"
-                  size="sm"
-                  disabled={isEmpty || !allComplete}
-                  className={isEmpty || !allComplete ? "opacity-50" : ""}
-                >
+                variant="default"
+                size="sm"
+                disabled={isEmpty || !allComplete}
+                className={isEmpty || !allComplete ? "opacity-50" : ""}>
+
                   <HugeiconsIcon icon={SentIcon} size={16} className="mr-1.5" />
                   <span className="hidden sm:inline">Send for signature</span>
                   <span className="sm:hidden">Send</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Send documents for eSignature</TooltipContent>
-            </Tooltip>
-          ) : (
-            <>
+            </Tooltip> :
+
+          <>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="outline" size="sm" disabled={isEmpty} className={isEmpty ? "opacity-50" : ""}>
@@ -605,7 +605,7 @@ const CreateDocument = () => {
                 </TooltipContent>
               </Tooltip>
             </>
-          )}
+          }
         </div>
       </header>
 
@@ -616,47 +616,47 @@ const CreateDocument = () => {
             <section>
               <div
                 className={`grid gap-3 md:gap-4 ${
-                  isEsign ? "grid-cols-2 max-w-lg mx-auto" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
-                }`}
-              >
-                {actions.map((action) => (
-                  <Card
-                    key={action.id}
-                    className={`p-5 cursor-pointer transition-all relative group ${
-                      action.highlight
-                        ? "ring-1 ring-primary/20 hover:shadow-md"
-                        : action.id === "library"
-                          ? "ring-1 ring-brand-indigo/20 hover:ring-brand-indigo/40 hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.3)]"
-                          : action.id === "ai"
-                            ? "hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.25)]"
-                            : "hover:shadow-md"
-                    }`}
-                    onClick={() => handleQuickAction(action.id)}
-                  >
-                    {action.id === "drive" && connectedCount > 0 && (
-                      <div className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-emerald-500" />
-                    )}
-                    {action.id === "library" ? (
-                      <div className="rounded-full p-2.5 w-fit bg-brand-indigo/10">
+                isEsign ? "grid-cols-2 max-w-lg mx-auto" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"}`
+                }>
+
+                {actions.map((action) =>
+                <Card
+                  key={action.id}
+                  className={`p-5 cursor-pointer transition-all relative group ${
+                  action.highlight ?
+                  "ring-1 ring-primary/20 hover:shadow-md" :
+                  action.id === "library" ?
+                  "ring-1 ring-brand-indigo/20 hover:ring-brand-indigo/40 hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.3)]" :
+                  action.id === "ai" ?
+                  "hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.25)]" :
+                  "hover:shadow-md"}`
+                  }
+                  onClick={() => handleQuickAction(action.id)}>
+
+                    {action.id === "drive" && connectedCount > 0 &&
+                  <div className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-emerald-500" />
+                  }
+                    {action.id === "library" ?
+                  <div className="rounded-full p-2.5 w-fit bg-brand-indigo/10">
                         <img src={signitLogo} alt="Signit" className="h-5 w-auto" />
+                      </div> :
+
+                  <div className={`rounded-full p-3 w-fit ${action.accent}`}>
+                        {(action as any).customIcon ?
+                    <AiIcon
+                      size={20}
+                      className="transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]" /> :
+
+
+                    <HugeiconsIcon icon={action.icon} size={20} />
+                    }
                       </div>
-                    ) : (
-                      <div className={`rounded-full p-3 w-fit ${action.accent}`}>
-                        {(action as any).customIcon ? (
-                          <AiIcon
-                            size={20}
-                            className="transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]"
-                          />
-                        ) : (
-                          <HugeiconsIcon icon={action.icon} size={20} />
-                        )}
-                      </div>
-                    )}
+                  }
                     <h3 className="font-semibold text-sm mt-3">{action.title}</h3>
                     <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
                     {action.sub && <p className="text-xs text-muted-foreground/70 mt-1">{action.sub}</p>}
                   </Card>
-                ))}
+                )}
               </div>
             </section>
 
@@ -667,23 +667,23 @@ const CreateDocument = () => {
                 <Button
                   variant="link"
                   className="text-sm"
-                  onClick={() => templateSectionRef.current?.scrollIntoView({ behavior: "smooth" })}
-                >
+                  onClick={() => templateSectionRef.current?.scrollIntoView({ behavior: "smooth" })}>
+
                   View all <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
                 </Button>
               </div>
               <ScrollArea className="mt-4 w-full">
                 <div className="flex gap-4 pb-4 items-stretch">
-                  {(isEsign ? esignRecentTemplates : recentTemplates).map((template) => (
-                    <div key={template.id} className="w-[220px] flex-shrink-0 h-full">
+                  {(isEsign ? esignRecentTemplates : recentTemplates).map((template) =>
+                  <div key={template.id} className="w-[220px] flex-shrink-0 h-full">
                       <TemplateCard
-                        template={template}
-                        showSourceBadge={!isEsign}
-                        onPreview={openPreview}
-                        onUse={handleUseTemplate}
-                      />
+                      template={template}
+                      showSourceBadge={!isEsign}
+                      onPreview={openPreview}
+                      onUse={handleUseTemplate} />
+
                     </div>
-                  ))}
+                  )}
                 </div>
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
@@ -695,87 +695,87 @@ const CreateDocument = () => {
 
               {/* Filter row */}
               <div className="mt-4 flex items-center gap-6 border-b overflow-x-auto scrollbar-none">
-                {allFilters.map((filter) => (
-                  <button
-                    key={filter.id}
-                    className={`pb-2 text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                      activeFilter === filter.id
-                        ? "text-foreground border-b-2 border-primary"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                    onClick={() => setActiveFilter(filter.id)}
-                  >
-                    {filter.dotColor && (
-                      <div
-                        className="h-2 w-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: filter.dotColor }}
-                      />
-                    )}
+                {allFilters.map((filter) =>
+                <button
+                  key={filter.id}
+                  className={`pb-2 text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                  activeFilter === filter.id ?
+                  "text-foreground border-b-2 border-primary" :
+                  "text-muted-foreground hover:text-foreground"}`
+                  }
+                  onClick={() => setActiveFilter(filter.id)}>
+
+                    {filter.dotColor &&
+                  <div
+                    className="h-2 w-2 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: filter.dotColor }} />
+
+                  }
                     {filter.label}
                   </button>
-                ))}
+                )}
               </div>
 
               {/* Drive browser content */}
-              {isDriveFilter && (
-                <div className="mt-4">
+              {isDriveFilter &&
+              <div className="mt-4">
                   <DriveBrowserView key={activeFilter} providerId={activeFilter} onImportFiles={handleDriveImport} />
                 </div>
-              )}
+              }
 
               {/* Template content */}
-              {!isDriveFilter && (
-                <>
+              {!isDriveFilter &&
+              <>
                   <div className="relative max-w-md mt-4">
                     <HugeiconsIcon
-                      icon={Search01Icon}
-                      size={16}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    />
+                    icon={Search01Icon}
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+
 
                     <Input
-                      placeholder={`Search ${activeFilter === "library" ? "template library" : activeFilter === "shared" ? "shared templates" : "my templates"}...`}
-                      className="pl-10"
-                      value={currentSearch}
-                      onChange={(e) => setCurrentSearch(e.target.value)}
-                    />
+                    placeholder={`Search ${activeFilter === "library" ? "template library" : activeFilter === "shared" ? "shared templates" : "my templates"}...`}
+                    className="pl-10"
+                    value={currentSearch}
+                    onChange={(e) => setCurrentSearch(e.target.value)} />
+
                   </div>
                   <div className="mt-3">
                     <CategoryFilter
-                      categories={currentCategories}
-                      quickCategories={currentQuickCategories}
-                      value={currentCategory}
-                      onChange={setCurrentCategory}
-                    />
+                    categories={currentCategories}
+                    quickCategories={currentQuickCategories}
+                    value={currentCategory}
+                    onChange={setCurrentCategory} />
+
                   </div>
 
-                  {filteredTemplates.length > 0 ? (
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredTemplates.map((template) => (
-                        <TemplateCard
-                          key={template.id}
-                          template={template}
-                          tall
-                          onPreview={openPreview}
-                          onUse={handleUseTemplate}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-16 flex flex-col items-center text-center">
+                  {filteredTemplates.length > 0 ?
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredTemplates.map((template) =>
+                  <TemplateCard
+                    key={template.id}
+                    template={template}
+                    tall
+                    onPreview={openPreview}
+                    onUse={handleUseTemplate} />
+
+                  )}
+                    </div> :
+
+                <div className="mt-16 flex flex-col items-center text-center">
                       <HugeiconsIcon icon={File01Icon} size={48} className="text-muted-foreground/30" />
                       <p className="text-sm font-medium text-muted-foreground mt-4">No templates found</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {activeFilter === "created"
-                          ? "Save a document as a template to reuse it later"
-                          : activeFilter === "shared"
-                            ? "No templates have been shared with you yet"
-                            : "Try a different search or category"}
+                        {activeFilter === "created" ?
+                    "Save a document as a template to reuse it later" :
+                    activeFilter === "shared" ?
+                    "No templates have been shared with you yet" :
+                    "Try a different search or category"}
                       </p>
                     </div>
-                  )}
+                }
                 </>
-              )}
+              }
             </section>
 
             {/* ─── eSign Drop Zone ─────────────────────────────────────── */}
@@ -783,42 +783,42 @@ const CreateDocument = () => {
         </main>
 
         {/* ─── Desktop Queue Panel ───────────────────────────────────── */}
-        {!isMobile && (
-          <AnimatePresence>
-            {showQueue && (
-              <motion.div
-                initial={{ x: 190 }}
-                animate={{ x: 0 }}
-                exit={{ x: 190 }}
-                transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              >
+        {!isMobile &&
+        <AnimatePresence>
+            {showQueue &&
+          <motion.div
+            initial={{ x: 190 }}
+            animate={{ x: 0 }}
+            exit={{ x: 190 }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}>
+
                 <DocumentQueuePanel
-                  documents={documents}
-                  setDocuments={setDocuments}
-                  onAddFiles={() => fileInputRef.current?.click()}
-                  mode={mode}
-                  onEditDocuments={count > 0 ? () => navigate("/editor") : undefined}
-                />
+              documents={documents}
+              setDocuments={setDocuments}
+              onAddFiles={() => fileInputRef.current?.click()}
+              mode={mode}
+              onEditDocuments={count > 0 ? () => navigate("/editor") : undefined} />
+
               </motion.div>
-            )}
+          }
           </AnimatePresence>
-        )}
+        }
 
         {/* Mobile queue drawer */}
-        {isMobile && (
-          <Drawer open={mobileQueueOpen} onOpenChange={setMobileQueueOpen}>
+        {isMobile &&
+        <Drawer open={mobileQueueOpen} onOpenChange={setMobileQueueOpen}>
             <DrawerContent className="max-h-[85vh]">
               <DocumentQueuePanel
-                documents={documents}
-                setDocuments={setDocuments}
-                onAddFiles={() => fileInputRef.current?.click()}
-                mode={mode}
-                isMobile
-                onEditDocuments={count > 0 ? () => navigate("/editor") : undefined}
-              />
+              documents={documents}
+              setDocuments={setDocuments}
+              onAddFiles={() => fileInputRef.current?.click()}
+              mode={mode}
+              isMobile
+              onEditDocuments={count > 0 ? () => navigate("/editor") : undefined} />
+
             </DrawerContent>
           </Drawer>
-        )}
+        }
       </div>
 
       <input
@@ -830,8 +830,8 @@ const CreateDocument = () => {
         onChange={(e) => {
           if (e.target.files) addFiles(e.target.files);
           e.target.value = "";
-        }}
-      />
+        }} />
+
 
       <AnimatePresence>{isDragActive && <DragDropOverlay />}</AnimatePresence>
 
@@ -839,8 +839,8 @@ const CreateDocument = () => {
         template={previewTemplate}
         open={previewOpen}
         onOpenChange={setPreviewOpen}
-        onUse={handleUseTemplate}
-      />
+        onUse={handleUseTemplate} />
+
 
       {/* ─── AI Dialog ───────────────────────────────────────────────── */}
       <Dialog
@@ -853,8 +853,8 @@ const CreateDocument = () => {
               setAiSelectedSuggestion(null);
             }
           }
-        }}
-      >
+        }}>
+
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -866,27 +866,27 @@ const CreateDocument = () => {
           <div className="space-y-4 py-2">
             {/* Document type pill */}
             <AnimatePresence>
-              {aiSelectedSuggestion && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
+              {aiSelectedSuggestion &&
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}>
+
                   <Label className="text-xs text-muted-foreground mb-1.5 block">Document type</Label>
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1 text-sm font-medium">
                       {aiSelectedSuggestion}
                       <button
-                        onClick={clearAISuggestion}
-                        className="hover:opacity-70 transition-opacity"
-                        disabled={aiGenerating}
-                      >
+                      onClick={clearAISuggestion}
+                      className="hover:opacity-70 transition-opacity"
+                      disabled={aiGenerating}>
+
                         <HugeiconsIcon icon={Cancel01Icon} size={14} />
                       </button>
                     </span>
                   </div>
                 </motion.div>
-              )}
+              }
             </AnimatePresence>
 
             <div>
@@ -896,23 +896,23 @@ const CreateDocument = () => {
                 className="min-h-[160px] resize-none"
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
-                disabled={aiGenerating}
-              />
+                disabled={aiGenerating} />
+
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {AI_SUGGESTIONS.map((s) => (
-                <Button
-                  key={s.label}
-                  variant={aiSelectedSuggestion === s.label ? "default" : "outline"}
-                  size="sm"
-                  className="rounded-full text-xs h-7"
-                  onClick={() => handleAISuggestionClick(s)}
-                  disabled={aiGenerating}
-                >
+              {AI_SUGGESTIONS.map((s) =>
+              <Button
+                key={s.label}
+                variant={aiSelectedSuggestion === s.label ? "default" : "outline"}
+                size="sm"
+                className="rounded-full text-xs h-7"
+                onClick={() => handleAISuggestionClick(s)}
+                disabled={aiGenerating}>
+
                   {s.label}
                 </Button>
-              ))}
+              )}
             </div>
           </div>
 
@@ -924,8 +924,8 @@ const CreateDocument = () => {
                 setAiPrompt("");
                 setAiSelectedSuggestion(null);
               }}
-              disabled={aiGenerating}
-            >
+              disabled={aiGenerating}>
+
               Cancel
             </Button>
             <Button onClick={handleAIGenerate} disabled={!aiPrompt.trim() || aiGenerating}>
@@ -943,10 +943,10 @@ const CreateDocument = () => {
         connectedProviders={connectedProviders}
         onConnect={handleDriveConnect}
         mode={driveConnectMode}
-        onSelectDrive={handleDriveSelect}
-      />
-    </div>
-  );
+        onSelectDrive={handleDriveSelect} />
+
+    </div>);
+
 };
 
 export default CreateDocument;
