@@ -165,13 +165,13 @@ function SortableDocCard({
 
   return (
     <Card ref={setNodeRef} style={style} className="group relative overflow-hidden">
-      {/* Drag handle overlay */}
+      {/* Drag handle - always visible */}
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-1 left-1 z-10 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded p-0.5"
+        className="absolute top-1.5 left-1.5 z-10 cursor-grab bg-background/80 backdrop-blur-sm rounded p-0.5 shadow-sm"
       >
-        <HugeiconsIcon icon={DragDropVerticalIcon} size={12} className="text-muted-foreground" />
+        <HugeiconsIcon icon={DragDropVerticalIcon} size={14} className="text-muted-foreground" />
       </div>
 
       {/* Delete button */}
@@ -356,7 +356,7 @@ const DocumentQueuePanel = ({
               items={documents.map((d) => d.id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 {documents.map((doc) => (
                   <SortableDocCard key={doc.id} doc={doc} onRemove={handleRemove} onPreview={setPreviewDoc} />
                 ))}
