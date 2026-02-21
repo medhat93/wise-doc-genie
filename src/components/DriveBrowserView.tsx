@@ -16,7 +16,7 @@ import { DriveFile, DRIVE_PROVIDERS } from "@/types/document";
 import { getDriveFiles, getDriveProviderRootName } from "@/data/driveFiles";
 
 const PAGE_SIZE = 25;
-const LOAD_DELAY_MS = 5000; // 5 seconds to see loading animation
+const LOAD_DELAY_MS = 2000; // 2 seconds to see loading animation
 
 interface DriveBrowserViewProps {
   providerId: string;
