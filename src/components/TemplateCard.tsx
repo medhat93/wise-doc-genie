@@ -101,7 +101,7 @@ const TemplateCard = ({ template, onPreview, onUse, tall }: TemplateCardProps) =
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">{template.name}</p>
-            {tall && template.description && (
+            {tall && template.description ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <p className="text-xs text-muted-foreground truncate mt-1">{template.description}</p>
@@ -110,7 +110,9 @@ const TemplateCard = ({ template, onPreview, onUse, tall }: TemplateCardProps) =
                   {template.description}
                 </TooltipContent>
               </Tooltip>
-            )}
+            ) : tall ? (
+              <p className="text-xs text-muted-foreground/50 italic mt-1">No description</p>
+            ) : null}
           </div>
           {/* Always-visible Add button */}
           <Tooltip>
@@ -131,7 +133,7 @@ const TemplateCard = ({ template, onPreview, onUse, tall }: TemplateCardProps) =
           </Tooltip>
         </div>
         <div className="flex items-center gap-2 mt-2">
-          {badgeLabel && <Badge variant="secondary" className="text-xs">{badgeLabel}</Badge>}
+          <Badge variant="secondary" className="text-xs">{badgeLabel || "Others"}</Badge>
           <span className="text-xs text-muted-foreground">{template.pageCount} {template.pageCount === 1 ? "page" : "pages"}</span>
         </div>
       </div>
