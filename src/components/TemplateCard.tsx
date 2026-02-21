@@ -97,7 +97,10 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
             )}
           </>
         )}
-        <Badge variant="secondary" className="text-xs mt-1.5">{badgeLabel}</Badge>
+        <div className="flex items-center gap-2 mt-1.5">
+          <Badge variant="secondary" className="text-xs">{badgeLabel}</Badge>
+          <span className="text-xs text-muted-foreground">{template.pageCount} {template.pageCount === 1 ? "page" : "pages"}</span>
+        </div>
       </div>
       {tall && (
         <div className="px-3 pb-3 flex items-center gap-2">
