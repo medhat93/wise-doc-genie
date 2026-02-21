@@ -82,7 +82,7 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
   if (doc.isTemplate) {
     if (doc.isUserTemplate || !doc.gradient) {
       return (
-        <div className="w-full aspect-[3/4] rounded-t-lg bg-muted flex items-center justify-center">
+        <div className="w-full aspect-[4/3] rounded-t-lg bg-muted flex items-center justify-center">
           <div className="w-[80px] space-y-1.5 p-2 bg-background rounded shadow-sm">
             <div className="h-[3px] bg-muted-foreground/20 rounded w-full" />
             <div className="h-[3px] bg-muted-foreground/15 rounded w-4/5" />
@@ -94,7 +94,7 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
     }
     return (
       <div
-        className={`w-full aspect-[3/4] rounded-t-lg bg-gradient-to-br ${doc.gradient} flex items-center justify-center`}
+        className={`w-full aspect-[4/3] rounded-t-lg bg-gradient-to-br ${doc.gradient} flex items-center justify-center`}
       >
         <div className="w-[80px] space-y-1.5 p-2 bg-white/90 rounded shadow-sm">
           <div className="h-[3px] bg-gray-200 rounded w-full" />
@@ -110,7 +110,7 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
     const isGenerating = doc.status === "uploading";
     return (
       <div
-        className={`w-full aspect-[3/4] rounded-t-lg bg-muted/50 border-b flex items-center justify-center ${isGenerating ? "animate-pulse" : ""}`}
+        className={`w-full aspect-[4/3] rounded-t-lg bg-muted/50 border-b flex items-center justify-center ${isGenerating ? "animate-pulse" : ""}`}
       >
         <AiIcon size={32} className={isGenerating ? "animate-spin" : ""} />
       </div>
@@ -119,7 +119,7 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
 
   if (doc.status === "uploading") {
     return (
-      <div className="w-full aspect-[3/4] rounded-t-lg relative">
+      <div className="w-full aspect-[4/3] rounded-t-lg relative">
         <Skeleton className="w-full h-full rounded-t-lg rounded-b-none" />
         {doc.isDriveImport && (
           <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
@@ -136,7 +136,7 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={`w-full aspect-[3/4] rounded-t-lg flex items-center justify-center ${fileStyle.bg}`}
+        className={`w-full aspect-[4/3] rounded-t-lg flex items-center justify-center ${fileStyle.bg}`}
       >
         <HugeiconsIcon icon={fileStyle.icon} size={36} className={fileStyle.color} />
       </motion.div>
