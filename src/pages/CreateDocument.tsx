@@ -53,6 +53,7 @@ import DriveConnectDialog from "@/components/DriveConnectDialog";
 import DriveBrowserView from "@/components/DriveBrowserView";
 import AiIcon from "@/components/AiIcon";
 import signitLogo from "@/assets/signit-logo.png";
+import { GoogleDriveLogo, DropboxLogo, OneDriveLogo } from "@/components/DriveLogos";
 
 // ─── AI Suggestion Templates ──────────────────────────────────────────────────
 
@@ -551,7 +552,13 @@ const CreateDocument = () => {
   const actions = isEsign ? esignQuickActions : fullQuickActions;
 
   // Build filter tabs
-  const baseFilters: { id: TemplateFilter; label: string; dotColor?: string }[] = isEsign
+  const driveLogoMap: Record<string, React.ReactNode> = {
+    google_drive: <GoogleDriveLogo size={16} />,
+    dropbox: <DropboxLogo size={16} />,
+    onedrive: <OneDriveLogo size={16} />,
+  };
+
+  const baseFilters: { id: TemplateFilter; label: string; icon?: React.ReactNode }[] = isEsign
     ? [
         { id: "created", label: "My Templates" },
         { id: "shared", label: "Shared Templates" },
@@ -559,12 +566,12 @@ const CreateDocument = () => {
     : [
         { id: "created", label: "My Templates" },
         { id: "shared", label: "Shared Templates" },
-        { id: "library", label: "Signit Library" },
+        { id: "library", label: "Library", icon: <img src={signitLogo} alt="Signit" className="h-4 w-4 rounded-full" /> },
       ];
 
   const driveFilters = connectedDriveIds.map((id) => {
     const provider = DRIVE_PROVIDERS.find((p) => p.id === id);
-    return { id, label: provider?.name || id, dotColor: provider?.color };
+    return { id, label: provider?.name || id, icon: driveLogoMap[id] };
   });
 
   const allFilters = [...baseFilters, ...driveFilters];
@@ -774,6 +781,7 @@ const CreateDocument = () => {
                       setTimeout(scrollToTemplateSection, 50);
                     }}
                   >
+                    {filter.icon && filter.icon}
                     {filter.label}
                   </button>
                 ))}
