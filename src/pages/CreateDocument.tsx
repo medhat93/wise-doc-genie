@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, DragEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -10,15 +11,14 @@ import {
   ArrowRight01Icon,
   Search01Icon,
   ArrowRight02Icon,
-  Folder01Icon,
   File01Icon,
-  FileAddIcon,
   SparklesIcon,
-
   Loading03Icon,
   Edit02Icon,
   FileValidationIcon,
   SentIcon,
+  Cancel01Icon,
+  FileAddIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +28,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Dialog,
   DialogContent,
@@ -48,33 +46,105 @@ import {
   quickFilterCategories,
   Template,
 } from "@/data/templates";
-import { UploadedDocument, DriveFile } from "@/types/document";
+import { UploadedDocument, DriveFile, DRIVE_PROVIDERS } from "@/types/document";
 import TemplateCard from "@/components/TemplateCard";
 import TemplatePreviewDialog from "@/components/TemplatePreviewDialog";
 import DocumentQueuePanel from "@/components/DocumentQueuePanel";
 import type { CreateDocumentMode } from "@/components/DocumentQueuePanel";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import DragDropOverlay from "@/components/DragDropOverlay";
 import CategoryFilter from "@/components/CategoryFilter";
-import DriveImportDialog from "@/components/DriveImportDialog";
+import DriveConnectDialog from "@/components/DriveConnectDialog";
+import DriveBrowserView from "@/components/DriveBrowserView";
 import AiIcon from "@/components/AiIcon";
 import signitLogo from "@/assets/signit-logo.png";
 
+// ─── AI Suggestion Templates ──────────────────────────────────────────────────
+
 const AI_SUGGESTIONS = [
-  "Sales proposal for SaaS product",
-  "Mutual NDA for partnership",
-  "Freelance service contract",
+  {
+    label: "Sales Proposal",
+    template: `Draft a professional sales proposal for [Company Name] offering [Product/Service].
+
+Key details to include:
+
+Target client: [Client Name / Industry]
+
+Proposed solution and deliverables
+
+Pricing structure: [Fixed / Tiered / Custom]
+
+Timeline: [Duration]
+
+Terms and conditions`,
+  },
+  {
+    label: "Non-Disclosure Agreement",
+    template: `Draft a mutual non-disclosure agreement between [Party A] and [Party B] for the purpose of [Business Purpose].
+
+Key details to include:
+
+Type: [Mutual / One-way]
+
+Confidential information scope
+
+Duration of confidentiality: [1 year / 2 years / Indefinite]
+
+Permitted disclosures and exceptions
+
+Governing jurisdiction: [State/Country]`,
+  },
+  {
+    label: "Service Contract",
+    template: `Draft a service agreement between [Service Provider] and [Client] for [Type of Service].
+
+Key details to include:
+
+Scope of services and deliverables
+
+Payment terms: [Hourly / Fixed / Milestone-based]
+
+Contract duration: [Start Date] to [End Date]
+
+Termination and cancellation policy
+
+Liability and indemnification clauses`,
+  },
+  {
+    label: "Employment Offer Letter",
+    template: `Draft an employment offer letter for the position of [Job Title] at [Company Name].
+
+Key details to include:
+
+Compensation: [Salary / Hourly Rate]
+
+Start date: [Date]
+
+Employment type: [Full-time / Part-time / Contract]
+
+Benefits and perks overview
+
+Reporting structure and location`,
+  },
+  {
+    label: "Consulting Agreement",
+    template: `Draft a consulting agreement between [Consultant Name/Firm] and [Client Company] for [Consulting Area].
+
+Key details to include:
+
+Engagement scope and objectives
+
+Fee structure: [Hourly / Retainer / Project-based]
+
+Estimated duration: [Timeline]
+
+Deliverables and milestones
+
+Intellectual property ownership`,
+  },
 ];
 
-function deriveAIDocName(prompt: string): string {
-  const lower = prompt.toLowerCase();
-  if (lower.includes("nda") || lower.includes("non-disclosure")) return "AI: Non-Disclosure Agreement";
-  if (lower.includes("proposal")) return "AI: Sales Proposal";
-  if (lower.includes("contract") || lower.includes("service")) return "AI: Service Contract";
-  if (lower.includes("invoice")) return "AI: Invoice";
-  if (lower.includes("partnership")) return "AI: Partnership Agreement";
-  return "AI: Generated Document";
-}
+// ─── Quick Actions ────────────────────────────────────────────────────────────
 
 const fullQuickActions = [
   {
@@ -85,13 +155,6 @@ const fullQuickActions = [
     accent: "bg-primary/10 text-primary",
     highlight: true,
     sub: "or drag & drop anywhere",
-  },
-  {
-    id: "blank",
-    title: "Start from blank",
-    description: "Open empty document editor",
-    icon: FileAddIcon,
-    accent: "bg-slate-500/10 text-slate-600",
   },
   {
     id: "ai",
@@ -110,8 +173,8 @@ const fullQuickActions = [
   },
   {
     id: "library",
-    title: "Signit library",
-    description: "Professional templates by Signit",
+    title: "Template Library",
+    description: "Browse all templates",
     icon: DashboardSquare01Icon,
     accent: "bg-brand-indigo/10 text-brand-indigo",
   },
@@ -119,8 +182,10 @@ const fullQuickActions = [
 
 const esignQuickActions = [
   fullQuickActions[0],
-  fullQuickActions[3],
+  fullQuickActions[2],
 ];
+
+// ─── Recent Templates ─────────────────────────────────────────────────────────
 
 const recentTemplates: Template[] = [
   libraryTemplates[0],
@@ -143,39 +208,50 @@ const esignRecentTemplates: Template[] = [
 
 const allMyTemplates = [...userTemplates, ...sharedTemplates];
 
+// ─── Template filter types ────────────────────────────────────────────────────
+
+type TemplateFilter = "created" | "shared" | "library" | string; // string for drive IDs
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const CreateDocument = () => {
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [mode, setMode] = useState<CreateDocumentMode>("full");
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
+  const [queueManuallyOpened, setQueueManuallyOpened] = useState(false);
   const hasDocuments = documents.length > 0;
+  const showQueue = hasDocuments || queueManuallyOpened;
   const [isDragActive, setIsDragActive] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("my-templates");
 
+  // Template filter state (unified)
+  const [activeFilter, setActiveFilter] = useState<TemplateFilter>("created");
   const [mySearchQuery, setMySearchQuery] = useState("");
   const [myCategory, setMyCategory] = useState("All");
-  const [mySubFilter, setMySubFilter] = useState("all");
-
+  const [sharedSearchQuery, setSharedSearchQuery] = useState("");
+  const [sharedCategory, setSharedCategory] = useState("All");
   const [libSearchQuery, setLibSearchQuery] = useState("");
   const [libCategory, setLibCategory] = useState("All");
 
+  // AI dialog
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
-  const [aiDocType, setAiDocType] = useState("");
+  const [aiSelectedSuggestion, setAiSelectedSuggestion] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
 
   const [esignDropHover, setEsignDropHover] = useState(false);
 
-  // Drive import state
-  const [driveDialogOpen, setDriveDialogOpen] = useState(false);
+  // Drive state
+  const [driveConnectOpen, setDriveConnectOpen] = useState(false);
+  const [driveConnectMode, setDriveConnectMode] = useState<"connect" | "select">("connect");
   const [connectedProviders, setConnectedProviders] = useState<Record<string, boolean>>({
     google_drive: false,
     dropbox: true,
     onedrive: false,
   });
-  const hasAnyConnected = Object.values(connectedProviders).some(Boolean);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const templateSectionRef = useRef<HTMLDivElement>(null);
@@ -185,7 +261,11 @@ const CreateDocument = () => {
   const isEmpty = documents.length === 0;
   const allComplete = documents.length > 0 && documents.every((d) => d.status === "complete");
   const count = documents.length;
-  const editLabel = count === 0 ? "Edit" : count === 1 ? "Edit document" : `Edit ${count} documents`;
+
+  const connectedDriveIds = Object.entries(connectedProviders).filter(([, v]) => v).map(([k]) => k);
+  const connectedCount = connectedDriveIds.length;
+
+  // ─── File handling ────────────────────────────────────────────────────────
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -200,6 +280,7 @@ const CreateDocument = () => {
       pageCount: Math.floor(Math.random() * 20) + 1,
     }));
     setDocuments((prev) => [...prev, ...newDocs]);
+    setQueueManuallyOpened(true);
   }, []);
 
   useEffect(() => {
@@ -231,6 +312,8 @@ const CreateDocument = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documents.filter((d) => d.status === "uploading" && !d.isTemplate && !d.isAI).length]);
 
+  // ─── Drag & Drop ─────────────────────────────────────────────────────────
+
   const handleDragEnter = (e: DragEvent) => {
     e.preventDefault();
     dragCounter.current++;
@@ -253,104 +336,101 @@ const CreateDocument = () => {
     if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files);
   };
 
+  // ─── Quick Actions ────────────────────────────────────────────────────────
+
   const handleQuickAction = (actionId: string) => {
     if (actionId === "upload") fileInputRef.current?.click();
-    if (actionId === "blank") {
-      toast({ title: "Opening blank editor...", description: "Redirecting to the document editor." });
-    }
     if (actionId === "ai") setAiDialogOpen(true);
-    if (actionId === "drive") setDriveDialogOpen(true);
+    if (actionId === "drive") {
+      if (connectedCount === 0) {
+        setDriveConnectMode("connect");
+        setDriveConnectOpen(true);
+      } else if (connectedCount === 1) {
+        setActiveFilter(connectedDriveIds[0]);
+        templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        setDriveConnectMode("select");
+        setDriveConnectOpen(true);
+      }
+    }
     if (actionId === "library") {
       templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-      setActiveTab("library");
+      setActiveFilter("library");
     }
   };
 
-  // Drive import handler
-  const handleDriveImport = useCallback((files: DriveFile[], providerName: string) => {
-    const getMimeType = (mimeType?: string) => {
-      if (!mimeType) return "application/octet-stream";
-      return mimeType;
-    };
+  // ─── Drive ────────────────────────────────────────────────────────────────
 
+  const handleDriveConnect = useCallback((providerId: string) => {
+    setConnectedProviders((prev) => ({ ...prev, [providerId]: true }));
+    // Switch to the newly connected drive tab
+    setActiveFilter(providerId);
+    setTimeout(() => {
+      templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }, []);
+
+  const handleDriveImport = useCallback((files: DriveFile[], providerName: string) => {
     const newDocs: UploadedDocument[] = files.map((file) => ({
       id: crypto.randomUUID(),
       name: file.name,
       size: file.size,
-      type: getMimeType(file.mimeType),
+      type: file.mimeType || "application/octet-stream",
       progress: 0,
       status: "uploading" as const,
       pageCount: Math.floor(Math.random() * 15) + 1,
       isDriveImport: true,
       driveProvider: providerName,
     }));
-
     setDocuments((prev) => [...prev, ...newDocs]);
+    setQueueManuallyOpened(true);
     toast({
       title: `Importing from ${providerName}`,
       description: `${files.length} file${files.length !== 1 ? "s" : ""} are being imported.`,
     });
   }, []);
 
-  const handleAIGenerate = async () => {
+  const handleDriveSelect = useCallback((providerId: string) => {
+    setActiveFilter(providerId);
+    setTimeout(() => {
+      templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }, []);
+
+  // ─── AI ───────────────────────────────────────────────────────────────────
+
+  const handleAISuggestionClick = (suggestion: typeof AI_SUGGESTIONS[0]) => {
+    setAiSelectedSuggestion(suggestion.label);
+    setAiPrompt(suggestion.template);
+  };
+
+  const clearAISuggestion = () => {
+    setAiSelectedSuggestion(null);
+    setAiPrompt("");
+  };
+
+  const handleAIGenerate = () => {
     if (!aiPrompt.trim()) return;
-    setAiGenerating(true);
-
-    const docName = deriveAIDocName(aiPrompt);
-    const aiDocId = crypto.randomUUID();
-
-    const thinkingSteps = [
-      "Analyzing your prompt...",
-      "Understanding document structure...",
-      "Researching relevant clauses...",
-      "Drafting key sections...",
-      "Writing terms & conditions...",
-      "Reviewing legal language...",
-      "Formatting document layout...",
-      "Finalizing content...",
-      "Running compliance checks...",
-      "Polishing final draft...",
-    ];
-
-    // Add to queue immediately in "generating" state
-    const aiDoc: UploadedDocument = {
-      id: aiDocId,
-      name: docName,
-      type: "application/ai",
-      progress: 0,
-      status: "uploading" as const,
-      isAI: true,
-      aiThinkingStep: thinkingSteps[0],
-    };
-    setDocuments((prev) => [...prev, aiDoc]);
+    const docType = aiSelectedSuggestion || "Document";
     setAiDialogOpen(false);
     setAiPrompt("");
-
-    // Cycle through thinking steps
-    for (let i = 1; i < thinkingSteps.length; i++) {
-      await new Promise((r) => setTimeout(r, 1000));
-      setDocuments((prev) =>
-        prev.map((d) =>
-          d.id === aiDocId ? { ...d, aiThinkingStep: thinkingSteps[i] } : d
-        )
-      );
-    }
-
-    // Final wait then mark complete
-    await new Promise((r) => setTimeout(r, 1000));
-
-    // Mark as complete
-    setDocuments((prev) =>
-      prev.map((d) => d.id === aiDocId ? { ...d, status: "complete" as const, progress: 100, aiThinkingStep: undefined } : d)
-    );
-
+    setAiSelectedSuggestion(null);
     toast({
-      title: "AI document created",
-      description: `"${docName}" has been added to your queue.`,
+      title: "Opening editor with AI draft...",
+      description: "Your document is being generated.",
     });
-
-    setAiGenerating(false);
+    navigate(`/editor?ai=true&type=${encodeURIComponent(docType)}`);
   };
+
+  const handleStartBlank = () => {
+    toast({
+      title: "Opening blank editor...",
+      description: "Starting a new document.",
+    });
+    navigate("/editor");
+  };
+
+  // ─── Templates ────────────────────────────────────────────────────────────
 
   const handleUseTemplate = useCallback((template: Template) => {
     const queued: UploadedDocument = {
@@ -365,34 +445,48 @@ const CreateDocument = () => {
       pageCount: template.pageCount,
     };
     setDocuments((prev) => [...prev, queued]);
+    setQueueManuallyOpened(true);
     toast({
       title: "Template added to queue",
       description: `"${template.name}" is ready in your document queue.`,
     });
   }, []);
 
-  const myTemplateSource =
-    mySubFilter === "created" ? userTemplates
-    : mySubFilter === "shared" ? sharedTemplates
-    : allMyTemplates;
+  // Filtering logic
+  const getFilteredTemplates = () => {
+    if (activeFilter === "created") {
+      return userTemplates.filter((t) => {
+        const matchCat = myCategory === "All" || t.category === myCategory;
+        const matchSearch = mySearchQuery === "" || t.name.toLowerCase().includes(mySearchQuery.toLowerCase()) || t.description.toLowerCase().includes(mySearchQuery.toLowerCase());
+        return matchCat && matchSearch;
+      });
+    }
+    if (activeFilter === "shared") {
+      return sharedTemplates.filter((t) => {
+        const matchCat = sharedCategory === "All" || t.category === sharedCategory;
+        const matchSearch = sharedSearchQuery === "" || t.name.toLowerCase().includes(sharedSearchQuery.toLowerCase()) || t.description.toLowerCase().includes(sharedSearchQuery.toLowerCase());
+        return matchCat && matchSearch;
+      });
+    }
+    if (activeFilter === "library") {
+      return libraryTemplates.filter((t) => {
+        const matchCat = libCategory === "All" || t.category === libCategory;
+        const matchSearch = libSearchQuery === "" || t.name.toLowerCase().includes(libSearchQuery.toLowerCase()) || t.description.toLowerCase().includes(libSearchQuery.toLowerCase());
+        return matchCat && matchSearch;
+      });
+    }
+    return []; // drive tabs don't show templates
+  };
 
-  const filteredMyTemplates = myTemplateSource.filter((t) => {
-    const matchCat = myCategory === "All" || t.category === myCategory;
-    const matchSearch =
-      mySearchQuery === "" ||
-      t.name.toLowerCase().includes(mySearchQuery.toLowerCase()) ||
-      t.description.toLowerCase().includes(mySearchQuery.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  const isDriveFilter = connectedDriveIds.includes(activeFilter);
+  const filteredTemplates = isDriveFilter ? [] : getFilteredTemplates();
 
-  const filteredLibTemplates = libraryTemplates.filter((t) => {
-    const matchCat = libCategory === "All" || t.category === libCategory;
-    const matchSearch =
-      libSearchQuery === "" ||
-      t.name.toLowerCase().includes(libSearchQuery.toLowerCase()) ||
-      t.description.toLowerCase().includes(libSearchQuery.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  const currentSearch = activeFilter === "created" ? mySearchQuery : activeFilter === "shared" ? sharedSearchQuery : libSearchQuery;
+  const setCurrentSearch = activeFilter === "created" ? setMySearchQuery : activeFilter === "shared" ? setSharedSearchQuery : setLibSearchQuery;
+  const currentCategory = activeFilter === "created" ? myCategory : activeFilter === "shared" ? sharedCategory : libCategory;
+  const setCurrentCategory = activeFilter === "created" ? setMyCategory : activeFilter === "shared" ? setSharedCategory : setLibCategory;
+  const currentCategories = activeFilter === "library" ? libraryCategories : myTemplateCategories;
+  const currentQuickCategories = activeFilter === "library" ? quickFilterCategories : myTemplateCategories.slice(0, 4);
 
   const openPreview = (t: Template) => {
     setPreviewTemplate(t);
@@ -400,6 +494,30 @@ const CreateDocument = () => {
   };
 
   const actions = isEsign ? esignQuickActions : fullQuickActions;
+
+  // Build filter tabs
+  const baseFilters: { id: TemplateFilter; label: string; dotColor?: string }[] = isEsign
+    ? [
+        { id: "created", label: "Created by Me" },
+        { id: "shared", label: "Shared with Me" },
+      ]
+    : [
+        { id: "created", label: "Created by Me" },
+        { id: "shared", label: "Shared with Me" },
+        { id: "library", label: "Signit Template Library" },
+      ];
+
+  const driveFilters = connectedDriveIds.map((id) => {
+    const provider = DRIVE_PROVIDERS.find((p) => p.id === id);
+    return { id, label: provider?.name || id, dotColor: provider?.color };
+  });
+
+  const allFilters = [...baseFilters, ...driveFilters];
+
+  // ─── Edit button label ────────────────────────────────────────────────────
+
+  const editButtonLabel = count === 0 ? "Start a Blank Document" : count === 1 ? "Edit Document" : `Edit ${count} Documents`;
+  const editButtonIcon = count === 0 ? FileAddIcon : Edit02Icon;
 
   return (
     <div
@@ -409,6 +527,7 @@ const CreateDocument = () => {
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
+      {/* ─── Header ──────────────────────────────────────────────────────── */}
       <header className="h-auto min-h-[3.5rem] md:h-16 border-b bg-background flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 flex-shrink-0 gap-2 sm:gap-0">
         <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
           <nav className="flex items-center gap-1.5 text-sm">
@@ -463,8 +582,8 @@ const CreateDocument = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={isEmpty || !allComplete}
-                    className={`${isEmpty || !allComplete ? "opacity-50" : ""}`}
+                    disabled={isEmpty}
+                    className={isEmpty ? "opacity-50" : ""}
                   >
                     <HugeiconsIcon icon={FileValidationIcon} size={16} className="sm:mr-1.5" />
                     <span className="hidden sm:inline">Get signature</span>
@@ -477,15 +596,14 @@ const CreateDocument = () => {
                   <Button
                     variant="default"
                     size="sm"
-                    disabled={isEmpty || !allComplete}
-                    className={isEmpty || !allComplete ? "opacity-50" : ""}
+                    onClick={count === 0 ? handleStartBlank : undefined}
                   >
-                    <HugeiconsIcon icon={Edit02Icon} size={16} className="sm:mr-1.5" />
-                    <span className="hidden sm:inline">{editLabel}</span>
-                    <span className="sm:hidden">Edit</span>
+                    <HugeiconsIcon icon={editButtonIcon} size={16} className="sm:mr-1.5" />
+                    <span className="hidden sm:inline">{editButtonLabel}</span>
+                    <span className="sm:hidden">{count === 0 ? "New" : "Edit"}</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Open documents in the editor</TooltipContent>
+                <TooltipContent>{count === 0 ? "Open a blank document editor" : "Open documents in the editor"}</TooltipContent>
               </Tooltip>
             </>
           )}
@@ -494,13 +612,14 @@ const CreateDocument = () => {
 
       <div className="flex flex-1 overflow-hidden relative">
         <main className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin">
-          <div className={`mx-auto transition-all ${hasDocuments && !isMobile ? "max-w-4xl" : "max-w-5xl"}`}>
+          <div className={`mx-auto transition-all ${showQueue && !isMobile ? "max-w-4xl" : "max-w-5xl"}`}>
 
+            {/* ─── Quick Actions ────────────────────────────────────────── */}
             <section>
               <div className={`grid gap-3 md:gap-4 ${
                 isEsign
                   ? "grid-cols-2 max-w-lg mx-auto"
-                  : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+                  : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
               }`}>
                 {actions.map((action) => (
                   <Card
@@ -513,7 +632,7 @@ const CreateDocument = () => {
                     }`}
                     onClick={() => handleQuickAction(action.id)}
                   >
-                    {action.id === "drive" && hasAnyConnected && (
+                    {action.id === "drive" && connectedCount > 0 && (
                       <div className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-emerald-500" />
                     )}
                     {action.id === "library" ? (
@@ -539,25 +658,21 @@ const CreateDocument = () => {
               </div>
             </section>
 
+            {/* ─── Recent Templates ────────────────────────────────────── */}
             <section className="mt-10">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Recent templates</h3>
                 <Button
                   variant="link"
                   className="text-sm"
-                  onClick={() =>
-                    templateSectionRef.current?.scrollIntoView({ behavior: "smooth" })
-                  }
+                  onClick={() => templateSectionRef.current?.scrollIntoView({ behavior: "smooth" })}
                 >
                   View all <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
                 </Button>
               </div>
               <ScrollArea className="mt-4 w-full">
                 <div className="flex gap-4 pb-4">
-                  {(isEsign
-                    ? esignRecentTemplates
-                    : recentTemplates
-                  ).map((template) => (
+                  {(isEsign ? esignRecentTemplates : recentTemplates).map((template) => (
                     <div key={template.id} className="w-[220px] flex-shrink-0">
                       <TemplateCard
                         template={template}
@@ -572,55 +687,65 @@ const CreateDocument = () => {
               </ScrollArea>
             </section>
 
+            {/* ─── Unified Template Section ─────────────────────────────── */}
             <section className="mt-10" ref={templateSectionRef}>
-              {isEsign ? (
+              <h3 className="text-lg font-semibold">Templates</h3>
+
+              {/* Filter row */}
+              <div className="mt-4 flex items-center gap-6 border-b overflow-x-auto scrollbar-none">
+                {allFilters.map((filter) => (
+                  <button
+                    key={filter.id}
+                    className={`pb-2 text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                      activeFilter === filter.id
+                        ? "text-foreground border-b-2 border-primary"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    onClick={() => setActiveFilter(filter.id)}
+                  >
+                    {filter.dotColor && (
+                      <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: filter.dotColor }} />
+                    )}
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Drive browser content */}
+              {isDriveFilter && (
+                <div className="mt-4">
+                  <DriveBrowserView
+                    key={activeFilter}
+                    providerId={activeFilter}
+                    onImportFiles={handleDriveImport}
+                  />
+                </div>
+              )}
+
+              {/* Template content */}
+              {!isDriveFilter && (
                 <>
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <HugeiconsIcon icon={Folder01Icon} size={20} />
-                    My templates
-                    <span className="text-muted-foreground font-normal text-sm">({allMyTemplates.length})</span>
-                  </h3>
-
-                  <div className="mt-4 mb-4">
-                    <ToggleGroup
-                      type="single"
-                      value={mySubFilter}
-                      onValueChange={(v) => v && setMySubFilter(v)}
-                      className="justify-start gap-0"
-                    >
-                      <ToggleGroupItem value="all" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                        All
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="created" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                         Created by me
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="shared" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                         Shared with me ({sharedTemplates.length})
-                      </ToggleGroupItem>
-                    </ToggleGroup>
-                  </div>
-
-                  <div className="relative max-w-md">
+                  <div className="relative max-w-md mt-4">
                     <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      placeholder="Search my templates..."
+                      placeholder={`Search ${activeFilter === "library" ? "template library" : activeFilter === "shared" ? "shared templates" : "my templates"}...`}
                       className="pl-10"
-                      value={mySearchQuery}
-                      onChange={(e) => setMySearchQuery(e.target.value)}
+                      value={currentSearch}
+                      onChange={(e) => setCurrentSearch(e.target.value)}
                     />
                   </div>
                   <div className="mt-3">
                     <CategoryFilter
-                      categories={myTemplateCategories}
-                      quickCategories={myTemplateCategories.slice(0, 4)}
-                      value={myCategory}
-                      onChange={setMyCategory}
+                      categories={currentCategories}
+                      quickCategories={currentQuickCategories}
+                      value={currentCategory}
+                      onChange={setCurrentCategory}
                     />
                   </div>
 
-                  {filteredMyTemplates.length > 0 ? (
+                  {filteredTemplates.length > 0 ? (
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredMyTemplates.map((template) => (
+                      {filteredTemplates.map((template) => (
                         <TemplateCard
                           key={template.id}
                           template={template}
@@ -633,153 +758,26 @@ const CreateDocument = () => {
                   ) : (
                     <div className="mt-16 flex flex-col items-center text-center">
                       <HugeiconsIcon icon={File01Icon} size={48} className="text-muted-foreground/30" />
-                      <p className="text-sm font-medium text-muted-foreground mt-4">
-                        No templates found
-                      </p>
+                      <p className="text-sm font-medium text-muted-foreground mt-4">No templates found</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Save a document as a template to reuse it later
+                        {activeFilter === "created"
+                          ? "Save a document as a template to reuse it later"
+                          : activeFilter === "shared"
+                          ? "No templates have been shared with you yet"
+                          : "Try a different search or category"}
                       </p>
                     </div>
                   )}
                 </>
-              ) : (
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="bg-transparent border-b w-full justify-start rounded-none h-auto p-0 gap-0">
-                    <TabsTrigger
-                      value="my-templates"
-                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
-                    >
-                      <HugeiconsIcon icon={Folder01Icon} size={16} />
-                      My templates
-                      <span className="text-muted-foreground">({allMyTemplates.length})</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="library"
-                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
-                    >
-                      <img src={signitLogo} alt="Signit" className="h-4 w-auto" />
-                      Signit library
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="my-templates" className="mt-4">
-                    <div className="mb-4">
-                      <ToggleGroup
-                        type="single"
-                        value={mySubFilter}
-                        onValueChange={(v) => v && setMySubFilter(v)}
-                        className="justify-start gap-0"
-                      >
-                        <ToggleGroupItem value="all" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                          All
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value="created" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                          Created by me
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value="shared" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                          Shared with me ({sharedTemplates.length})
-                        </ToggleGroupItem>
-                      </ToggleGroup>
-                    </div>
-
-                    <div className="relative max-w-md">
-                      <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        placeholder="Search my templates..."
-                        className="pl-10"
-                        value={mySearchQuery}
-                        onChange={(e) => setMySearchQuery(e.target.value)}
-                      />
-                    </div>
-                    <div className="mt-3">
-                      <CategoryFilter
-                        categories={myTemplateCategories}
-                        quickCategories={myTemplateCategories.slice(0, 4)}
-                        value={myCategory}
-                        onChange={setMyCategory}
-                      />
-                    </div>
-
-                    {filteredMyTemplates.length > 0 ? (
-                      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredMyTemplates.map((template) => (
-                          <TemplateCard
-                            key={template.id}
-                            template={template}
-                            tall
-                            onPreview={openPreview}
-                            onUse={handleUseTemplate}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="mt-16 flex flex-col items-center text-center">
-                        <HugeiconsIcon icon={File01Icon} size={48} className="text-muted-foreground/30" />
-                        <p className="text-sm font-medium text-muted-foreground mt-4">
-                          No templates yet
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Save a document as a template to reuse it later
-                        </p>
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="mt-3"
-                          onClick={() => setActiveTab("library")}
-                        >
-                          Browse template library <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
-                        </Button>
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="library" className="mt-4">
-                    <div className="relative max-w-md">
-                      <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        placeholder="Search template library..."
-                        className="pl-10"
-                        value={libSearchQuery}
-                        onChange={(e) => setLibSearchQuery(e.target.value)}
-                      />
-                    </div>
-                    <div className="mt-3">
-                      <CategoryFilter
-                        categories={libraryCategories}
-                        quickCategories={quickFilterCategories}
-                        value={libCategory}
-                        onChange={setLibCategory}
-                      />
-                    </div>
-
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredLibTemplates.map((template) => (
-                        <TemplateCard
-                          key={template.id}
-                          template={template}
-                          tall
-                          onPreview={openPreview}
-                          onUse={handleUseTemplate}
-                        />
-                      ))}
-                      {filteredLibTemplates.length === 0 && (
-                        <div className="col-span-full py-16 text-center">
-                          <p className="text-muted-foreground">No templates found</p>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                </Tabs>
               )}
             </section>
 
+            {/* ─── eSign Drop Zone ─────────────────────────────────────── */}
             {isEsign && (
               <section className="mt-10">
                 <div
                   className={`border-2 border-dashed rounded-2xl min-h-[200px] flex flex-col items-center justify-center transition-colors ${
-                    esignDropHover
-                      ? "border-primary bg-primary/5"
-                      : "border-muted-foreground/20"
+                    esignDropHover ? "border-primary bg-primary/5" : "border-muted-foreground/20"
                   }`}
                   onDragEnter={(e) => { e.preventDefault(); setEsignDropHover(true); }}
                   onDragLeave={(e) => { e.preventDefault(); setEsignDropHover(false); }}
@@ -792,26 +790,20 @@ const CreateDocument = () => {
                   }}
                 >
                   <HugeiconsIcon icon={CloudUploadIcon} size={56} className={`${esignDropHover ? "text-primary" : "text-muted-foreground/40"} transition-colors`} />
-                  <p className="text-lg font-medium text-muted-foreground mt-4">
-                    Drag and drop your documents here
-                  </p>
+                  <p className="text-lg font-medium text-muted-foreground mt-4">Drag and drop your documents here</p>
                   <p className="text-sm text-muted-foreground my-2">or</p>
-                  <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                    Browse files
-                  </Button>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    PDF, DOCX, DOC, PNG, JPG — up to 50MB
-                  </p>
+                  <Button variant="outline" onClick={() => fileInputRef.current?.click()}>Browse files</Button>
+                  <p className="text-xs text-muted-foreground mt-3">PDF, DOCX, DOC, PNG, JPG — up to 50MB</p>
                 </div>
               </section>
             )}
           </div>
         </main>
 
-        {/* Desktop queue panel */}
+        {/* ─── Desktop Queue Panel ───────────────────────────────────── */}
         {!isMobile && (
           <AnimatePresence>
-            {hasDocuments && (
+            {showQueue && (
               <motion.div
                 initial={{ x: 400 }}
                 animate={{ x: 0 }}
@@ -823,6 +815,7 @@ const CreateDocument = () => {
                   setDocuments={setDocuments}
                   onAddFiles={() => fileInputRef.current?.click()}
                   mode={mode}
+                  onEditDocuments={count > 0 ? () => navigate("/editor") : undefined}
                 />
               </motion.div>
             )}
@@ -839,6 +832,7 @@ const CreateDocument = () => {
                 onAddFiles={() => fileInputRef.current?.click()}
                 mode={mode}
                 isMobile
+                onEditDocuments={count > 0 ? () => navigate("/editor") : undefined}
               />
             </DrawerContent>
           </Drawer>
@@ -866,12 +860,13 @@ const CreateDocument = () => {
         onUse={handleUseTemplate}
       />
 
+      {/* ─── AI Dialog ───────────────────────────────────────────────── */}
       <Dialog
         open={aiDialogOpen}
         onOpenChange={(o) => {
           if (!aiGenerating) {
             setAiDialogOpen(o);
-            if (!o) { setAiPrompt(""); setAiDocType(""); }
+            if (!o) { setAiPrompt(""); setAiSelectedSuggestion(null); }
           }
         }}
       >
@@ -884,20 +879,36 @@ const CreateDocument = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Document type</Label>
-              <Input
-                placeholder="e.g. NDA, Sales Proposal, Service Contract..."
-                value={aiDocType}
-                onChange={(e) => setAiDocType(e.target.value)}
-                disabled={aiGenerating}
-              />
-            </div>
+            {/* Document type pill */}
+            <AnimatePresence>
+              {aiSelectedSuggestion && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">Document type</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1 text-sm font-medium">
+                      {aiSelectedSuggestion}
+                      <button
+                        onClick={clearAISuggestion}
+                        className="hover:opacity-70 transition-opacity"
+                        disabled={aiGenerating}
+                      >
+                        <HugeiconsIcon icon={Cancel01Icon} size={14} />
+                      </button>
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div>
               <Label className="text-xs text-muted-foreground mb-1.5 block">Describe your document</Label>
               <Textarea
                 placeholder="e.g. Draft a non-disclosure agreement between two companies for a software development partnership..."
-                className="min-h-[130px] resize-none"
+                className="min-h-[160px] resize-none"
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 disabled={aiGenerating}
@@ -907,14 +918,14 @@ const CreateDocument = () => {
             <div className="flex flex-wrap gap-2">
               {AI_SUGGESTIONS.map((s) => (
                 <Button
-                  key={s}
-                  variant="outline"
+                  key={s.label}
+                  variant={aiSelectedSuggestion === s.label ? "default" : "outline"}
                   size="sm"
                   className="rounded-full text-xs h-7"
-                  onClick={() => setAiPrompt(s)}
+                  onClick={() => handleAISuggestionClick(s)}
                   disabled={aiGenerating}
                 >
-                  {s}
+                  {s.label}
                 </Button>
               ))}
             </div>
@@ -926,7 +937,7 @@ const CreateDocument = () => {
               onClick={() => {
                 setAiDialogOpen(false);
                 setAiPrompt("");
-                setAiDocType("");
+                setAiSelectedSuggestion(null);
               }}
               disabled={aiGenerating}
             >
@@ -936,29 +947,21 @@ const CreateDocument = () => {
               onClick={handleAIGenerate}
               disabled={!aiPrompt.trim() || aiGenerating}
             >
-              {aiGenerating ? (
-                <>
-                  <HugeiconsIcon icon={Loading03Icon} size={16} className="mr-1.5 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <AiIcon size={16} className="mr-1.5" />
-                  Generate document
-                </>
-              )}
+              <AiIcon size={16} className="mr-1.5" />
+              Generate document
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Drive Import Dialog */}
-      <DriveImportDialog
-        open={driveDialogOpen}
-        onOpenChange={setDriveDialogOpen}
+      {/* ─── Drive Connect Dialog ────────────────────────────────────── */}
+      <DriveConnectDialog
+        open={driveConnectOpen}
+        onOpenChange={setDriveConnectOpen}
         connectedProviders={connectedProviders}
-        setConnectedProviders={setConnectedProviders}
-        onImportFiles={handleDriveImport}
+        onConnect={handleDriveConnect}
+        mode={driveConnectMode}
+        onSelectDrive={handleDriveSelect}
       />
     </div>
   );
