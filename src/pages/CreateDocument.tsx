@@ -144,7 +144,7 @@ const allMyTemplates = [...userTemplates, ...sharedTemplates];
 const CreateDocument = () => {
   const [mode, setMode] = useState<CreateDocumentMode>("full");
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const hasDocuments = documents.length > 0;
   const [isDragActive, setIsDragActive] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -196,7 +196,6 @@ const CreateDocument = () => {
       pageCount: Math.floor(Math.random() * 20) + 1,
     }));
     setDocuments((prev) => [...prev, ...newDocs]);
-    setIsPanelOpen(true);
   }, []);
 
   useEffect(() => {
@@ -283,8 +282,6 @@ const CreateDocument = () => {
     }));
 
     setDocuments((prev) => [...prev, ...newDocs]);
-    setIsPanelOpen(true);
-
     toast({
       title: `Importing from ${providerName}`,
       description: `${files.length} file${files.length !== 1 ? "s" : ""} are being imported.`,
@@ -306,7 +303,6 @@ const CreateDocument = () => {
       isAI: true,
     };
     setDocuments((prev) => [...prev, aiDoc]);
-    setIsPanelOpen(true);
 
     toast({
       title: "AI document created",
@@ -331,7 +327,6 @@ const CreateDocument = () => {
       pageCount: template.pageCount,
     };
     setDocuments((prev) => [...prev, queued]);
-    setIsPanelOpen(true);
     toast({
       title: "Template added to queue",
       description: `"${template.name}" is ready in your document queue.`,
@@ -453,26 +448,7 @@ const CreateDocument = () => {
 
       <div className="flex flex-1 overflow-hidden relative">
         <main className="flex-1 overflow-y-auto p-8 scrollbar-thin">
-          {/* Floating Document Queue Toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setIsPanelOpen(!isPanelOpen)}
-                className={`fixed top-20 right-4 z-30 flex items-center gap-1.5 p-2 rounded-full border shadow-md transition-all hover:shadow-lg bg-background ${
-                  isPanelOpen ? "translate-x-[-408px]" : ""
-                }`}
-              >
-                <HugeiconsIcon icon={Files01Icon} size={16} className="text-foreground" />
-                {count > 0 && (
-                  <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
-                    {count}
-                  </Badge>
-                )}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="left">{isPanelOpen ? "Hide document queue" : "Show document queue"}</TooltipContent>
-          </Tooltip>
-          <div className={`mx-auto transition-all ${isPanelOpen ? "max-w-4xl" : "max-w-5xl"}`}>
+          <div className={`mx-auto transition-all ${hasDocuments ? "max-w-4xl" : "max-w-5xl"}`}>
 
             <section>
               <div className={`grid gap-4 ${
@@ -787,7 +763,7 @@ const CreateDocument = () => {
         </main>
 
         <AnimatePresence>
-          {isPanelOpen && (
+          {hasDocuments && (
             <motion.div
               initial={{ x: 400 }}
               animate={{ x: 0 }}
@@ -797,7 +773,6 @@ const CreateDocument = () => {
               <DocumentQueuePanel
                 documents={documents}
                 setDocuments={setDocuments}
-                onClose={() => setIsPanelOpen(false)}
                 onAddFiles={() => fileInputRef.current?.click()}
                 mode={mode}
               />
