@@ -124,6 +124,16 @@ const recentTemplates: Template[] = [
   libraryTemplates[3],
 ];
 
+const esignRecentTemplates: Template[] = [
+  userTemplates[0],
+  userTemplates[1],
+  userTemplates[2],
+  userTemplates[3],
+  userTemplates[4],
+  userTemplates[5],
+  sharedTemplates[0],
+];
+
 const allMyTemplates = [...userTemplates, ...sharedTemplates];
 
 const CreateDocument = () => {
@@ -479,7 +489,7 @@ const CreateDocument = () => {
               <ScrollArea className="mt-4 w-full">
                 <div className="flex gap-4 pb-4">
                   {(isEsign
-                    ? recentTemplates.filter((t) => t.source === "user")
+                    ? esignRecentTemplates
                     : recentTemplates
                   ).map((template) => (
                     <div key={template.id} className="w-[220px] flex-shrink-0">
