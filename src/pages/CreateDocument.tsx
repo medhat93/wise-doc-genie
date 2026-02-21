@@ -608,9 +608,8 @@ const CreateDocument = () => {
                       value="library"
                       className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
                     >
-                      <HugeiconsIcon icon={DashboardSquare01Icon} size={16} />
-                      Template Library
-                      <HugeiconsIcon icon={SparklesIcon} size={12} className="text-amber-500" />
+                      <img src={signitLogo} alt="Signit" className="h-4 w-auto" />
+                      Signit Library
                     </TabsTrigger>
                   </TabsList>
 
