@@ -206,7 +206,7 @@ const allMyTemplates = [...userTemplates, ...sharedTemplates];
 type TemplateFilter = "created" | "shared" | "library" | string; // string for drive IDs
 
 const TEMPLATE_PAGE_SIZE = 12;
-const TEMPLATE_LOAD_DELAY_MS = 5000;
+const TEMPLATE_LOAD_DELAY_MS = 2000;
 
 function TemplateCardSkeleton() {
   return (
