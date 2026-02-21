@@ -55,6 +55,7 @@ import DragDropOverlay from "@/components/DragDropOverlay";
 import CategoryFilter from "@/components/CategoryFilter";
 import DriveImportDialog from "@/components/DriveImportDialog";
 import AiIcon from "@/components/AiIcon";
+import signitLogo from "@/assets/signit-logo.png";
 
 const AI_SUGGESTIONS = [
   "Sales proposal for SaaS product",
@@ -456,21 +457,29 @@ const CreateDocument = () => {
                 {actions.map((action) => (
                   <Card
                     key={action.id}
-                    className={`p-5 cursor-pointer hover:shadow-md transition-shadow relative ${
-                      action.highlight ? "ring-1 ring-primary/20" : ""
+                    className={`p-5 cursor-pointer transition-all relative ${
+                      action.highlight ? "ring-1 ring-primary/20 hover:shadow-md" :
+                      action.id === "library" ? "ring-1 ring-brand-indigo/20 hover:ring-brand-indigo/40 hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.3)]" :
+                      "hover:shadow-md"
                     }`}
                     onClick={() => handleQuickAction(action.id)}
                   >
                     {action.id === "drive" && hasAnyConnected && (
                       <div className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-emerald-500" />
                     )}
-                    <div className={`rounded-full p-3 w-fit ${action.accent}`}>
-                      {(action as any).customIcon ? (
-                        <AiIcon size={20} />
-                      ) : (
-                        <HugeiconsIcon icon={action.icon} size={20} />
-                      )}
-                    </div>
+                    {action.id === "library" ? (
+                      <div className="rounded-full p-2.5 w-fit bg-brand-indigo/10">
+                        <img src={signitLogo} alt="Signit" className="h-5 w-auto" />
+                      </div>
+                    ) : (
+                      <div className={`rounded-full p-3 w-fit ${action.accent}`}>
+                        {(action as any).customIcon ? (
+                          <AiIcon size={20} />
+                        ) : (
+                          <HugeiconsIcon icon={action.icon} size={20} />
+                        )}
+                      </div>
+                    )}
                     <h3 className="font-semibold text-sm mt-3">{action.title}</h3>
                     <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
                     {action.sub && (
