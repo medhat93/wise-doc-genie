@@ -360,10 +360,19 @@ const DocumentQueuePanel = ({
         )}
       </div>
 
-      <div className="border-t p-2 flex-shrink-0">
-        <p className="text-[10px] text-muted-foreground text-center">
-          {isEmpty ? "Queue" : `${count} doc${count !== 1 ? "s" : ""} · ${totalPages} pg`}
-        </p>
+      <div className="border-t px-3 py-2.5 flex-shrink-0 bg-muted/30">
+        {isEmpty ? (
+          <p className="text-[11px] font-medium text-muted-foreground text-center">Queue</p>
+        ) : (
+          <div className="flex items-center justify-center gap-2">
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-[18px] rounded-md font-semibold">
+              {count}
+            </Badge>
+            <span className="text-[11px] text-muted-foreground">
+              doc{count !== 1 ? "s" : ""} · {totalPages} pg
+            </span>
+          </div>
+        )}
       </div>
 
       <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
