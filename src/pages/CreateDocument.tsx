@@ -457,9 +457,10 @@ const CreateDocument = () => {
                 {actions.map((action) => (
                   <Card
                     key={action.id}
-                    className={`p-5 cursor-pointer transition-all relative ${
+                    className={`p-5 cursor-pointer transition-all relative group ${
                       action.highlight ? "ring-1 ring-primary/20 hover:shadow-md" :
                       action.id === "library" ? "ring-1 ring-brand-indigo/20 hover:ring-brand-indigo/40 hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.3)]" :
+                      action.id === "ai" ? "hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.25)]" :
                       "hover:shadow-md"
                     }`}
                     onClick={() => handleQuickAction(action.id)}
@@ -474,7 +475,7 @@ const CreateDocument = () => {
                     ) : (
                       <div className={`rounded-full p-3 w-fit ${action.accent}`}>
                         {(action as any).customIcon ? (
-                          <AiIcon size={20} />
+                          <AiIcon size={20} className="transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]" />
                         ) : (
                           <HugeiconsIcon icon={action.icon} size={20} />
                         )}
