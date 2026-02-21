@@ -114,7 +114,7 @@ const DriveBrowserView = ({ providerId, onImportFiles }: DriveBrowserViewProps) 
           return (
             <div
               key={file.id}
-              className={`group flex items-center gap-3 px-4 py-2.5 transition-colors border-b last:border-b-0 ${
+              className={`group flex items-center gap-3 px-4 h-10 transition-colors border-b last:border-b-0 ${
                 isFolder ? "cursor-pointer hover:bg-muted/50" : "hover:bg-muted/50"
               }`}
               onClick={() => {
