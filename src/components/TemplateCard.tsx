@@ -96,7 +96,14 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">{template.name}</p>
             {tall && template.description && (
-              <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{template.description}</p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-xs text-muted-foreground truncate mt-1">{template.description}</p>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  {template.description}
+                </TooltipContent>
+              </Tooltip>
             )}
             {tall && template.isShared && template.sharedBy && (
               <div className="flex items-center gap-1.5 mt-1">
