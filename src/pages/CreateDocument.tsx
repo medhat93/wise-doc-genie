@@ -664,9 +664,9 @@ const CreateDocument = () => {
                 </Button>
               </div>
               <ScrollArea className="mt-4 w-full">
-                <div className="flex gap-4 pb-4">
+                <div className="flex gap-4 pb-4 items-stretch">
                   {(isEsign ? esignRecentTemplates : recentTemplates).map((template) => (
-                    <div key={template.id} className="w-[220px] flex-shrink-0">
+                    <div key={template.id} className="w-[220px] flex-shrink-0 h-full">
                       <TemplateCard
                         template={template}
                         showSourceBadge={!isEsign}
