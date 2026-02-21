@@ -699,7 +699,7 @@ const CreateDocument = () => {
             </section>
 
             {/* ─── Unified Template Section ─────────────────────────────── */}
-            <section className="mt-10" ref={templateSectionRef}>
+            <section className="mt-10 min-h-[calc(100vh-4rem)]" ref={templateSectionRef}>
               <h3 className="text-lg font-semibold">Browse for more</h3>
 
               {/* Filter row */}
