@@ -862,30 +862,16 @@ const CreateDocument = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* Document type pill */}
-            <AnimatePresence>
-              {aiSelectedSuggestion && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  <Label className="text-xs text-muted-foreground mb-1.5 block">Document type</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1 text-sm font-medium">
-                      {aiSelectedSuggestion}
-                      <button
-                        onClick={clearAISuggestion}
-                        className="hover:opacity-70 transition-opacity"
-                        disabled={aiGenerating}
-                      >
-                        <HugeiconsIcon icon={Cancel01Icon} size={14} />
-                      </button>
-                    </span>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Document type field */}
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Document type</Label>
+              <Input
+                placeholder="e.g. Sales Proposal, NDA, Contract..."
+                value={aiSelectedSuggestion || ""}
+                onChange={(e) => setAiSelectedSuggestion(e.target.value || null)}
+                disabled={aiGenerating}
+              />
+            </div>
 
             <div>
               <Label className="text-xs text-muted-foreground mb-1.5 block">Describe your document</Label>
