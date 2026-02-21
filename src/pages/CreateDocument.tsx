@@ -667,7 +667,6 @@ const CreateDocument = () => {
                     <div key={template.id} className="w-[220px] flex-shrink-0 h-full">
                       <TemplateCard
                         template={template}
-                        showSourceBadge={!isEsign}
                         onPreview={openPreview}
                         onUse={handleUseTemplate}
                       />
