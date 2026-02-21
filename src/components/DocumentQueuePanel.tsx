@@ -149,7 +149,7 @@ function SortableDocItem({
   const sublabel = doc.isTemplate
     ? `Template · ${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
     : doc.isAI
-    ? (doc.status === "uploading" ? "AI is generating..." : "AI generated")
+    ? (doc.status === "uploading" ? (doc.aiThinkingStep || "AI is generating...") : "AI generated")
     : doc.status === "uploading"
     ? (doc.isDriveImport ? `Importing from ${doc.driveProvider || "Drive"}...` : "Uploading...")
     : `${doc.size ? formatSize(doc.size) : ""} · ${doc.pageCount} pages`;
@@ -181,7 +181,22 @@ function SortableDocItem({
               </motion.div>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">{sublabel}</p>
+          {doc.isAI && doc.status === "uploading" ? (
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={sublabel}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+                className="text-xs text-muted-foreground"
+              >
+                {sublabel}
+              </motion.p>
+            </AnimatePresence>
+          ) : (
+            <p className="text-xs text-muted-foreground">{sublabel}</p>
+          )}
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
