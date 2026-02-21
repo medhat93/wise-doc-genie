@@ -440,37 +440,26 @@ const CreateDocument = () => {
 
   // Filtering logic
   const getFilteredTemplates = () => {
+    const matchCategory = (tCat: string | undefined, filterCat: string) => {
+      if (filterCat === "All") return true;
+      if (filterCat === "Others") return !tCat;
+      return tCat === filterCat;
+    };
+    const matchSearch = (t: Template, query: string) =>
+      query === "" ||
+      t.name.toLowerCase().includes(query.toLowerCase()) ||
+      (t.description || "").toLowerCase().includes(query.toLowerCase());
+
     if (activeFilter === "created") {
-      return userTemplates.filter((t) => {
-        const matchCat = myCategory === "All" || t.category === myCategory;
-        const matchSearch =
-          mySearchQuery === "" ||
-          t.name.toLowerCase().includes(mySearchQuery.toLowerCase()) ||
-          t.description.toLowerCase().includes(mySearchQuery.toLowerCase());
-        return matchCat && matchSearch;
-      });
+      return userTemplates.filter((t) => matchCategory(t.category, myCategory) && matchSearch(t, mySearchQuery));
     }
     if (activeFilter === "shared") {
-      return sharedTemplates.filter((t) => {
-        const matchCat = sharedCategory === "All" || t.category === sharedCategory;
-        const matchSearch =
-          sharedSearchQuery === "" ||
-          t.name.toLowerCase().includes(sharedSearchQuery.toLowerCase()) ||
-          t.description.toLowerCase().includes(sharedSearchQuery.toLowerCase());
-        return matchCat && matchSearch;
-      });
+      return sharedTemplates.filter((t) => matchCategory(t.category, sharedCategory) && matchSearch(t, sharedSearchQuery));
     }
     if (activeFilter === "library") {
-      return libraryTemplates.filter((t) => {
-        const matchCat = libCategory === "All" || t.category === libCategory;
-        const matchSearch =
-          libSearchQuery === "" ||
-          t.name.toLowerCase().includes(libSearchQuery.toLowerCase()) ||
-          t.description.toLowerCase().includes(libSearchQuery.toLowerCase());
-        return matchCat && matchSearch;
-      });
+      return libraryTemplates.filter((t) => matchCategory(t.category, libCategory) && matchSearch(t, libSearchQuery));
     }
-    return []; // drive tabs don't show templates
+    return [];
   };
 
   const isDriveFilter = connectedDriveIds.includes(activeFilter);

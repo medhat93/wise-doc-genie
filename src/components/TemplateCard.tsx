@@ -35,7 +35,7 @@ const MutedDocumentLines = () => (
 );
 
 const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: TemplateCardProps) => {
-  const badgeLabel = categoryBadgeMap[template.name] || template.category;
+  const badgeLabel = categoryBadgeMap[template.name] || template.category || null;
   const isUserTemplate = template.source === "user";
 
   const sourceBadge = isUserTemplate ? (
@@ -95,7 +95,7 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">{template.name}</p>
-            {tall && (
+            {tall && template.description && (
               <>
                 <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{template.description}</p>
                 {template.isShared && template.sharedBy && (
@@ -110,6 +110,17 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
                   <p className="text-xs text-muted-foreground/70 mt-0.5">{template.subtitle}</p>
                 )}
               </>
+            )}
+            {tall && !template.description && template.isShared && template.sharedBy && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <Avatar className="h-4 w-4">
+                  <AvatarFallback className="text-[8px] bg-muted">{template.sharedByInitials}</AvatarFallback>
+                </Avatar>
+                <p className="text-xs text-muted-foreground">Shared by {template.sharedBy}</p>
+              </div>
+            )}
+            {tall && !template.description && !template.isShared && template.subtitle && (
+              <p className="text-xs text-muted-foreground/70 mt-0.5">{template.subtitle}</p>
             )}
           </div>
           {/* Always-visible Add button */}
@@ -131,7 +142,7 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
           </Tooltip>
         </div>
         <div className="flex items-center gap-2 mt-1.5">
-          <Badge variant="secondary" className="text-xs">{badgeLabel}</Badge>
+          {badgeLabel && <Badge variant="secondary" className="text-xs">{badgeLabel}</Badge>}
           <span className="text-xs text-muted-foreground">{template.pageCount} {template.pageCount === 1 ? "page" : "pages"}</span>
         </div>
       </div>

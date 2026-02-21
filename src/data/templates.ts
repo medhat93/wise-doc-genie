@@ -1,8 +1,8 @@
 export interface Template {
   id: string;
   name: string;
-  description: string;
-  category: string;
+  description?: string;
+  category?: string;
   gradient: string;
   pageCount: number;
   source?: "user" | "library";
@@ -36,6 +36,8 @@ export const userTemplates: Template[] = [
   { id: "user-4", name: "Monthly Invoice", description: "Recurring invoice template for monthly billing cycles.", category: "Financial Reports", gradient: "", source: "user", subtitle: "Created by you", pageCount: 1 },
   { id: "user-5", name: "Consulting SOW", description: "Statement of work for consulting engagements and deliverables.", category: "Sales Proposals", gradient: "", source: "user", subtitle: "Team template", pageCount: 5 },
   { id: "user-6", name: "Vendor Agreement", description: "Vendor onboarding agreement with customized payment terms.", category: "Service Contracts", gradient: "", source: "user", subtitle: "Created by you", pageCount: 8 },
+  { id: "user-7", name: "Quick Memo", gradient: "", source: "user", subtitle: "Created by you", pageCount: 1 },
+  { id: "user-8", name: "Meeting Notes Template", gradient: "", source: "user", subtitle: "Created by you", pageCount: 2 },
 ];
 
 export const sharedTemplates: Template[] = [
@@ -43,6 +45,7 @@ export const sharedTemplates: Template[] = [
   { id: "shared-2", name: "Master Services Agreement", description: "Comprehensive MSA for long-term client partnerships.", category: "Service Contracts", gradient: "", source: "user", subtitle: "Shared by David K.", isShared: true, sharedBy: "David K.", sharedByInitials: "DK", pageCount: 15 },
   { id: "shared-3", name: "Executive NDA", description: "Executive-level NDA for board and leadership discussions.", category: "Non-Disclosure", gradient: "", source: "user", subtitle: "Shared by Lisa R.", isShared: true, sharedBy: "Lisa R.", sharedByInitials: "LR", pageCount: 3 },
   { id: "shared-4", name: "Quarterly Report Template", description: "Standardized quarterly financial report format.", category: "Financial Reports", gradient: "", source: "user", subtitle: "Shared by James T.", isShared: true, sharedBy: "James T.", sharedByInitials: "JT", pageCount: 10 },
+  { id: "shared-5", name: "Office Checklist", gradient: "", source: "user", isShared: true, sharedBy: "Mike P.", sharedByInitials: "MP", pageCount: 1 },
 ];
 
 export const templates: Template[] = [...libraryTemplates, ...userTemplates];
@@ -86,7 +89,7 @@ export const quickFilterCategories = [
 
 export const libraryCategories = allCategories;
 
-export const myTemplateCategories = ["All", "Service Contracts", "Sales Proposals", "Non-Disclosure", "Financial Reports"];
+export const myTemplateCategories = ["All", "Service Contracts", "Sales Proposals", "Non-Disclosure", "Financial Reports", "Others"];
 
 export const categories = myTemplateCategories;
 
