@@ -2,7 +2,8 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronDown, Search } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowDown01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
@@ -52,13 +53,13 @@ const CategoryFilter = ({ categories, quickCategories, value, onChange, category
             className="rounded-full px-3 py-1 text-xs h-7 whitespace-nowrap gap-1"
           >
             + More ({remainingCount})
-            <ChevronDown className="h-3 w-3" />
+            <HugeiconsIcon icon={ArrowDown01Icon} size={12} />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[360px] p-0" align="start">
           <div className="p-3 border-b">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <HugeiconsIcon icon={Search01Icon} size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 ref={inputRef}
                 placeholder="Filter categories..."

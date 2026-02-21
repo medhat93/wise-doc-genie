@@ -15,19 +15,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  X,
-  Plus,
-  UploadCloud,
-  Eye,
-  Trash2,
-  GripVertical,
-  FileText,
-  Image,
-  CheckCircle2,
-  Sparkles,
-  HardDrive,
-} from "lucide-react";
+  Cancel01Icon,
+  Add01Icon,
+  CloudUploadIcon,
+  ViewIcon,
+  Delete02Icon,
+  DragDropVerticalIcon,
+  File01Icon,
+  Image01Icon,
+  CheckmarkCircle02Icon,
+  SparklesIcon,
+  CloudIcon,
+} from "@hugeicons/core-free-icons";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DndContext,
@@ -58,10 +59,10 @@ interface DocumentQueuePanelProps {
 }
 
 function getFileIcon(type: string) {
-  if (type.includes("pdf")) return { icon: FileText, bg: "bg-red-100", color: "text-red-600" };
-  if (type.includes("word") || type.includes("doc")) return { icon: FileText, bg: "bg-blue-100", color: "text-blue-600" };
-  if (type.startsWith("image/")) return { icon: Image, bg: "bg-green-100", color: "text-green-600" };
-  return { icon: FileText, bg: "bg-muted", color: "text-muted-foreground" };
+  if (type.includes("pdf")) return { icon: File01Icon, bg: "bg-red-100", color: "text-red-600" };
+  if (type.includes("word") || type.includes("doc")) return { icon: File01Icon, bg: "bg-brand-indigo-light", color: "text-brand-indigo" };
+  if (type.startsWith("image/")) return { icon: Image01Icon, bg: "bg-green-100", color: "text-green-600" };
+  return { icon: File01Icon, bg: "bg-muted", color: "text-muted-foreground" };
 }
 
 function formatSize(bytes: number) {
@@ -75,13 +76,13 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
     if (doc.isUserTemplate || !doc.gradient) {
       return (
         <div className="h-10 w-10 rounded flex-shrink-0 bg-muted flex items-center justify-center">
-          <FileText className="h-5 w-5 text-muted-foreground" />
+          <HugeiconsIcon icon={File01Icon} size={20} className="text-muted-foreground" />
         </div>
       );
     }
     return (
       <div className={`h-10 w-10 rounded flex-shrink-0 bg-gradient-to-br ${doc.gradient} flex items-center justify-center`}>
-        <FileText className="h-4 w-4 text-white/90" />
+        <HugeiconsIcon icon={File01Icon} size={16} className="text-white/90" />
       </div>
     );
   }
@@ -89,7 +90,7 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
   if (doc.isAI) {
     return (
       <div className="h-10 w-10 rounded flex-shrink-0 bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
-        <Sparkles className="h-4 w-4 text-white" />
+        <HugeiconsIcon icon={SparklesIcon} size={16} className="text-white" />
       </div>
     );
   }
@@ -100,7 +101,7 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
         <Skeleton className="h-10 w-10 rounded flex-shrink-0" />
         {doc.isDriveImport && (
           <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
-            <HardDrive className="h-2.5 w-2.5 text-muted-foreground" />
+            <HugeiconsIcon icon={CloudIcon} size={10} className="text-muted-foreground" />
           </div>
         )}
       </div>
@@ -108,7 +109,6 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
   }
 
   const fileStyle = getFileIcon(doc.type);
-  const FileIcon = fileStyle.icon;
   return (
     <div className="relative">
       <motion.div
@@ -116,11 +116,11 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
         animate={{ opacity: 1, scale: 1 }}
         className={`h-10 w-10 rounded flex items-center justify-center flex-shrink-0 ${fileStyle.bg}`}
       >
-        <FileIcon className={`h-5 w-5 ${fileStyle.color}`} />
+        <HugeiconsIcon icon={fileStyle.icon} size={20} className={fileStyle.color} />
       </motion.div>
       {doc.isDriveImport && (
         <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
-          <HardDrive className="h-2.5 w-2.5 text-muted-foreground" />
+          <HugeiconsIcon icon={CloudIcon} size={10} className="text-muted-foreground" />
         </div>
       )}
     </div>
@@ -149,21 +149,21 @@ function SortableDocItem({
     <Card ref={setNodeRef} style={style} className="p-3 group">
       <div className="flex items-center gap-3">
         <div {...attributes} {...listeners} className="cursor-grab text-muted-foreground/50">
-          <GripVertical className="h-4 w-4" />
+          <HugeiconsIcon icon={DragDropVerticalIcon} size={16} />
         </div>
 
         <QueueItemThumbnail doc={doc} />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="text-sm font-medium truncate">{doc.name}</p>
+            <p className="text-sm font-semibold truncate">{doc.name}</p>
             {doc.status === "complete" && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="text-emerald-500 flex-shrink-0" />
               </motion.div>
             )}
           </div>
@@ -172,12 +172,12 @@ function SortableDocItem({
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button variant="ghost" size="icon" className="h-7 w-7">
-            <Eye className="h-3.5 w-3.5" />
+            <HugeiconsIcon icon={ViewIcon} size={14} />
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                <Trash2 className="h-3.5 w-3.5" />
+                <HugeiconsIcon icon={Delete02Icon} size={14} />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -203,7 +203,7 @@ function SortableDocItem({
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <Progress value={doc.progress} className="h-1.5" />
+            <Progress value={doc.progress} className="h-1" />
             <p className="text-xs text-muted-foreground text-right mt-0.5">
               {Math.min(doc.progress, 100)}%
             </p>
@@ -245,10 +245,10 @@ const DocumentQueuePanel = ({
   }
 
   return (
-    <div className="w-[400px] h-[calc(100vh-4rem)] flex flex-col border-l bg-background">
+    <div className="w-[400px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar">
       <div className="h-14 px-4 flex items-center justify-between border-b flex-shrink-0">
         <div className="flex items-center gap-2">
-          <span className="font-semibold">Document Queue</span>
+          <span className="font-semibold text-sm">Document Queue</span>
           {documents.length > 0 && (
             <Badge className="rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs">
               {documents.length}
@@ -256,7 +256,7 @@ const DocumentQueuePanel = ({
           )}
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-          <X className="h-4 w-4" />
+          <HugeiconsIcon icon={Cancel01Icon} size={16} />
         </Button>
       </div>
 
@@ -264,7 +264,7 @@ const DocumentQueuePanel = ({
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-8 flex flex-col items-center w-full">
-              <UploadCloud className="h-10 w-10 text-muted-foreground/40" />
+              <HugeiconsIcon icon={CloudUploadIcon} size={40} className="text-muted-foreground/40" />
               <p className="text-sm font-medium text-muted-foreground mt-3">
                 Add documents to get started
               </p>
@@ -298,7 +298,7 @@ const DocumentQueuePanel = ({
           </p>
         )}
         <Button variant="ghost" className="w-full" onClick={onAddFiles}>
-          <Plus className="h-4 w-4 mr-1.5" />
+          <HugeiconsIcon icon={Add01Icon} size={16} className="mr-1.5" />
           {isEmpty ? "Add Documents" : "Add More Documents"}
         </Button>
       </div>

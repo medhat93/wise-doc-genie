@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { UploadCloud } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { CloudUploadIcon } from "@hugeicons/core-free-icons";
 
 const formatPills = ["PDF", "DOCX", "PNG", "JPG"];
 
@@ -22,7 +23,7 @@ const DragDropOverlay = () => (
         animate={{ y: [0, -8, 0] }}
         transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
       >
-        <UploadCloud className="h-14 w-14 text-primary" />
+        <HugeiconsIcon icon={CloudUploadIcon} size={56} className="text-primary" />
       </motion.div>
       <p className="text-xl font-semibold mt-4">Release to upload</p>
       <p className="text-sm text-muted-foreground mt-2">Your files will be added to the document queue</p>
@@ -30,7 +31,7 @@ const DragDropOverlay = () => (
         {formatPills.map((fmt) => (
           <span
             key={fmt}
-            className="rounded bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground"
+            className="rounded-md bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground"
           >
             {fmt}
           </span>

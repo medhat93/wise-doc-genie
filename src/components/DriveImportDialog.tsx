@@ -1,18 +1,18 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  HardDrive,
-  ArrowLeft,
-  Search,
-  Folder,
-  FileText,
-  Image as ImageIcon,
-  File,
-  ChevronRight,
-  Download,
-  Loader2,
-  CheckCircle2,
-} from "lucide-react";
+  CloudIcon,
+  ArrowLeft01Icon,
+  Search01Icon,
+  Folder01Icon,
+  File01Icon,
+  Image01Icon,
+  ArrowRight01Icon,
+  Download04Icon,
+  Loading02Icon,
+  CheckmarkCircle02Icon,
+} from "@hugeicons/core-free-icons";
 import {
   Dialog,
   DialogContent,
@@ -37,11 +37,11 @@ interface DriveImportDialogProps {
 type DialogView = "providers" | "activating" | "activated" | "browser";
 
 function getFileIcon(mimeType?: string) {
-  if (!mimeType) return { icon: File, colorClass: "text-muted-foreground" };
-  if (mimeType.includes("pdf")) return { icon: FileText, colorClass: "text-red-500" };
-  if (mimeType.includes("word") || mimeType.includes("document")) return { icon: FileText, colorClass: "text-blue-500" };
-  if (mimeType.startsWith("image/")) return { icon: ImageIcon, colorClass: "text-green-500" };
-  return { icon: File, colorClass: "text-muted-foreground" };
+  if (!mimeType) return { icon: File01Icon, colorClass: "text-muted-foreground" };
+  if (mimeType.includes("pdf")) return { icon: File01Icon, colorClass: "text-red-500" };
+  if (mimeType.includes("word") || mimeType.includes("document")) return { icon: File01Icon, colorClass: "text-blue-500" };
+  if (mimeType.startsWith("image/")) return { icon: Image01Icon, colorClass: "text-green-500" };
+  return { icon: File01Icon, colorClass: "text-muted-foreground" };
 }
 
 function formatFileSize(bytes?: number) {
@@ -68,7 +68,6 @@ const DriveImportDialog = ({
   const [activeProvider, setActiveProvider] = useState<string | null>(null);
   const [connectingProvider, setConnectingProvider] = useState(false);
 
-  // File browser state
   const [breadcrumb, setBreadcrumb] = useState<{ id: string; name: string }[]>([]);
   const [currentFiles, setCurrentFiles] = useState<DriveFile[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
@@ -175,7 +174,6 @@ const DriveImportDialog = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
         <AnimatePresence mode="wait">
-          {/* ── Provider Selection ─────────────────────────────── */}
           {view === "providers" && (
             <motion.div
               key="providers"
@@ -199,7 +197,7 @@ const DriveImportDialog = ({
                       onClick={() => handleProviderClick(provider.id)}
                     >
                       <div className={`rounded-full p-3 w-fit mx-auto ${provider.bgClass}`}>
-                        <HardDrive className={`h-6 w-6 ${provider.textClass}`} />
+                        <HugeiconsIcon icon={CloudIcon} size={24} className={provider.textClass} />
                       </div>
                       <p className="font-medium text-sm mt-3">{provider.name}</p>
                       <div className="flex items-center justify-center gap-1.5 mt-1">
@@ -219,7 +217,6 @@ const DriveImportDialog = ({
             </motion.div>
           )}
 
-          {/* ── Activation Flow ───────────────────────────────── */}
           {(view === "activating" || view === "activated") && providerData && (
             <motion.div
               key="activating"
@@ -236,7 +233,7 @@ const DriveImportDialog = ({
                 onClick={() => { setView("providers"); setActiveProvider(null); }}
                 disabled={connectingProvider}
               >
-                <ArrowLeft className="h-4 w-4 mr-1" />
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={16} className="mr-1" />
                 Back
               </Button>
 
@@ -247,11 +244,11 @@ const DriveImportDialog = ({
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 400 }}
                   >
-                    <CheckCircle2 className="h-12 w-12 text-emerald-500" />
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={48} className="text-emerald-500" />
                   </motion.div>
                 ) : (
                   <div className={`rounded-full p-4 ${providerData.bgClass}`}>
-                    <HardDrive className={`h-12 w-12 ${providerData.textClass}`} />
+                    <HugeiconsIcon icon={CloudIcon} size={48} className={providerData.textClass} />
                   </div>
                 )}
 
@@ -272,7 +269,7 @@ const DriveImportDialog = ({
                     >
                       {connectingProvider ? (
                         <>
-                          <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                          <HugeiconsIcon icon={Loading02Icon} size={16} className="mr-1.5 animate-spin" />
                           Connecting...
                         </>
                       ) : (
@@ -289,7 +286,6 @@ const DriveImportDialog = ({
             </motion.div>
           )}
 
-          {/* ── File Browser ──────────────────────────────────── */}
           {view === "browser" && providerData && (
             <motion.div
               key="browser"
@@ -299,7 +295,6 @@ const DriveImportDialog = ({
               transition={{ duration: 0.15 }}
               className="flex flex-col min-h-0 flex-1"
             >
-              {/* Browser Header */}
               <div className="flex items-center justify-between px-6 pt-6 pb-3 flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <Button
@@ -308,10 +303,10 @@ const DriveImportDialog = ({
                     className="h-8 w-8"
                     onClick={() => { setView("providers"); setActiveProvider(null); }}
                   >
-                    <ArrowLeft className="h-4 w-4" />
+                    <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
                   </Button>
                   <div className={`rounded-full p-1.5 ${providerData.bgClass}`}>
-                    <HardDrive className={`h-3.5 w-3.5 ${providerData.textClass}`} />
+                    <HugeiconsIcon icon={CloudIcon} size={14} className={providerData.textClass} />
                   </div>
                   <span className="font-medium text-sm">{providerData.name}</span>
                 </div>
@@ -320,16 +315,15 @@ const DriveImportDialog = ({
                   disabled={selectedFiles.length === 0}
                   onClick={handleImport}
                 >
-                  <Download className="h-4 w-4 mr-1.5" />
+                  <HugeiconsIcon icon={Download04Icon} size={16} className="mr-1.5" />
                   Import Selected ({selectedFiles.length})
                 </Button>
               </div>
 
-              {/* Breadcrumb */}
               <div className="flex items-center gap-1 px-6 text-xs text-muted-foreground flex-shrink-0">
                 {breadcrumb.map((crumb, idx) => (
                   <span key={crumb.id} className="flex items-center gap-1">
-                    {idx > 0 && <ChevronRight className="h-3 w-3" />}
+                    {idx > 0 && <HugeiconsIcon icon={ArrowRight01Icon} size={12} />}
                     <button
                       className={`hover:text-foreground transition-colors ${
                         idx === breadcrumb.length - 1 ? "text-foreground font-medium" : ""
@@ -342,10 +336,9 @@ const DriveImportDialog = ({
                 ))}
               </div>
 
-              {/* Search */}
               <div className="px-6 mt-3 flex-shrink-0">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder={`Search in ${providerData.name}...`}
                     className="pl-10"
@@ -355,9 +348,7 @@ const DriveImportDialog = ({
                 </div>
               </div>
 
-              {/* File List */}
               <div className="flex-1 overflow-y-auto px-6 mt-3 min-h-0 max-h-[400px] scrollbar-thin">
-                {/* Select All */}
                 {selectableFiles.length > 0 && (
                   <div
                     className="flex items-center gap-3 px-3 py-2 rounded-md border-b cursor-pointer hover:bg-muted/50 transition-colors"
@@ -377,7 +368,7 @@ const DriveImportDialog = ({
                   const isFolder = file.type === "folder";
                   const isSelected = selectedFiles.includes(file.id);
                   const fileIconInfo = getFileIcon(file.mimeType);
-                  const IconComponent = isFolder ? Folder : fileIconInfo.icon;
+                  const iconToUse = isFolder ? Folder01Icon : fileIconInfo.icon;
                   const iconColor = isFolder ? "text-amber-500" : fileIconInfo.colorClass;
 
                   return (
@@ -403,7 +394,7 @@ const DriveImportDialog = ({
                       )}
                       {isFolder && <div className="w-4" />}
 
-                      <IconComponent className={`h-4 w-4 flex-shrink-0 ${iconColor}`} />
+                      <HugeiconsIcon icon={iconToUse} size={16} className={`flex-shrink-0 ${iconColor}`} />
 
                       <span className="text-sm font-medium flex-1 truncate">{file.name}</span>
 
@@ -412,7 +403,7 @@ const DriveImportDialog = ({
                           <span className="text-xs text-muted-foreground w-20 text-right hidden sm:block">
                             {file.itemCount} items
                           </span>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-muted-foreground flex-shrink-0" />
                         </>
                       )}
 
@@ -437,7 +428,6 @@ const DriveImportDialog = ({
                 )}
               </div>
 
-              {/* Footer */}
               <div className="flex items-center justify-between px-6 py-4 border-t flex-shrink-0">
                 <p className="text-sm text-muted-foreground">
                   {selectedFiles.length} file{selectedFiles.length !== 1 ? "s" : ""} selected
@@ -451,7 +441,7 @@ const DriveImportDialog = ({
                     disabled={selectedFiles.length === 0}
                     onClick={handleImport}
                   >
-                    <Download className="h-4 w-4 mr-1.5" />
+                    <HugeiconsIcon icon={Download04Icon} size={16} className="mr-1.5" />
                     Import {selectedFiles.length} File{selectedFiles.length !== 1 ? "s" : ""}
                   </Button>
                 </div>
