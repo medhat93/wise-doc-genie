@@ -55,6 +55,7 @@ const googleDriveFiles: DriveFileMap = {
     { id: "gf-7", name: "Invoice #1042.pdf", type: "file", mimeType: "application/pdf", size: 911360, modifiedDate: "2025-01-12" },
     { id: "gf-8", name: "Meeting Notes.docx", type: "file", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", size: 327680, modifiedDate: "2025-01-18" },
     { id: "gf-9", name: "NDA - Acme Corp.pdf", type: "file", mimeType: "application/pdf", size: 1153434, modifiedDate: "2024-12-08" },
+    ...generateBulkFiles("gf-root", 60, 10),
   ],
   "gf-1": [
     { id: "gf-1-1", name: "Website Redesign", type: "folder", itemCount: 4, modifiedDate: "2025-01-15" },
@@ -87,6 +88,7 @@ const dropboxFiles: DriveFileMap = {
     { id: "df-5", name: "Team Photo.jpg", type: "file", mimeType: "image/jpeg", size: 3145728, modifiedDate: "2024-11-15" },
     { id: "df-6", name: "Contract - Signed.pdf", type: "file", mimeType: "application/pdf", size: 1572864, modifiedDate: "2025-01-10" },
     { id: "df-7", name: "Presentation Deck.pdf", type: "file", mimeType: "application/pdf", size: 5242880, modifiedDate: "2025-01-08" },
+    ...generateBulkFiles("df-root", 55, 8),
   ],
   "df-1": [
     { id: "df-1-1", name: "Invoices", type: "folder", itemCount: 42, modifiedDate: "2025-01-20" },
