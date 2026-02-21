@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ViewIcon, Add01Icon, DashboardSquare01Icon, UserIcon, Share01Icon } from "@hugeicons/core-free-icons";
+import signitLogo from "@/assets/signit-logo.png";
 
 interface TemplateCardProps {
   template: Template;
@@ -65,8 +66,8 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
         </div>
       )}
       {!showSourceBadge && (
-        <div className="absolute top-2 right-2 text-[10px] font-medium text-brand-indigo bg-black/20 rounded-md px-1.5 py-0.5">
-          Signit
+        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white flex items-center justify-center">
+          <img src={signitLogo} alt="Signit" className="h-3 w-3 object-contain" />
         </div>
       )}
       <div className="absolute inset-0 bg-black/50 rounded-t-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
