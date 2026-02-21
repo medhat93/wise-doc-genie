@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { UploadedDocument } from "@/types/document";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Cancel01Icon,
@@ -131,9 +138,11 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
 function SortableDocItem({
   doc,
   onRemove,
+  onPreview,
 }: {
   doc: UploadedDocument;
   onRemove: (id: string) => void;
+  onPreview: (doc: UploadedDocument) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: doc.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -172,7 +181,7 @@ function SortableDocItem({
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onPreview(doc)}>
             <HugeiconsIcon icon={ViewIcon} size={14} />
           </Button>
           <AlertDialog>
@@ -222,6 +231,8 @@ const DocumentQueuePanel = ({
   onAddFiles,
   mode = "full",
 }: DocumentQueuePanelProps) => {
+  const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -285,7 +296,7 @@ const DocumentQueuePanel = ({
               strategy={verticalListSortingStrategy}
             >
               {documents.map((doc) => (
-                <SortableDocItem key={doc.id} doc={doc} onRemove={handleRemove} />
+                <SortableDocItem key={doc.id} doc={doc} onRemove={handleRemove} onPreview={setPreviewDoc} />
               ))}
             </SortableContext>
           </DndContext>
@@ -303,6 +314,54 @@ const DocumentQueuePanel = ({
           {isEmpty ? "Add Documents" : "Add More Documents"}
         </Button>
       </div>
+
+      <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <HugeiconsIcon icon={ViewIcon} size={18} />
+              {previewDoc?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {previewDoc && (
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border bg-muted/50 p-6 flex flex-col items-center min-h-[280px] justify-center">
+                <QueueItemThumbnail doc={previewDoc} />
+                <div className="mt-6 w-[200px] space-y-2.5">
+                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
+                  <div className="h-[5px] bg-muted-foreground/10 rounded w-4/5" />
+                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
+                  <div className="h-[5px] bg-muted-foreground/10 rounded w-3/5" />
+                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
+                  <div className="h-[5px] bg-muted-foreground/10 rounded w-2/3" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Type</p>
+                  <p className="font-medium mt-0.5">
+                    {previewDoc.isTemplate ? "Template" : previewDoc.isAI ? "AI Generated" : previewDoc.type.split("/").pop()?.toUpperCase() || "File"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Pages</p>
+                  <p className="font-medium mt-0.5">{previewDoc.pageCount ?? "—"}</p>
+                </div>
+                {previewDoc.size && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Size</p>
+                    <p className="font-medium mt-0.5">{formatSize(previewDoc.size)}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs text-muted-foreground">Status</p>
+                  <p className="font-medium mt-0.5 capitalize">{previewDoc.status}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
