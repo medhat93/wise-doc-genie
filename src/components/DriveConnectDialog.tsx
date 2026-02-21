@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CloudIcon, Loading02Icon, CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
+import { Loading02Icon } from "@hugeicons/core-free-icons";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DRIVE_PROVIDERS } from "@/types/document";
 import { toast } from "@/hooks/use-toast";
+import { GoogleDriveLogo, DropboxLogo, OneDriveLogo } from "@/components/DriveLogos";
 
 interface DriveConnectDialogProps {
   open: boolean;
@@ -19,6 +20,12 @@ interface DriveConnectDialogProps {
   mode?: "connect" | "select";
   onSelectDrive?: (providerId: string) => void;
 }
+
+const driveLogo: Record<string, React.ReactNode> = {
+  google_drive: <GoogleDriveLogo size={32} />,
+  dropbox: <DropboxLogo size={32} />,
+  onedrive: <OneDriveLogo size={32} />,
+};
 
 const DriveConnectDialog = ({
   open,
@@ -42,78 +49,73 @@ const DriveConnectDialog = ({
     onOpenChange(false);
   };
 
-  const connectedDrives = DRIVE_PROVIDERS.filter((p) => connectedProviders[p.id]);
-  const disconnectedDrives = DRIVE_PROVIDERS.filter((p) => !connectedProviders[p.id]);
+  const handleCardClick = (provider: (typeof DRIVE_PROVIDERS)[0]) => {
+    if (connectedProviders[provider.id]) {
+      onSelectDrive?.(provider.id);
+      onOpenChange(false);
+    } else {
+      handleConnect(provider.id);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {mode === "select" ? "Choose a Drive" : "Connect a Drive"}
+            {mode === "select" ? "Choose a drive" : "Connect a drive"}
           </DialogTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Import documents directly from your cloud storage
+          </p>
         </DialogHeader>
 
-        <div className="space-y-2 mt-2">
-          {mode === "select" && connectedDrives.length > 0 && (
-            <>
-              {connectedDrives.map((provider) => (
-                <div
-                  key={provider.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => {
-                    onSelectDrive?.(provider.id);
-                    onOpenChange(false);
-                  }}
-                >
-                  <div className={`rounded-full p-2 ${provider.bgClass}`}>
-                    <HugeiconsIcon icon={CloudIcon} size={18} className={provider.textClass} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Browse {provider.name}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    <span className="text-xs text-emerald-600">Connected</span>
-                  </div>
-                </div>
-              ))}
-              {disconnectedDrives.length > 0 && (
-                <div className="pt-2 border-t mt-3">
-                  <p className="text-xs text-muted-foreground mb-2">Connect another drive</p>
-                </div>
-              )}
-            </>
-          )}
-
-          {(mode === "connect" ? DRIVE_PROVIDERS : disconnectedDrives).map((provider) => {
-            if (mode === "connect" && connectedProviders[provider.id]) return null;
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          {DRIVE_PROVIDERS.map((provider) => {
+            const isConnected = connectedProviders[provider.id];
             const isConnecting = connectingId === provider.id;
+
             return (
-              <div
+              <button
                 key={provider.id}
-                className="flex items-center gap-3 p-3 rounded-lg border"
+                disabled={!!connectingId}
+                onClick={() => handleCardClick(provider)}
+                className={`group relative flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
+                  isConnected
+                    ? "border-primary/30 bg-primary/5 hover:border-primary/50 hover:bg-primary/10"
+                    : "border-border hover:border-muted-foreground/30 hover:bg-muted/50"
+                } ${isConnecting ? "opacity-70 pointer-events-none" : ""}`}
               >
-                <div className={`rounded-full p-2 ${provider.bgClass}`}>
-                  <HugeiconsIcon icon={CloudIcon} size={18} className={provider.textClass} />
-                </div>
-                <span className="text-sm font-medium flex-1">{provider.name}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!!connectingId}
-                  onClick={() => handleConnect(provider.id)}
-                >
+                {/* Connected badge */}
+                {isConnected && (
+                  <span className="absolute top-2 right-2 flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  </span>
+                )}
+
+                {/* Logo */}
+                <div className="h-10 w-10 flex items-center justify-center">
                   {isConnecting ? (
-                    <>
-                      <HugeiconsIcon icon={Loading02Icon} size={14} className="mr-1 animate-spin" />
-                      Connecting...
-                    </>
+                    <HugeiconsIcon icon={Loading02Icon} size={28} className="animate-spin text-muted-foreground" />
                   ) : (
-                    "Connect"
+                    driveLogo[provider.id]
                   )}
-                </Button>
-              </div>
+                </div>
+
+                {/* Name */}
+                <span className="text-sm font-medium text-foreground">{provider.name}</span>
+
+                {/* Status / Action */}
+                {isConnected ? (
+                  <span className="text-xs text-emerald-600 font-medium">Connected</span>
+                ) : isConnecting ? (
+                  <span className="text-xs text-muted-foreground">Connecting...</span>
+                ) : (
+                  <Button variant="outline" size="sm" className="h-7 text-xs pointer-events-none">
+                    Connect
+                  </Button>
+                )}
+              </button>
             );
           })}
         </div>
