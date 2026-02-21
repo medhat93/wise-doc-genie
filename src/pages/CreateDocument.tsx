@@ -463,10 +463,245 @@ const CreateDocument = () => {
               </div>
             </section>
 
+            <section className="mt-10">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Recent Templates</h3>
+                <Button
+                  variant="link"
+                  className="text-sm"
+                  onClick={() =>
+                    templateSectionRef.current?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  View All <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                </Button>
+              </div>
+              <ScrollArea className="mt-4 w-full">
+                <div className="flex gap-4 pb-4">
+                  {(isEsign
+                    ? recentTemplates.filter((t) => t.source === "user")
+                    : recentTemplates
+                  ).map((template) => (
+                    <div key={template.id} className="w-[220px] flex-shrink-0">
+                      <TemplateCard
+                        template={template}
+                        showSourceBadge={!isEsign}
+                        onPreview={openPreview}
+                        onUse={handleUseTemplate}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </section>
+
+            <section className="mt-10" ref={templateSectionRef}>
+              {isEsign ? (
+                <>
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <FolderOpen className="h-5 w-5" />
+                    My Templates
+                    <span className="text-muted-foreground font-normal text-sm">({allMyTemplates.length})</span>
+                  </h3>
+
+                  <div className="mt-4 mb-4">
+                    <ToggleGroup
+                      type="single"
+                      value={mySubFilter}
+                      onValueChange={(v) => v && setMySubFilter(v)}
+                      className="justify-start gap-0"
+                    >
+                      <ToggleGroupItem value="all" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
+                        All
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="created" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
+                        Created by Me
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="shared" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
+                        Shared with Me ({sharedTemplates.length})
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+
+                  <div className="relative max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search my templates..."
+                      className="pl-10"
+                      value={mySearchQuery}
+                      onChange={(e) => setMySearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <CategoryFilter
+                      categories={myTemplateCategories}
+                      quickCategories={myTemplateCategories.slice(0, 4)}
+                      value={myCategory}
+                      onChange={setMyCategory}
+                    />
+                  </div>
+
+                  {filteredMyTemplates.length > 0 ? (
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredMyTemplates.map((template) => (
+                        <TemplateCard
+                          key={template.id}
+                          template={template}
+                          tall
+                          onPreview={openPreview}
+                          onUse={handleUseTemplate}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-16 flex flex-col items-center text-center">
+                      <FileText className="h-12 w-12 text-muted-foreground/30" />
+                      <p className="text-sm font-medium text-muted-foreground mt-4">
+                        No templates found
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Save a document as a template to reuse it later
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList className="bg-transparent border-b w-full justify-start rounded-none h-auto p-0 gap-0">
+                    <TabsTrigger
+                      value="my-templates"
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
+                    >
+                      <FolderOpen className="h-4 w-4" />
+                      My Templates
+                      <span className="text-muted-foreground">({allMyTemplates.length})</span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="library"
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                      Template Library
+                      <Sparkles className="h-3 w-3 text-amber-500" />
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="my-templates" className="mt-4">
+                    <div className="mb-4">
+                      <ToggleGroup
+                        type="single"
+                        value={mySubFilter}
+                        onValueChange={(v) => v && setMySubFilter(v)}
+                        className="justify-start gap-0"
+                      >
+                        <ToggleGroupItem value="all" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
+                          All
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="created" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
+                          Created by Me
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="shared" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
+                          Shared with Me ({sharedTemplates.length})
+                        </ToggleGroupItem>
+                      </ToggleGroup>
+                    </div>
+
+                    <div className="relative max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search my templates..."
+                        className="pl-10"
+                        value={mySearchQuery}
+                        onChange={(e) => setMySearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <CategoryFilter
+                        categories={myTemplateCategories}
+                        quickCategories={myTemplateCategories.slice(0, 4)}
+                        value={myCategory}
+                        onChange={setMyCategory}
+                      />
+                    </div>
+
+                    {filteredMyTemplates.length > 0 ? (
+                      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredMyTemplates.map((template) => (
+                          <TemplateCard
+                            key={template.id}
+                            template={template}
+                            tall
+                            onPreview={openPreview}
+                            onUse={handleUseTemplate}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-16 flex flex-col items-center text-center">
+                        <FileText className="h-12 w-12 text-muted-foreground/30" />
+                        <p className="text-sm font-medium text-muted-foreground mt-4">
+                          No templates yet
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Save a document as a template to reuse it later
+                        </p>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="mt-3"
+                          onClick={() => setActiveTab("library")}
+                        >
+                          Browse Template Library <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="library" className="mt-4">
+                    <div className="relative max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search template library..."
+                        className="pl-10"
+                        value={libSearchQuery}
+                        onChange={(e) => setLibSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <CategoryFilter
+                        categories={libraryCategories}
+                        quickCategories={quickFilterCategories}
+                        value={libCategory}
+                        onChange={setLibCategory}
+                      />
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredLibTemplates.map((template) => (
+                        <TemplateCard
+                          key={template.id}
+                          template={template}
+                          tall
+                          onPreview={openPreview}
+                          onUse={handleUseTemplate}
+                        />
+                      ))}
+                      {filteredLibTemplates.length === 0 && (
+                        <div className="col-span-full py-16 text-center">
+                          <p className="text-muted-foreground">No templates found</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              )}
+            </section>
+
             {isEsign && (
               <section className="mt-10">
                 <div
-                  className={`border-2 border-dashed rounded-2xl min-h-[300px] flex flex-col items-center justify-center transition-colors ${
+                  className={`border-2 border-dashed rounded-2xl min-h-[200px] flex flex-col items-center justify-center transition-colors ${
                     esignDropHover
                       ? "border-primary bg-primary/5"
                       : "border-muted-foreground/20"
@@ -494,171 +729,6 @@ const CreateDocument = () => {
                   </p>
                 </div>
               </section>
-            )}
-
-            {!isEsign && (
-              <>
-                <section className="mt-10">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">Recent Templates</h3>
-                    <Button
-                      variant="link"
-                      className="text-sm"
-                      onClick={() =>
-                        templateSectionRef.current?.scrollIntoView({ behavior: "smooth" })
-                      }
-                    >
-                      View All <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                    </Button>
-                  </div>
-                  <ScrollArea className="mt-4 w-full">
-                    <div className="flex gap-4 pb-4">
-                      {recentTemplates.map((template) => (
-                        <div key={template.id} className="w-[220px] flex-shrink-0">
-                          <TemplateCard
-                            template={template}
-                            showSourceBadge
-                            onPreview={openPreview}
-                            onUse={handleUseTemplate}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <ScrollBar orientation="horizontal" />
-                  </ScrollArea>
-                </section>
-
-                <section className="mt-10" ref={templateSectionRef}>
-                  <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="bg-transparent border-b w-full justify-start rounded-none h-auto p-0 gap-0">
-                      <TabsTrigger
-                        value="my-templates"
-                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
-                      >
-                        <FolderOpen className="h-4 w-4" />
-                        My Templates
-                        <span className="text-muted-foreground">({allMyTemplates.length})</span>
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="library"
-                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
-                      >
-                        <LayoutGrid className="h-4 w-4" />
-                        Template Library
-                        <Sparkles className="h-3 w-3 text-amber-500" />
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="my-templates" className="mt-4">
-                      <div className="mb-4">
-                        <ToggleGroup
-                          type="single"
-                          value={mySubFilter}
-                          onValueChange={(v) => v && setMySubFilter(v)}
-                          className="justify-start gap-0"
-                        >
-                          <ToggleGroupItem value="all" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                            All
-                          </ToggleGroupItem>
-                          <ToggleGroupItem value="created" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                            Created by Me
-                          </ToggleGroupItem>
-                          <ToggleGroupItem value="shared" className="text-xs px-3 py-1 h-7 rounded-none border-b-2 border-transparent data-[state=on]:border-primary data-[state=on]:bg-transparent">
-                            Shared with Me ({sharedTemplates.length})
-                          </ToggleGroupItem>
-                        </ToggleGroup>
-                      </div>
-
-                      <div className="relative max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search my templates..."
-                          className="pl-10"
-                          value={mySearchQuery}
-                          onChange={(e) => setMySearchQuery(e.target.value)}
-                        />
-                      </div>
-                      <div className="mt-3">
-                        <CategoryFilter
-                          categories={myTemplateCategories}
-                          quickCategories={myTemplateCategories.slice(0, 4)}
-                          value={myCategory}
-                          onChange={setMyCategory}
-                        />
-                      </div>
-
-                      {filteredMyTemplates.length > 0 ? (
-                        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {filteredMyTemplates.map((template) => (
-                            <TemplateCard
-                              key={template.id}
-                              template={template}
-                              tall
-                              onPreview={openPreview}
-                              onUse={handleUseTemplate}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="mt-16 flex flex-col items-center text-center">
-                          <FileText className="h-12 w-12 text-muted-foreground/30" />
-                          <p className="text-sm font-medium text-muted-foreground mt-4">
-                            No templates yet
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Save a document as a template to reuse it later
-                          </p>
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="mt-3"
-                            onClick={() => setActiveTab("library")}
-                          >
-                            Browse Template Library <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                          </Button>
-                        </div>
-                      )}
-                    </TabsContent>
-
-                    <TabsContent value="library" className="mt-4">
-                      <div className="relative max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search template library..."
-                          className="pl-10"
-                          value={libSearchQuery}
-                          onChange={(e) => setLibSearchQuery(e.target.value)}
-                        />
-                      </div>
-                      <div className="mt-3">
-                        <CategoryFilter
-                          categories={libraryCategories}
-                          quickCategories={quickFilterCategories}
-                          value={libCategory}
-                          onChange={setLibCategory}
-                        />
-                      </div>
-
-                      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredLibTemplates.map((template) => (
-                          <TemplateCard
-                            key={template.id}
-                            template={template}
-                            tall
-                            onPreview={openPreview}
-                            onUse={handleUseTemplate}
-                          />
-                        ))}
-                        {filteredLibTemplates.length === 0 && (
-                          <div className="col-span-full py-16 text-center">
-                            <p className="text-muted-foreground">No templates found</p>
-                          </div>
-                        )}
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </section>
-              </>
             )}
           </div>
         </main>
