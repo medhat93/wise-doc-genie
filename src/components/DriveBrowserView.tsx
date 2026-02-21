@@ -73,25 +73,8 @@ const DriveBrowserView = ({ providerId, onImportFiles }: DriveBrowserViewProps) 
 
   return (
     <div>
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
-        {breadcrumb.map((crumb, idx) => (
-          <span key={crumb.id} className="flex items-center gap-1">
-            {idx > 0 && <HugeiconsIcon icon={ArrowRight01Icon} size={12} />}
-            <button
-              className={`hover:text-foreground transition-colors ${
-                idx === breadcrumb.length - 1 ? "text-foreground font-medium" : ""
-              }`}
-              onClick={() => navigateToBreadcrumb(idx)}
-            >
-              {crumb.name}
-            </button>
-          </span>
-        ))}
-      </div>
-
       {/* Search */}
-      <div className="relative max-w-md mb-4">
+      <div className="relative max-w-md mb-3">
         <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder={`Search in ${providerData?.name || "Drive"}...`}
@@ -100,6 +83,25 @@ const DriveBrowserView = ({ providerId, onImportFiles }: DriveBrowserViewProps) 
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
+
+      {/* Breadcrumb — only when navigated into a folder */}
+      {breadcrumb.length > 1 && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
+          {breadcrumb.map((crumb, idx) => (
+            <span key={crumb.id} className="flex items-center gap-1">
+              {idx > 0 && <HugeiconsIcon icon={ArrowRight01Icon} size={12} />}
+              <button
+                className={`hover:text-foreground transition-colors ${
+                  idx === breadcrumb.length - 1 ? "text-foreground font-medium" : ""
+                }`}
+                onClick={() => navigateToBreadcrumb(idx)}
+              >
+                {crumb.name}
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* File list */}
       <div className="border rounded-lg">
