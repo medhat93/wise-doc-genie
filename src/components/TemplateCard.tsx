@@ -78,9 +78,9 @@ const TemplateCard = ({ template, onPreview, onUse, tall, showSourceBadge }: Tem
   );
 
   return (
-    <Card className="group relative overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+    <Card className="group relative overflow-hidden cursor-pointer hover:shadow-md transition-shadow h-full flex flex-col">
       {previewArea}
-      <div className="p-3">
+      <div className="p-3 flex-1">
         <p className="font-semibold text-sm">{template.name}</p>
         {tall && (
           <>
