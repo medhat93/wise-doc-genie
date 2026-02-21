@@ -16,6 +16,7 @@ import { getDriveFiles, getDriveProviderRootName } from "@/data/driveFiles";
 interface DriveBrowserViewProps {
   providerId: string;
   onImportFiles: (files: DriveFile[], providerName: string) => void;
+  onNavigate?: () => void;
 }
 
 function getFileIcon(mimeType?: string) {
@@ -39,7 +40,7 @@ function formatDate(dateStr?: string) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-const DriveBrowserView = ({ providerId, onImportFiles }: DriveBrowserViewProps) => {
+const DriveBrowserView = ({ providerId, onImportFiles, onNavigate }: DriveBrowserViewProps) => {
   const providerData = DRIVE_PROVIDERS.find((p) => p.id === providerId);
   const rootName = getDriveProviderRootName(providerId);
 
@@ -52,6 +53,7 @@ const DriveBrowserView = ({ providerId, onImportFiles }: DriveBrowserViewProps) 
     setBreadcrumb((prev) => [...prev, { id: folder.id, name: folder.name }]);
     setCurrentFiles(files);
     setSearchQuery("");
+    onNavigate?.();
   };
 
   const navigateToBreadcrumb = (index: number) => {
@@ -61,6 +63,7 @@ const DriveBrowserView = ({ providerId, onImportFiles }: DriveBrowserViewProps) 
     setBreadcrumb(newBreadcrumb);
     setCurrentFiles(files);
     setSearchQuery("");
+    onNavigate?.();
   };
 
   const handleAddFile = (file: DriveFile) => {

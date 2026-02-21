@@ -710,7 +710,7 @@ const CreateDocument = () => {
               {/* Drive browser content */}
               {isDriveFilter && (
                 <div className="mt-4">
-                  <DriveBrowserView key={activeFilter} providerId={activeFilter} onImportFiles={handleDriveImport} />
+                  <DriveBrowserView key={activeFilter} providerId={activeFilter} onImportFiles={handleDriveImport} onNavigate={() => setTimeout(scrollToTemplateSection, 50)} />
                 </div>
               )}
 
