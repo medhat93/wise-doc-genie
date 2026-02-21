@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, DragEvent } from "react";
+import { useState, useRef, useCallback, useEffect, DragEvent, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -203,6 +204,22 @@ const allMyTemplates = [...userTemplates, ...sharedTemplates];
 
 type TemplateFilter = "created" | "shared" | "library" | string; // string for drive IDs
 
+const TEMPLATE_PAGE_SIZE = 12;
+const TEMPLATE_LOAD_DELAY_MS = 5000;
+
+function TemplateCardSkeleton() {
+  return (
+    <div className="rounded-xl border bg-card p-0 overflow-hidden">
+      <Skeleton className="w-full h-32" />
+      <div className="p-4 space-y-2">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-1/2" />
+      </div>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const CreateDocument = () => {
@@ -246,7 +263,13 @@ const CreateDocument = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const templateSectionRef = useRef<HTMLDivElement>(null);
+  const templateSentinelRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
+
+  // Template infinite scroll state
+  const [templateDisplayCount, setTemplateDisplayCount] = useState(TEMPLATE_PAGE_SIZE);
+  const [templateLoadingMore, setTemplateLoadingMore] = useState(false);
+  const [templateInitialLoading, setTemplateInitialLoading] = useState(false);
 
   const scrollToTemplateSection = useCallback(() => {
     if (templateSectionRef.current) {
@@ -470,6 +493,40 @@ const CreateDocument = () => {
 
   const isDriveFilter = connectedDriveIds.includes(activeFilter);
   const filteredTemplates = isDriveFilter ? [] : getFilteredTemplates();
+  const visibleTemplates = filteredTemplates.slice(0, templateDisplayCount);
+  const hasMoreTemplates = templateDisplayCount < filteredTemplates.length;
+
+  // Reset pagination & trigger initial loading on filter/search/category change
+  useEffect(() => {
+    setTemplateDisplayCount(TEMPLATE_PAGE_SIZE);
+    setTemplateLoadingMore(false);
+    if (!isDriveFilter) {
+      setTemplateInitialLoading(true);
+      const timer = setTimeout(() => setTemplateInitialLoading(false), TEMPLATE_LOAD_DELAY_MS);
+      return () => clearTimeout(timer);
+    }
+  }, [activeFilter, mySearchQuery, sharedSearchQuery, libSearchQuery, myCategory, sharedCategory, libCategory, isDriveFilter]);
+
+  // Infinite scroll observer for templates
+  useEffect(() => {
+    if (!templateSentinelRef.current || !hasMoreTemplates || templateLoadingMore || templateInitialLoading || isDriveFilter) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !templateLoadingMore) {
+          setTemplateLoadingMore(true);
+          setTimeout(() => {
+            setTemplateDisplayCount((prev) => prev + TEMPLATE_PAGE_SIZE);
+            setTemplateLoadingMore(false);
+          }, TEMPLATE_LOAD_DELAY_MS);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(templateSentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMoreTemplates, templateLoadingMore, templateInitialLoading, isDriveFilter, templateDisplayCount]);
 
   const currentSearch =
     activeFilter === "created" ? mySearchQuery : activeFilter === "shared" ? sharedSearchQuery : libSearchQuery;
@@ -761,19 +818,53 @@ const CreateDocument = () => {
                     />
                   </div>
 
-                  {filteredTemplates.length > 0 ? (
+                  {/* Initial loading state */}
+                  {templateInitialLoading && (
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredTemplates.map((template) => (
-                        <TemplateCard
-                          key={template.id}
-                          template={template}
-                          tall
-                          onPreview={openPreview}
-                          onUse={handleUseTemplate}
-                        />
+                      {Array.from({ length: TEMPLATE_PAGE_SIZE }).map((_, i) => (
+                        <TemplateCardSkeleton key={i} />
                       ))}
                     </div>
-                  ) : (
+                  )}
+
+                  {/* Loaded templates */}
+                  {!templateInitialLoading && filteredTemplates.length > 0 && (
+                    <>
+                      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {visibleTemplates.map((template) => (
+                          <TemplateCard
+                            key={template.id}
+                            template={template}
+                            tall
+                            onPreview={openPreview}
+                            onUse={handleUseTemplate}
+                          />
+                        ))}
+                        {/* Loading more skeletons */}
+                        {templateLoadingMore && Array.from({ length: 3 }).map((_, i) => (
+                          <TemplateCardSkeleton key={`skel-${i}`} />
+                        ))}
+                      </div>
+
+                      {/* Infinite scroll sentinel */}
+                      {hasMoreTemplates && !templateLoadingMore && (
+                        <div ref={templateSentinelRef} className="h-1" />
+                      )}
+
+                      {/* Items count footer */}
+                      {filteredTemplates.length > TEMPLATE_PAGE_SIZE && (
+                        <div className="mt-4 text-center">
+                          <span className="text-xs text-muted-foreground">
+                            Showing {visibleTemplates.length} of {filteredTemplates.length} templates
+                            {templateLoadingMore && " · Loading more..."}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Empty state */}
+                  {!templateInitialLoading && filteredTemplates.length === 0 && (
                     <div className="mt-16 flex flex-col items-center text-center">
                       <HugeiconsIcon icon={File01Icon} size={48} className="text-muted-foreground/30" />
                       <p className="text-sm font-medium text-muted-foreground mt-4">No templates found</p>
