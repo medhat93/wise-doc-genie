@@ -612,43 +612,56 @@ const CreateDocument = () => {
                   isEsign ? "grid-cols-4 max-w-4xl mx-auto" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
                 }`}
               >
-                {actions.map((action) => (
-                  <Card
-                    key={action.id}
-                    className={`p-5 cursor-pointer transition-all relative group ${
-                      isEsign && action.id === "upload" ? "col-span-3 " : ""
-                    }${
-                      action.highlight
-                        ? "ring-1 ring-primary/20 hover:shadow-md"
-                        : action.id === "library"
-                          ? "ring-1 ring-brand-indigo/20 hover:ring-brand-indigo/40 hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.3)]"
-                          : action.id === "ai"
-                            ? "hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.25)]"
-                            : "hover:shadow-md"
-                    }`}
-                    onClick={() => handleQuickAction(action.id)}
-                  >
-                    {action.id === "library" ? (
-                      <div className="rounded-full p-2.5 w-fit bg-brand-indigo/10">
-                        <img src={signitLogo} alt="Signit" className="h-5 w-auto" />
+                {actions.map((action) =>
+                  action.id === "upload" ? (
+                    <div
+                      key={action.id}
+                      className={`cursor-pointer transition-all relative group rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 bg-primary/[0.03] hover:bg-primary/[0.06] p-6 flex flex-col items-center justify-center text-center ${
+                        isEsign ? "col-span-3" : ""
+                      }`}
+                      onClick={() => handleQuickAction(action.id)}
+                    >
+                      <div className="rounded-full p-3.5 bg-primary/10 mb-3 group-hover:scale-110 transition-transform">
+                        <HugeiconsIcon icon={CloudUploadIcon} size={24} className="text-primary" />
                       </div>
-                    ) : (
-                      <div className={`rounded-full p-3 w-fit ${action.accent}`}>
-                        {(action as any).customIcon ? (
-                          <AiIcon
-                            size={20}
-                            className="transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]"
-                          />
-                        ) : (
-                          <HugeiconsIcon icon={action.icon} size={20} />
-                        )}
-                      </div>
-                    )}
-                    <h3 className="font-semibold text-sm mt-3">{action.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
-                    {action.sub && <p className="text-xs text-muted-foreground/70 mt-1">{action.sub}</p>}
-                  </Card>
-                ))}
+                      <h3 className="font-semibold text-sm">{action.title}</h3>
+                      <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
+                      <p className="text-xs text-muted-foreground/60 mt-1.5">or drag & drop anywhere</p>
+                    </div>
+                  ) : (
+                    <Card
+                      key={action.id}
+                      className={`p-5 cursor-pointer transition-all relative group ${
+                        action.id === "library"
+                            ? "ring-1 ring-brand-indigo/20 hover:ring-brand-indigo/40 hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.3)]"
+                            : action.id === "ai"
+                              ? "hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.25)]"
+                              : "hover:shadow-md"
+                      }`}
+                      onClick={() => handleQuickAction(action.id)}
+                    >
+                      {action.id === "library" ? (
+                        <div className="rounded-full p-2.5 w-fit bg-brand-indigo/10">
+                          <img src={signitLogo} alt="Signit" className="h-5 w-auto" />
+                        </div>
+                      ) : (
+                        <div className={`rounded-full p-3 w-fit ${action.accent}`}>
+                          {(action as any).customIcon ? (
+                            <AiIcon
+                              size={20}
+                              className="transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]"
+                            />
+                          ) : (
+                            <HugeiconsIcon icon={action.icon} size={20} />
+                          )}
+                        </div>
+                      )}
+                      <h3 className="font-semibold text-sm mt-3">{action.title}</h3>
+                      <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
+                      {action.sub && <p className="text-xs text-muted-foreground/70 mt-1">{action.sub}</p>}
+                    </Card>
+                  )
+                )}
               </div>
             </section>
 
