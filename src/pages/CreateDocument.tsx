@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, DragEvent, useMemo } from "react";
+import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "framer-motion";
@@ -593,6 +594,12 @@ const CreateDocument = () => {
       {/* ─── Header ──────────────────────────────────────────────────────── */}
       <header className="h-auto min-h-[3.5rem] md:h-16 border-b bg-background flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 flex-shrink-0 gap-2 sm:gap-0">
         <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
+          <button
+            onClick={() => navigate(-1)}
+            className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <nav className="flex items-center gap-1.5 text-sm">
             <span className="font-medium text-sm">New document</span>
           </nav>
