@@ -686,14 +686,13 @@ const CreateDocument = () => {
         <main className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin">
           <div className={`mx-auto transition-all ${showQueue && !isMobile ? "max-w-4xl" : "max-w-5xl"}`}>
             {/* ─── Title & Subtitle ──────────────────────────────────── */}
-            <section className="mb-8">
+            <section className="mb-6">
               <h1 className="text-2xl font-bold tracking-tight">Start your document</h1>
               <p className="text-sm text-muted-foreground mt-1">Upload, use a template, or create with AI.</p>
             </section>
 
-            {/* ─── Start from ──────────────────────────────────────────── */}
+            {/* ─── Quick Actions ──────────────────────────────────────────── */}
             <section>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">Start from</h3>
               <div
                 className={`grid gap-3 md:gap-4 ${
                   isEsign ? "grid-cols-4 max-w-4xl mx-auto" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
