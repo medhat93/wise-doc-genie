@@ -204,7 +204,7 @@ const allMyTemplates = [...userTemplates, ...sharedTemplates];
 
 // ─── Template filter types ────────────────────────────────────────────────────
 
-type TemplateFilter = "created" | "shared" | "library" | string; // string for drive IDs
+type TemplateFilter = "recent" | "created" | "shared" | "library" | string; // string for drive IDs
 
 const TEMPLATE_PAGE_SIZE = 12;
 const TEMPLATE_LOAD_DELAY_MS = 2000;
@@ -238,7 +238,7 @@ const CreateDocument = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   // Template filter state (unified)
-  const [activeFilter, setActiveFilter] = useState<TemplateFilter>("created");
+  const [activeFilter, setActiveFilter] = useState<TemplateFilter>("recent");
   const [mySearchQuery, setMySearchQuery] = useState("");
   const [myCategory, setMyCategory] = useState("All");
   const [sharedSearchQuery, setSharedSearchQuery] = useState("");
@@ -481,6 +481,10 @@ const CreateDocument = () => {
       t.name.toLowerCase().includes(query.toLowerCase()) ||
       (t.description || "").toLowerCase().includes(query.toLowerCase());
 
+    if (activeFilter === "recent") {
+      const recents = isEsign ? esignRecentTemplates : recentTemplates;
+      return recents.filter((t) => matchSearch(t, mySearchQuery));
+    }
     if (activeFilter === "created") {
       return userTemplates.filter((t) => matchCategory(t.category, myCategory) && matchSearch(t, mySearchQuery));
     }
@@ -531,19 +535,22 @@ const CreateDocument = () => {
   }, [hasMoreTemplates, templateLoadingMore, templateInitialLoading, isDriveFilter, templateDisplayCount]);
 
   const currentSearch =
-    activeFilter === "created" ? mySearchQuery : activeFilter === "shared" ? sharedSearchQuery : libSearchQuery;
+    activeFilter === "recent" ? mySearchQuery : activeFilter === "created" ? mySearchQuery : activeFilter === "shared" ? sharedSearchQuery : libSearchQuery;
   const setCurrentSearch =
-    activeFilter === "created"
+    activeFilter === "recent"
       ? setMySearchQuery
-      : activeFilter === "shared"
-        ? setSharedSearchQuery
-        : setLibSearchQuery;
+      : activeFilter === "created"
+        ? setMySearchQuery
+        : activeFilter === "shared"
+          ? setSharedSearchQuery
+          : setLibSearchQuery;
   const currentCategory =
     activeFilter === "created" ? myCategory : activeFilter === "shared" ? sharedCategory : libCategory;
   const setCurrentCategory =
     activeFilter === "created" ? setMyCategory : activeFilter === "shared" ? setSharedCategory : setLibCategory;
   const currentCategories = activeFilter === "library" ? libraryCategories : myTemplateCategories;
   const currentQuickCategories = activeFilter === "library" ? quickFilterCategories : myTemplateCategories.slice(0, 4);
+  const showCategoryFilter = activeFilter !== "recent";
 
   const openPreview = (t: Template) => {
     setPreviewTemplate(t);
@@ -561,10 +568,12 @@ const CreateDocument = () => {
 
   const baseFilters: { id: TemplateFilter; label: string; icon?: React.ReactNode; isNew?: boolean }[] = isEsign
     ? [
+        { id: "recent", label: "Recent Templates" },
         { id: "created", label: "My Templates" },
         { id: "shared", label: "Shared Templates" },
       ]
     : [
+        { id: "recent", label: "Recent Templates" },
         { id: "created", label: "My Templates" },
         { id: "shared", label: "Shared Templates" },
         { id: "library", label: "Library", icon: <img src={signitLogo} alt="Signit" className="h-3.5" />, isNew: true },
@@ -676,8 +685,15 @@ const CreateDocument = () => {
       <div className="flex flex-1 overflow-hidden relative">
         <main className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin">
           <div className={`mx-auto transition-all ${showQueue && !isMobile ? "max-w-4xl" : "max-w-5xl"}`}>
-            {/* ─── Quick Actions ────────────────────────────────────────── */}
+            {/* ─── Title & Subtitle ──────────────────────────────────── */}
+            <section className="mb-8">
+              <h1 className="text-2xl font-bold tracking-tight">Start your document</h1>
+              <p className="text-sm text-muted-foreground mt-1">Upload, use a template, or create with AI.</p>
+            </section>
+
+            {/* ─── Start from ──────────────────────────────────────────── */}
             <section>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">Start from</h3>
               <div
                 className={`grid gap-3 md:gap-4 ${
                   isEsign ? "grid-cols-4 max-w-4xl mx-auto" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
@@ -734,39 +750,6 @@ const CreateDocument = () => {
                   )
                 )}
               </div>
-            </section>
-
-            {/* ─── Recent Templates ────────────────────────────────────── */}
-            <section className="mt-10">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Start from a recent templates</h3>
-                <Button
-                  variant="link"
-                  className="text-sm"
-                  onClick={() => {
-                    setActiveFilter("created");
-                    setTimeout(() => {
-                      templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-                    }, 50);
-                  }}
-                >
-                  View all <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="ml-1" />
-                </Button>
-              </div>
-              <ScrollArea className="mt-4 w-full">
-                <div className="flex gap-4 pb-4 items-stretch">
-                  {(isEsign ? esignRecentTemplates : recentTemplates).map((template) => (
-                    <div key={template.id} className="w-[220px] flex-shrink-0 h-full">
-                      <TemplateCard
-                        template={template}
-                        onPreview={openPreview}
-                        onUse={handleUseTemplate}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
             </section>
 
             {/* ─── Unified Template Section ─────────────────────────────── */}
@@ -828,17 +811,19 @@ const CreateDocument = () => {
                       }}
                     />
                   </div>
-                  <div className="mt-3">
-                    <CategoryFilter
-                      categories={currentCategories}
-                      quickCategories={currentQuickCategories}
-                      value={currentCategory}
-                      onChange={(val) => {
-                        setCurrentCategory(val);
-                        setTimeout(scrollToTemplateSection, 50);
-                      }}
-                    />
-                  </div>
+                  {showCategoryFilter && (
+                    <div className="mt-3">
+                      <CategoryFilter
+                        categories={currentCategories}
+                        quickCategories={currentQuickCategories}
+                        value={currentCategory}
+                        onChange={(val) => {
+                          setCurrentCategory(val);
+                          setTimeout(scrollToTemplateSection, 50);
+                        }}
+                      />
+                    </div>
+                  )}
 
                   {/* Initial loading state */}
                   {templateInitialLoading && (
