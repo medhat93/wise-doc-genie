@@ -7,7 +7,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   CloudUploadIcon,
   CloudIcon,
-  DashboardSquare01Icon,
+  // DashboardSquare01Icon removed
   Files01Icon,
   ArrowRight01Icon,
   Search01Icon,
@@ -167,13 +167,6 @@ const fullQuickActions = [
     description: "Google Drive, OneDrive, Dropbox",
     icon: CloudIcon,
     accent: "bg-orange-500/10 text-orange-600",
-  },
-  {
-    id: "library",
-    title: "Start from Signit library",
-    description: "Browse all templates",
-    icon: DashboardSquare01Icon,
-    accent: "bg-brand-indigo/10 text-brand-indigo",
   },
 ];
 
@@ -369,10 +362,6 @@ const CreateDocument = () => {
       // Always open the dialog — show connected drives to browse + disconnected ones to connect
       setDriveConnectMode(connectedCount > 0 ? "select" : "connect");
       setDriveConnectOpen(true);
-    }
-    if (actionId === "library") {
-      templateSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-      setActiveFilter("library");
     }
   };
 
@@ -703,7 +692,7 @@ const CreateDocument = () => {
                     <div
                       key={action.id}
                       className={`cursor-pointer transition-all relative group rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 bg-primary/[0.03] hover:bg-primary/[0.06] p-6 flex flex-col ${
-                        isEsign ? "col-span-3 items-center justify-center text-center" : "items-start justify-center text-left"
+                        isEsign ? "col-span-3 items-center justify-center text-center" : "lg:col-span-2 items-start justify-center text-left"
                       }`}
                       onClick={() => handleQuickAction(action.id)}
                     >
@@ -718,30 +707,22 @@ const CreateDocument = () => {
                     <Card
                       key={action.id}
                       className={`p-5 cursor-pointer transition-all relative group ${
-                        action.id === "library"
-                            ? "ring-1 ring-brand-indigo/20 hover:ring-brand-indigo/40 hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.3)]"
-                            : action.id === "ai"
-                              ? "hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.25)]"
-                              : "hover:shadow-md"
+                        action.id === "ai"
+                          ? "hover:shadow-[0_0_20px_-4px_hsl(var(--brand-indigo)/0.25)]"
+                          : "hover:shadow-md"
                       }`}
                       onClick={() => handleQuickAction(action.id)}
                     >
-                      {action.id === "library" ? (
-                        <div className="rounded-full p-2.5 w-fit bg-brand-indigo/10">
-                          <img src={signitLogo} alt="Signit" className="h-5 w-auto" />
-                        </div>
-                      ) : (
-                        <div className={`rounded-full p-3 w-fit ${action.accent}`}>
-                          {(action as any).customIcon ? (
-                            <AiIcon
-                              size={20}
-                              className="transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]"
-                            />
-                          ) : (
-                            <HugeiconsIcon icon={action.icon} size={20} />
-                          )}
-                        </div>
-                      )}
+                      <div className={`rounded-full p-3 w-fit ${action.accent}`}>
+                        {(action as any).customIcon ? (
+                          <AiIcon
+                            size={20}
+                            className="transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]"
+                          />
+                        ) : (
+                          <HugeiconsIcon icon={action.icon} size={20} />
+                        )}
+                      </div>
                       <h3 className="font-semibold text-sm mt-3">{action.title}</h3>
                       <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
                       {action.sub && <p className="text-xs text-muted-foreground/70 mt-1">{action.sub}</p>}
