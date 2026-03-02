@@ -7,7 +7,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   CloudUploadIcon,
   CloudIcon,
-  // DashboardSquare01Icon removed
   Files01Icon,
   ArrowRight01Icon,
   Search01Icon,
@@ -20,6 +19,9 @@ import {
   SentIcon,
   Cancel01Icon,
   FileAddIcon,
+  ArrowDown01Icon,
+  Add01Icon,
+  Note01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
 import {
   libraryTemplates,
@@ -162,15 +165,15 @@ const fullQuickActions = [
     customIcon: true,
   },
   {
-    id: "drive",
-    title: "Import from Cloud",
-    description: "Google Drive, OneDrive, Dropbox",
-    icon: CloudIcon,
-    accent: "bg-orange-500/10 text-orange-600",
+    id: "blank",
+    title: "Blank document",
+    description: "Start from a clean slate",
+    icon: Note01Icon,
+    accent: "bg-muted text-muted-foreground",
   },
 ];
 
-const esignQuickActions = [fullQuickActions[0], fullQuickActions[2]];
+const esignQuickActions = [fullQuickActions[0]];
 
 // ─── Recent Templates ─────────────────────────────────────────────────────────
 
@@ -246,6 +249,7 @@ const CreateDocument = () => {
   const [aiGenerating, setAiGenerating] = useState(false);
 
   const [esignDropHover, setEsignDropHover] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   // Drive state
   const [driveConnectOpen, setDriveConnectOpen] = useState(false);
@@ -358,10 +362,8 @@ const CreateDocument = () => {
   const handleQuickAction = (actionId: string) => {
     if (actionId === "upload") fileInputRef.current?.click();
     if (actionId === "ai") setAiDialogOpen(true);
-    if (actionId === "drive") {
-      // Always open the dialog — show connected drives to browse + disconnected ones to connect
-      setDriveConnectMode(connectedCount > 0 ? "select" : "connect");
-      setDriveConnectOpen(true);
+    if (actionId === "blank") {
+      handleStartBlank();
     }
   };
 
@@ -575,7 +577,20 @@ const CreateDocument = () => {
 
   const allFilters = [...baseFilters, ...driveFilters];
 
-  // ─── Edit button label ────────────────────────────────────────────────────
+  // Unconnected drive providers for the "More" menu
+  const unconnectedProviders = DRIVE_PROVIDERS.filter((p) => !connectedProviders[p.id]);
+  const hasUnconnected = unconnectedProviders.length > 0;
+
+  const handleConnectFromMore = (providerId: string) => {
+    setMoreOpen(false);
+    setDriveConnectMode("connect");
+    setDriveConnectOpen(true);
+    // After connection, the handleDriveConnect callback handles the rest
+    // We store which provider to auto-connect
+    setTimeout(() => {
+      handleDriveConnect(providerId);
+    }, 1500);
+  };
 
   const editButtonLabel =
     count === 0 ? "Start a blank document" : count === 1 ? "Edit document" : `Edit ${count} documents`;
@@ -703,6 +718,18 @@ const CreateDocument = () => {
                       <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
                       <p className="text-xs text-muted-foreground/60 mt-1.5">or drag & drop anywhere</p>
                     </div>
+                  ) : action.id === "blank" ? (
+                    <Card
+                      key={action.id}
+                      className="p-5 cursor-pointer transition-all relative group border-dashed border-muted-foreground/20 hover:border-muted-foreground/40 hover:shadow-sm bg-muted/30"
+                      onClick={() => handleQuickAction(action.id)}
+                    >
+                      <div className="rounded-full p-3 w-fit bg-muted">
+                        <HugeiconsIcon icon={Note01Icon} size={20} className="text-muted-foreground" />
+                      </div>
+                      <h3 className="font-semibold text-sm mt-3">{action.title}</h3>
+                      <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
+                    </Card>
                   ) : (
                     <Card
                       key={action.id}
@@ -762,6 +789,38 @@ const CreateDocument = () => {
                     )}
                   </button>
                 ))}
+
+                {/* More dropdown for unconnected drives */}
+                {hasUnconnected && (
+                  <Popover open={moreOpen} onOpenChange={setMoreOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        className={`relative pb-2 text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1 ${
+                          moreOpen
+                            ? "text-foreground border-b-2 border-primary"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        More
+                        <HugeiconsIcon icon={ArrowDown01Icon} size={14} className={`transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-56 p-1.5">
+                      <div className="space-y-0.5">
+                        {unconnectedProviders.map((provider) => (
+                          <button
+                            key={provider.id}
+                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-md text-sm hover:bg-muted transition-colors text-left"
+                            onClick={() => handleConnectFromMore(provider.id)}
+                          >
+                            <span className="flex-shrink-0">{driveLogoMap[provider.id]}</span>
+                            <span>Connect {provider.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
 
               {/* Drive browser content */}
