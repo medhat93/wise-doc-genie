@@ -721,10 +721,10 @@ const CreateDocument = () => {
                   ) : action.id === "blank" ? (
                     <Card
                       key={action.id}
-                      className="p-5 cursor-pointer transition-all relative group border-dashed border-muted-foreground/20 hover:border-muted-foreground/40 hover:shadow-sm bg-muted/30"
+                      className="p-5 cursor-pointer transition-all relative group hover:shadow-[0_0_20px_-4px_hsl(var(--muted-foreground)/0.15)]"
                       onClick={() => handleQuickAction(action.id)}
                     >
-                      <div className="rounded-full p-3 w-fit bg-muted">
+                      <div className="rounded-full p-3 w-fit bg-muted border">
                         <HugeiconsIcon icon={Note01Icon} size={20} className="text-muted-foreground" />
                       </div>
                       <h3 className="font-semibold text-sm mt-3">{action.title}</h3>
