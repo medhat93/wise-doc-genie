@@ -206,7 +206,7 @@ function SortableDocCard({
       {/* Info + remove row */}
       <div className="p-2.5 flex items-start gap-1">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
+          <p className="text-xs font-medium truncate leading-tight" title={doc.name}>{doc.name}</p>
           {doc.isAI && doc.status === "uploading" ? (
             <AnimatePresence mode="wait">
               <motion.p
