@@ -64,83 +64,49 @@ import { GoogleDriveLogo, DropboxLogo, OneDriveLogo } from "@/components/DriveLo
 const AI_SUGGESTIONS = [
   {
     label: "Sales Proposal",
-    template: `Draft a professional sales proposal for [Company Name] offering [Product/Service].
-
-Key details to include:
-
-Target client: [Client Name / Industry]
-
-Proposed solution and deliverables
-
-Pricing structure: [Fixed / Tiered / Custom]
-
-Timeline: [Duration]
-
-Terms and conditions`,
+    options: [
+      { name: "Product sales proposal", template: "Draft a professional product sales proposal for [Company Name] offering [Product] to [Client Name]." },
+      { name: "Service sales proposal", template: "Draft a service sales proposal for [Company Name] offering [Service] to [Client Name], including scope and pricing." },
+      { name: "SaaS partnership proposal", template: "Draft a SaaS partnership proposal between [Company A] and [Company B] for co-selling [Product/Platform]." },
+      { name: "Enterprise deal proposal", template: "Draft an enterprise sales proposal for [Company Name] targeting [Enterprise Client] with a multi-year deal structure." },
+    ],
   },
   {
     label: "Non-Disclosure Agreement",
-    template: `Draft a mutual non-disclosure agreement between [Party A] and [Party B] for the purpose of [Business Purpose].
-
-Key details to include:
-
-Type: [Mutual / One-way]
-
-Confidential information scope
-
-Duration of confidentiality: [1 year / 2 years / Indefinite]
-
-Permitted disclosures and exceptions
-
-Governing jurisdiction: [State/Country]`,
+    options: [
+      { name: "Mutual NDA", template: "Draft a mutual non-disclosure agreement between [Party A] and [Party B] for [Business Purpose]." },
+      { name: "One-way NDA", template: "Draft a one-way non-disclosure agreement where [Disclosing Party] shares confidential information with [Receiving Party]." },
+      { name: "Employee NDA", template: "Draft an employee non-disclosure agreement for [Company Name] to be signed by new hires upon onboarding." },
+      { name: "Investor NDA", template: "Draft a non-disclosure agreement for [Company Name] to share confidential business information with potential investors." },
+      { name: "Vendor NDA", template: "Draft a vendor non-disclosure agreement between [Company Name] and [Vendor Name] for [Project/Service]." },
+    ],
   },
   {
     label: "Service Contract",
-    template: `Draft a service agreement between [Service Provider] and [Client] for [Type of Service].
-
-Key details to include:
-
-Scope of services and deliverables
-
-Payment terms: [Hourly / Fixed / Milestone-based]
-
-Contract duration: [Start Date] to [End Date]
-
-Termination and cancellation policy
-
-Liability and indemnification clauses`,
+    options: [
+      { name: "Freelance service agreement", template: "Draft a freelance service agreement between [Freelancer] and [Client] for [Type of Work], including payment terms and deliverables." },
+      { name: "Managed services contract", template: "Draft a managed services contract between [Provider] and [Client] for ongoing [IT/Marketing/HR] services." },
+      { name: "Maintenance agreement", template: "Draft a maintenance and support agreement between [Provider] and [Client] for [Software/Equipment]." },
+      { name: "Professional services contract", template: "Draft a professional services contract for [Company] providing [Consulting/Advisory] services to [Client]." },
+    ],
   },
   {
-    label: "Employment Offer Letter",
-    template: `Draft an employment offer letter for the position of [Job Title] at [Company Name].
-
-Key details to include:
-
-Compensation: [Salary / Hourly Rate]
-
-Start date: [Date]
-
-Employment type: [Full-time / Part-time / Contract]
-
-Benefits and perks overview
-
-Reporting structure and location`,
+    label: "Employment Offer",
+    options: [
+      { name: "Full-time offer letter", template: "Draft a full-time employment offer letter for [Job Title] at [Company Name] with [Salary] compensation." },
+      { name: "Part-time offer letter", template: "Draft a part-time employment offer letter for [Job Title] at [Company Name] with [Hourly Rate]." },
+      { name: "Contract position offer", template: "Draft a contract position offer letter for [Job Title] at [Company Name] for [Duration]." },
+      { name: "Executive offer letter", template: "Draft an executive offer letter for [C-Level/VP Title] at [Company Name] including equity and benefits package." },
+    ],
   },
   {
     label: "Consulting Agreement",
-    template: `Draft a consulting agreement between [Consultant Name/Firm] and [Client Company] for [Consulting Area].
-
-Key details to include:
-
-Engagement scope and objectives
-
-Fee structure: [Hourly / Retainer / Project-based]
-
-Estimated duration: [Timeline]
-
-Deliverables and milestones
-
-Intellectual property ownership`,
+    options: [
+      { name: "Independent consultant agreement", template: "Draft an independent consulting agreement between [Consultant] and [Client] for [Area of Expertise]." },
+      { name: "Retainer agreement", template: "Draft a retainer-based consulting agreement between [Consultant/Firm] and [Client] for ongoing advisory services." },
+      { name: "Project-based consulting", template: "Draft a project-based consulting agreement for [Consultant] to deliver [Specific Project] to [Client]." },
+      { name: "Advisory board agreement", template: "Draft an advisory board agreement for [Advisor Name] joining [Company Name]'s advisory board." },
+    ],
   },
 ];
 
@@ -426,9 +392,16 @@ const CreateDocument = () => {
 
   // ─── AI ───────────────────────────────────────────────────────────────────
 
+  const [aiExpandedCategory, setAiExpandedCategory] = useState<string | null>(null);
+
   const handleAISuggestionClick = (suggestion: (typeof AI_SUGGESTIONS)[0]) => {
-    setAiSelectedSuggestion(suggestion.label);
-    setAiPrompt(suggestion.template);
+    setAiExpandedCategory((prev) => (prev === suggestion.label ? null : suggestion.label));
+  };
+
+  const handleAIOptionClick = (option: { name: string; template: string }, categoryLabel: string) => {
+    setAiSelectedSuggestion(categoryLabel);
+    setAiPrompt(option.template);
+    setAiExpandedCategory(null);
   };
 
   const clearAISuggestion = () => {
@@ -1019,6 +992,7 @@ const CreateDocument = () => {
             if (!o) {
               setAiPrompt("");
               setAiSelectedSuggestion(null);
+              setAiExpandedCategory(null);
             }
           }
         }}
@@ -1032,41 +1006,61 @@ const CreateDocument = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* Document type field */}
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Document type</Label>
-              <Input
-                placeholder="e.g. Sales Proposal, NDA, Contract..."
-                value={aiSelectedSuggestion || ""}
-                onChange={(e) => setAiSelectedSuggestion(e.target.value || null)}
-                disabled={aiGenerating}
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Describe your document</Label>
               <Textarea
                 placeholder="e.g. Draft a non-disclosure agreement between two companies for a software development partnership..."
-                className="min-h-[160px] resize-none"
+                className="min-h-[120px] resize-none"
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 disabled={aiGenerating}
               />
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {AI_SUGGESTIONS.map((s) => (
-                <Button
-                  key={s.label}
-                  variant={aiSelectedSuggestion === s.label ? "default" : "outline"}
-                  size="sm"
-                  className="rounded-full text-xs h-7"
-                  onClick={() => handleAISuggestionClick(s)}
-                  disabled={aiGenerating}
-                >
-                  {s.label}
-                </Button>
-              ))}
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {AI_SUGGESTIONS.map((s) => (
+                  <Button
+                    key={s.label}
+                    variant={aiExpandedCategory === s.label || aiSelectedSuggestion === s.label ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full text-xs h-7"
+                    onClick={() => handleAISuggestionClick(s)}
+                    disabled={aiGenerating}
+                  >
+                    {s.label}
+                    <HugeiconsIcon
+                      icon={ArrowDown01Icon}
+                      size={12}
+                      className={`ml-0.5 transition-transform ${aiExpandedCategory === s.label ? "rotate-180" : ""}`}
+                    />
+                  </Button>
+                ))}
+              </div>
+
+              <AnimatePresence mode="wait">
+                {aiExpandedCategory && (
+                  <motion.div
+                    key={aiExpandedCategory}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="grid grid-cols-1 gap-1 pt-1">
+                      {AI_SUGGESTIONS.find((s) => s.label === aiExpandedCategory)?.options.map((opt) => (
+                        <button
+                          key={opt.name}
+                          className="text-left text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors text-foreground"
+                          onClick={() => handleAIOptionClick(opt, aiExpandedCategory)}
+                        >
+                          {opt.name}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -1077,6 +1071,7 @@ const CreateDocument = () => {
                 setAiDialogOpen(false);
                 setAiPrompt("");
                 setAiSelectedSuggestion(null);
+                setAiExpandedCategory(null);
               }}
               disabled={aiGenerating}
             >
