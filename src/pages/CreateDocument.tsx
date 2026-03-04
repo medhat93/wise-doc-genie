@@ -773,7 +773,7 @@ const CreateDocument = () => {
                     {filter.icon && filter.icon}
                     {filter.label}
                     {filter.isNew && (
-                      <span className="absolute -top-1 -right-2.5 text-amber-500">
+                      <span className="text-amber-500 flex-shrink-0">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/>
                         </svg>
