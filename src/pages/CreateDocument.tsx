@@ -1016,63 +1016,60 @@ const CreateDocument = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <AnimatePresence mode="wait">
-                {aiExpandedCategory ? (
-                  <motion.div
-                    key={aiExpandedCategory}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
+            <div className="relative overflow-hidden">
+              {/* Prompt chips */}
+              <motion.div
+                animate={{
+                  opacity: aiExpandedCategory ? 0 : 1,
+                  x: aiExpandedCategory ? -20 : 0,
+                  position: aiExpandedCategory ? "absolute" as const : "relative" as const,
+                }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="flex flex-wrap gap-2 w-full"
+                style={{ pointerEvents: aiExpandedCategory ? "none" : "auto" }}
+              >
+                {AI_SUGGESTIONS.map((s) => (
+                  <Button
+                    key={s.label}
+                    variant={aiSelectedSuggestion === s.label ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full text-xs h-7"
+                    onClick={() => handleAISuggestionClick(s)}
+                    disabled={aiGenerating}
                   >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="rounded-full text-xs h-7"
-                        onClick={() => setAiExpandedCategory(null)}
-                      >
-                        {aiExpandedCategory}
-                        <X className="ml-1 h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 gap-1">
-                      {AI_SUGGESTIONS.find((s) => s.label === aiExpandedCategory)?.options.map((opt) => (
-                        <button
-                          key={opt.name}
-                          className="text-left text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors text-foreground"
-                          onClick={() => handleAIOptionClick(opt, aiExpandedCategory)}
-                        >
-                          {opt.name}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="chips"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex flex-wrap gap-2"
-                  >
-                    {AI_SUGGESTIONS.map((s) => (
-                      <Button
-                        key={s.label}
-                        variant={aiSelectedSuggestion === s.label ? "default" : "outline"}
-                        size="sm"
-                        className="rounded-full text-xs h-7"
-                        onClick={() => handleAISuggestionClick(s)}
-                        disabled={aiGenerating}
-                      >
-                        {s.label}
-                      </Button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    {s.label}
+                  </Button>
+                ))}
+              </motion.div>
+
+              {/* Expanded options list */}
+              <motion.div
+                animate={{
+                  opacity: aiExpandedCategory ? 1 : 0,
+                  x: aiExpandedCategory ? 0 : 20,
+                }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                style={{ pointerEvents: aiExpandedCategory ? "auto" : "none", display: aiExpandedCategory ? "block" : "none" }}
+              >
+                <button
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-2"
+                  onClick={() => setAiExpandedCategory(null)}
+                >
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={12} className="rotate-180" />
+                  <span>{aiExpandedCategory}</span>
+                </button>
+                <div className="grid grid-cols-1 gap-0.5">
+                  {aiExpandedCategory && AI_SUGGESTIONS.find((s) => s.label === aiExpandedCategory)?.options.map((opt) => (
+                    <button
+                      key={opt.name}
+                      className="text-left text-sm px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-foreground"
+                      onClick={() => handleAIOptionClick(opt, aiExpandedCategory)}
+                    >
+                      {opt.name}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
             </div>
           </div>
 
