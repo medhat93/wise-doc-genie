@@ -671,7 +671,7 @@ const CreateDocument = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="default" size="sm" onClick={count === 0 ? handleStartBlank : undefined}>
+                  <Button variant="default" size="sm" disabled={count === 0} onClick={count === 0 ? handleStartBlank : undefined}>
                     <HugeiconsIcon icon={editButtonIcon} size={16} className="sm:mr-1.5" />
                     <span className="hidden sm:inline">{editButtonLabel}</span>
                     <span className="sm:hidden">{count === 0 ? "New" : "Edit"}</span>
