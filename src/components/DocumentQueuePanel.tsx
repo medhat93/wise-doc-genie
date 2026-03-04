@@ -189,10 +189,21 @@ function SortableDocCard({
         </motion.div>
       )}
 
-      {/* Thumbnail */}
-      <VerticalThumbnail doc={doc} />
+      {/* Thumbnail with preview overlay */}
+      <div className="relative">
+        <VerticalThumbnail doc={doc} />
+        <button
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-t-lg"
+          onClick={(e) => { e.stopPropagation(); onPreview(doc); }}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <div className="bg-background/90 backdrop-blur-sm rounded-full p-2">
+            <HugeiconsIcon icon={ViewIcon} size={16} className="text-foreground" />
+          </div>
+        </button>
+      </div>
 
-      {/* Info + actions row */}
+      {/* Info + remove row */}
       <div className="p-2.5 flex items-start gap-1">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
@@ -221,15 +232,6 @@ function SortableDocCard({
             </p>
           )}
         </div>
-
-        {/* Preview button */}
-        <button
-          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent flex-shrink-0"
-          onClick={(e) => { e.stopPropagation(); onPreview(doc); }}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <HugeiconsIcon icon={ViewIcon} size={14} className="text-muted-foreground" />
-        </button>
 
         {/* Remove button */}
         <AlertDialog>
