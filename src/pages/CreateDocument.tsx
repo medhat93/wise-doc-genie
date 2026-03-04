@@ -691,7 +691,7 @@ const CreateDocument = () => {
             <section>
               <div
                 className={`grid gap-3 md:gap-4 ${
-                  isEsign ? "grid-cols-4 max-w-4xl mx-auto" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
+                  isEsign ? "grid-cols-1 max-w-3xl mx-auto" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
                 }`}
               >
                 {actions.map((action) =>
@@ -699,7 +699,7 @@ const CreateDocument = () => {
                     <div
                       key={action.id}
                       className={`cursor-pointer transition-all relative group rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 bg-primary/[0.03] hover:bg-primary/[0.06] p-6 flex flex-col ${
-                        isEsign ? "col-span-3 items-center justify-center text-center" : "lg:col-span-2 items-start justify-center text-left"
+                        isEsign ? "items-center justify-center text-center" : "lg:col-span-2 items-start justify-center text-left"
                       }`}
                       onClick={() => handleQuickAction(action.id)}
                     >
