@@ -34,7 +34,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { motion, AnimatePresence } from "framer-motion";
 import AiIcon from "@/components/AiIcon";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   DndContext,
   closestCenter,
@@ -192,8 +192,8 @@ function SortableDocCard({
       {/* Thumbnail */}
       <VerticalThumbnail doc={doc} />
 
-      {/* Info + delete row */}
-      <div className="p-2.5 flex items-start gap-1.5">
+      {/* Info + actions row */}
+      <div className="p-2.5 flex items-start gap-1">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
           {doc.isAI && doc.status === "uploading" ? (
@@ -222,7 +222,16 @@ function SortableDocCard({
           )}
         </div>
 
-        {/* Delete button */}
+        {/* Preview button */}
+        <button
+          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent flex-shrink-0"
+          onClick={(e) => { e.stopPropagation(); onPreview(doc); }}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <HugeiconsIcon icon={ViewIcon} size={14} className="text-muted-foreground" />
+        </button>
+
+        {/* Remove button */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
@@ -302,8 +311,6 @@ const DocumentQueuePanel = ({
   onEditDocuments,
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
-  const [selectMode, setSelectMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(documents.length);
 
@@ -338,96 +345,8 @@ const DocumentQueuePanel = ({
     setDocuments((prev) => prev.filter((d) => d.id !== id));
   }
 
-  function toggleSelect(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function handleBulkDelete() {
-    setDocuments((prev) => prev.filter((d) => !selectedIds.has(d.id)));
-    setSelectedIds(new Set());
-    setSelectMode(false);
-  }
-
-  const allSelected = documents.length > 0 && selectedIds.size === documents.length;
-  function toggleAll() {
-    if (allSelected) setSelectedIds(new Set());
-    else setSelectedIds(new Set(documents.map((d) => d.id)));
-  }
-
   return (
     <div className={isMobile ? "flex flex-col" : "w-[260px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
-      {/* Bulk select header */}
-      {!isEmpty && (
-        <div className="border-b px-3 py-2 flex items-center justify-between flex-shrink-0">
-          {selectMode ? (
-            <>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={toggleAll}
-                  className="h-3.5 w-3.5"
-                />
-                <span className="text-[11px] text-muted-foreground">
-                  {selectedIds.size} selected
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      disabled={selectedIds.size === 0}
-                    >
-                      <HugeiconsIcon icon={Delete02Icon} size={13} />
-                      <span className="text-[11px]">Delete</span>
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Remove {selectedIds.size} document{selectedIds.size !== 1 ? "s" : ""}?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {selectedIds.size} document{selectedIds.size !== 1 ? "s" : ""} will be removed from the queue.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleBulkDelete}>Remove</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-[11px]"
-                  onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <span className="text-[11px] font-medium text-muted-foreground">Queue</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-[11px] text-muted-foreground"
-                onClick={() => setSelectMode(true)}
-              >
-                Select
-              </Button>
-            </>
-          )}
-        </div>
-      )}
-
       <div ref={scrollRef} className={`flex-1 overflow-y-auto p-3 scrollbar-thin ${isMobile ? "max-h-[50vh]" : ""}`}>
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
@@ -444,21 +363,7 @@ const DocumentQueuePanel = ({
             <SortableContext items={documents.map((d) => d.id)} strategy={verticalListSortingStrategy}>
               <div className="grid grid-cols-1 gap-2">
                 {documents.map((doc) => (
-                  <div key={doc.id} className="relative">
-                    {selectMode && (
-                      <div
-                        className="absolute top-1.5 right-1.5 z-20 cursor-pointer"
-                        onClick={(e) => { e.stopPropagation(); toggleSelect(doc.id); }}
-                        onPointerDown={(e) => e.stopPropagation()}
-                      >
-                        <Checkbox
-                          checked={selectedIds.has(doc.id)}
-                          className="h-4 w-4 bg-background/80 backdrop-blur-sm"
-                        />
-                      </div>
-                    )}
-                    <SortableDocCard doc={doc} onRemove={handleRemove} onPreview={setPreviewDoc} />
-                  </div>
+                  <SortableDocCard key={doc.id} doc={doc} onRemove={handleRemove} onPreview={setPreviewDoc} />
                 ))}
               </div>
             </SortableContext>
@@ -467,11 +372,34 @@ const DocumentQueuePanel = ({
       </div>
 
       <div className="border-t px-3 py-3 flex-shrink-0">
-        <div className="flex items-center justify-center gap-1.5">
-          <HugeiconsIcon icon={File01Icon} size={13} className="text-muted-foreground" />
-          <span className="text-[11px] font-medium text-muted-foreground">
-            {isEmpty ? "Queue empty" : `${count} doc${count !== 1 ? "s" : ""} · ${totalPages} pages`}
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <HugeiconsIcon icon={File01Icon} size={13} className="text-muted-foreground" />
+            <span className="text-[11px] font-medium text-muted-foreground">
+              {isEmpty ? "Queue empty" : `${count} doc${count !== 1 ? "s" : ""} · ${totalPages} pages`}
+            </span>
+          </div>
+          {!isEmpty && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="text-[11px] text-destructive hover:text-destructive/80 transition-colors">
+                  Remove all
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove all documents?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    All {count} document{count !== 1 ? "s" : ""} will be removed from the queue.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => setDocuments([])}>Remove</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </div>
 
