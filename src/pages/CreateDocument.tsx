@@ -593,8 +593,8 @@ const CreateDocument = () => {
   };
 
   const editButtonLabel =
-    count === 0 ? "Start a blank document" : count === 1 ? "Edit document" : `Edit ${count} documents`;
-  const editButtonIcon = count === 0 ? FileAddIcon : Edit02Icon;
+    count === 0 ? "Edit" : count === 1 ? "Edit document" : `Edit ${count} documents`;
+  const editButtonIcon = Edit02Icon;
 
   return (
     <div
@@ -671,7 +671,7 @@ const CreateDocument = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant={count === 0 ? "outline" : "default"} size="sm" className={count === 0 ? "border-primary text-primary hover:bg-primary/5" : ""} onClick={count === 0 ? handleStartBlank : undefined}>
+                  <Button variant="default" size="sm" onClick={count === 0 ? handleStartBlank : undefined}>
                     <HugeiconsIcon icon={editButtonIcon} size={16} className="sm:mr-1.5" />
                     <span className="hidden sm:inline">{editButtonLabel}</span>
                     <span className="sm:hidden">{count === 0 ? "New" : "Edit"}</span>
