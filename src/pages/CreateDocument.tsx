@@ -304,6 +304,11 @@ const CreateDocument = () => {
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
 
+    toast({
+      title: `${fileArray.length} file${fileArray.length !== 1 ? "s" : ""} added to queue`,
+      variant: "success" as const,
+    });
+
     // Check if any Word files were uploaded
     const wordFile = fileArray.find((f) =>
       f.name.match(/\.(docx?|dot|dotx)$/i) ||
