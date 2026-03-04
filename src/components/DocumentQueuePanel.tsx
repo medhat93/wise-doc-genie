@@ -206,7 +206,14 @@ function SortableDocCard({
       {/* Info + remove row */}
       <div className="p-2.5 flex items-start gap-1">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium truncate leading-tight" title={doc.name}>{doc.name}</p>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[200px] break-words text-xs">
+              {doc.name}
+            </TooltipContent>
+          </Tooltip>
           {doc.isAI && doc.status === "uploading" ? (
             <AnimatePresence mode="wait">
               <motion.p
