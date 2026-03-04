@@ -1017,37 +1017,27 @@ const CreateDocument = () => {
             </div>
 
             <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                {AI_SUGGESTIONS.map((s) => (
-                  <Button
-                    key={s.label}
-                    variant={aiExpandedCategory === s.label || aiSelectedSuggestion === s.label ? "default" : "outline"}
-                    size="sm"
-                    className="rounded-full text-xs h-7"
-                    onClick={() => handleAISuggestionClick(s)}
-                    disabled={aiGenerating}
-                  >
-                    {s.label}
-                    <HugeiconsIcon
-                      icon={ArrowDown01Icon}
-                      size={12}
-                      className={`ml-0.5 transition-transform ${aiExpandedCategory === s.label ? "rotate-180" : ""}`}
-                    />
-                  </Button>
-                ))}
-              </div>
-
               <AnimatePresence mode="wait">
-                {aiExpandedCategory && (
+                {aiExpandedCategory ? (
                   <motion.div
                     key={aiExpandedCategory}
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
                   >
-                    <div className="grid grid-cols-1 gap-1 pt-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="rounded-full text-xs h-7"
+                        onClick={() => setAiExpandedCategory(null)}
+                      >
+                        {aiExpandedCategory}
+                        <X className="ml-1 h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-1">
                       {AI_SUGGESTIONS.find((s) => s.label === aiExpandedCategory)?.options.map((opt) => (
                         <button
                           key={opt.name}
@@ -1058,6 +1048,28 @@ const CreateDocument = () => {
                         </button>
                       ))}
                     </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="chips"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex flex-wrap gap-2"
+                  >
+                    {AI_SUGGESTIONS.map((s) => (
+                      <Button
+                        key={s.label}
+                        variant={aiSelectedSuggestion === s.label ? "default" : "outline"}
+                        size="sm"
+                        className="rounded-full text-xs h-7"
+                        onClick={() => handleAISuggestionClick(s)}
+                        disabled={aiGenerating}
+                      >
+                        {s.label}
+                      </Button>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
