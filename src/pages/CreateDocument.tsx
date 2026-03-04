@@ -393,8 +393,8 @@ const CreateDocument = () => {
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
     toast({
-      title: `Importing from ${providerName}`,
-      description: `${files.length} file${files.length !== 1 ? "s" : ""} are being imported.`,
+      title: `Importing ${files.length} file${files.length !== 1 ? "s" : ""} from ${providerName}`,
+      variant: "success" as const,
     });
   }, []);
 
@@ -425,7 +425,7 @@ const CreateDocument = () => {
     setAiSelectedSuggestion(null);
     toast({
       title: "Opening editor with AI draft...",
-      description: "Your document is being generated.",
+      variant: "success" as const,
     });
     navigate(`/editor?ai=true&type=${encodeURIComponent(docType)}`);
   };
@@ -433,7 +433,7 @@ const CreateDocument = () => {
   const handleStartBlank = () => {
     toast({
       title: "Opening blank editor...",
-      description: "Starting a new document.",
+      variant: "success" as const,
     });
     navigate("/editor");
   };
@@ -455,8 +455,8 @@ const CreateDocument = () => {
     setDocuments((prev) => [...prev, queued]);
     setQueueManuallyOpened(true);
     toast({
-      title: "Template added to queue",
-      description: `"${template.name}" is ready in your document queue.`,
+      title: `"${template.name}" added to queue`,
+      variant: "success" as const,
     });
   }, []);
 
