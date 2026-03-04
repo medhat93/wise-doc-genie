@@ -250,6 +250,7 @@ const CreateDocument = () => {
 
   const [esignDropHover, setEsignDropHover] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [wordEditDialog, setWordEditDialog] = useState<{ file: File; doc: UploadedDocument } | null>(null);
 
   // Drive state
   const [driveConnectOpen, setDriveConnectOpen] = useState(false);
@@ -302,6 +303,19 @@ const CreateDocument = () => {
     }));
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
+
+    // Check if any Word files were uploaded
+    const wordFile = fileArray.find((f) =>
+      f.name.match(/\.(docx?|dot|dotx)$/i) ||
+      f.type.includes("word") ||
+      f.type.includes("msword")
+    );
+    if (wordFile) {
+      const matchingDoc = newDocs.find((d) => d.name === wordFile.name);
+      if (matchingDoc) {
+        setWordEditDialog({ file: wordFile, doc: matchingDoc });
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -1080,6 +1094,41 @@ const CreateDocument = () => {
         mode={driveConnectMode}
         onSelectDrive={handleDriveSelect}
       />
+
+      {/* ─── Word File Edit Dialog ───────────────────────────────────── */}
+      <Dialog open={!!wordEditDialog} onOpenChange={(open) => !open && setWordEditDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold pr-4 leading-snug">
+              Want to edit your {wordEditDialog?.file.name} file?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <p className="text-sm text-muted-foreground">
+              Some formatting may change when uploading word files. Please review before sending.
+            </p>
+            <p className="text-sm font-medium">Are you sure you want to edit text?</p>
+          </div>
+          <DialogFooter className="flex-row gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setWordEditDialog(null)}
+              className="flex-1 sm:flex-none"
+            >
+              Skip
+            </Button>
+            <Button
+              onClick={() => {
+                setWordEditDialog(null);
+                toast({ title: "Document is now editable", variant: "success" as const });
+              }}
+              className="flex-1 sm:flex-none bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90 text-primary-foreground"
+            >
+              Make it editable
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
