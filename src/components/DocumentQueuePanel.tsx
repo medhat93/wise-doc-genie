@@ -611,6 +611,12 @@ const DocumentQueuePanel = ({
           )}
         </DialogContent>
       </Dialog>
+
+      <RotatePagesDialog
+        doc={rotateDoc}
+        open={!!rotateDoc}
+        onOpenChange={(open) => !open && setRotateDoc(null)}
+      />
     </div>
   );
 };
