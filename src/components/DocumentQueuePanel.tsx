@@ -33,9 +33,10 @@ import {
   Edit02Icon,
   SentIcon,
 } from "@hugeicons/core-free-icons";
-import { FileText, FilePlus, Paperclip } from "lucide-react";
+import { FileText, FilePlus, Paperclip, RotateCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AiIcon from "@/components/AiIcon";
+import RotatePagesDialog from "@/components/RotatePagesDialog";
 
 import {
   DndContext,
@@ -244,11 +245,13 @@ function SortableDocCard({
   onRemove,
   onPreview,
   onChangeType,
+  onRotate,
 }: {
   doc: UploadedDocument;
   onRemove: (id: string) => void;
   onPreview: (doc: UploadedDocument) => void;
   onChangeType: (id: string, type: DocumentType) => void;
+  onRotate: (doc: UploadedDocument) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: doc.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -332,6 +335,22 @@ function SortableDocCard({
               </p>
             )}
           </div>
+
+          {/* Rotate button (PDF only) */}
+          {doc.type.includes("pdf") && doc.status === "complete" && (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <button
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent flex-shrink-0"
+                  onClick={(e) => { e.stopPropagation(); onRotate(doc); }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <RotateCw size={14} className="text-muted-foreground" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Rotate pages</TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Remove button */}
           <AlertDialog>
@@ -420,6 +439,7 @@ const DocumentQueuePanel = ({
   onEditDocuments,
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
+  const [rotateDoc, setRotateDoc] = useState<UploadedDocument | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(documents.length);
 
@@ -493,6 +513,7 @@ const DocumentQueuePanel = ({
                     onRemove={handleRemove}
                     onPreview={setPreviewDoc}
                     onChangeType={handleChangeType}
+                    onRotate={setRotateDoc}
                   />
                 ))}
               </div>
@@ -590,6 +611,12 @@ const DocumentQueuePanel = ({
           )}
         </DialogContent>
       </Dialog>
+
+      <RotatePagesDialog
+        doc={rotateDoc}
+        open={!!rotateDoc}
+        onOpenChange={(open) => !open && setRotateDoc(null)}
+      />
     </div>
   );
 };
