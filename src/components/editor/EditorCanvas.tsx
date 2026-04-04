@@ -2,8 +2,15 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { X } from "lucide-react";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
+import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
 
 /* ── Mock documents ── */
 export const MOCK_DOCUMENTS: EditorDocument[] = [
@@ -227,18 +234,109 @@ interface EditorCanvasProps {
   showToolbar?: boolean;
 }
 
+/* ── Pre-placed mock fields (shown on first doc) ── */
+const MOCK_PLACED_FIELDS: PlacedField[] = [
+  { id: "f1", fieldTypeId: "signature", participantId: "p1", participantName: "Ahmed Al-Rashid", participantColor: "#4F46E5", page: 1, x: 60, y: 680, width: 200, height: 50 },
+  { id: "f2", fieldTypeId: "date", participantId: "p1", participantName: "Ahmed Al-Rashid", participantColor: "#4F46E5", page: 1, x: 300, y: 690, width: 120, height: 36 },
+  { id: "f3", fieldTypeId: "signature", participantId: "p2", participantName: "Sarah Johnson", participantColor: "#DC2626", page: 1, x: 60, y: 760, width: 200, height: 50 },
+];
+
+/* ── Field overlay component ── */
+const FieldOverlay = ({
+  field,
+  onRemove,
+}: {
+  field: PlacedField;
+  onRemove: (id: string) => void;
+}) => {
+  const ft = FIELD_TYPES.find((f) => f.id === field.fieldTypeId);
+  const Icon = ft?.icon;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className="absolute group cursor-move flex items-center gap-1.5 px-2 select-none"
+          style={{
+            left: field.x,
+            top: field.y,
+            width: field.width,
+            height: field.height,
+            backgroundColor: `${field.participantColor}10`,
+            border: `2px dashed ${field.participantColor}`,
+            borderRadius: 4,
+          }}
+        >
+          {Icon && <Icon size={12} style={{ color: field.participantColor }} className="flex-shrink-0" />}
+          <span className="text-[9px] font-medium truncate" style={{ color: field.participantColor }}>
+            {ft?.label} — {field.participantName.split(" ")[0]}
+          </span>
+          <button
+            onClick={(e) => { e.stopPropagation(); onRemove(field.id); }}
+            className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+          >
+            <X size={8} />
+          </button>
+          <div
+            className="absolute bottom-0 right-0 h-2.5 w-2.5 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ backgroundColor: field.participantColor, borderRadius: "0 0 3px 0" }}
+          />
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs">
+        {ft?.label} — {field.participantName}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
 const EditorCanvas = ({ showToolbar = true }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
   const [showIndicator, setShowIndicator] = useState(false);
+  const [placedFields, setPlacedFields] = useState<PlacedField[]>(MOCK_PLACED_FIELDS);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  /* IntersectionObserver for active doc detection */
+  const removePlacedField = useCallback((id: string) => {
+    setPlacedFields((prev) => prev.filter((f) => f.id !== id));
+  }, []);
+
+  /* Handle drop from panel */
+  const handleDrop = useCallback((e: React.DragEvent, docId: string) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData("application/field-type");
+    if (!data) return;
+    try {
+      const parsed = JSON.parse(data);
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const x = e.clientX - rect.left - parsed.defaultWidth / 2;
+      const y = e.clientY - rect.top - parsed.defaultHeight / 2;
+      const newField: PlacedField = {
+        id: `f${Date.now()}`,
+        fieldTypeId: parsed.id,
+        participantId: parsed.participantId,
+        participantName: parsed.participantName,
+        participantColor: parsed.participantColor,
+        page: MOCK_DOCUMENTS.findIndex((d) => d.id === docId) + 1,
+        x: Math.max(0, x),
+        y: Math.max(0, y),
+        width: parsed.defaultWidth,
+        height: parsed.defaultHeight,
+      };
+      setPlacedFields((prev) => [...prev, newField]);
+    } catch {}
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes("application/field-type")) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    }
+  }, []);
+
   useEffect(() => {
     const root = scrollRef.current;
     if (!root) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -249,15 +347,12 @@ const EditorCanvas = ({ showToolbar = true }: EditorCanvasProps) => {
       },
       { root, rootMargin: "-40% 0px -40% 0px", threshold: 0 }
     );
-
     Object.values(docRefs.current).forEach((el) => {
       if (el) observer.observe(el);
     });
-
     return () => observer.disconnect();
   }, []);
 
-  /* Show floating indicator on scroll */
   const handleScroll = useCallback(() => {
     setShowIndicator(true);
     clearTimeout(hideTimer.current);
@@ -290,23 +385,29 @@ const EditorCanvas = ({ showToolbar = true }: EditorCanvasProps) => {
         <div className="p-6 md:p-10 space-y-0">
           {MOCK_DOCUMENTS.map((doc, idx) => {
             const Content = DOC_CONTENT[doc.id];
+            const docFields = placedFields.filter((f) => f.page === idx + 1);
             return (
               <div key={doc.id}>
                 {idx > 0 && <DocumentDivider doc={doc} />}
                 <div
                   ref={(el) => { docRefs.current[doc.id] = el; }}
                   data-doc-id={doc.id}
+                  onDrop={(e) => handleDrop(e, doc.id)}
+                  onDragOver={handleDragOver}
                   className={cn(
-                    "max-w-[816px] mx-auto bg-card shadow-sm border rounded-sm min-h-[800px] p-12 md:p-16",
+                    "max-w-[816px] mx-auto bg-card shadow-sm border rounded-sm min-h-[800px] p-12 md:p-16 relative",
                     DOC_BORDER[doc.docType]
                   )}
                 >
                   {Content && <Content />}
+                  {/* Field overlays */}
+                  {docFields.map((f) => (
+                    <FieldOverlay key={f.id} field={f} onRemove={removePlacedField} />
+                  ))}
                 </div>
               </div>
             );
           })}
-          {/* bottom spacer */}
           <div className="h-20" />
         </div>
       </div>
