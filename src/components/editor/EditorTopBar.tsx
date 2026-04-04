@@ -308,7 +308,7 @@ const EditorTopBar = () => {
       <header className="h-14 border-b flex items-center justify-between px-4 flex-shrink-0 bg-card">
         {/* Left */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => navigate("/")}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => navigate("/participants")}>
             <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
           </Button>
           <Input
