@@ -689,161 +689,302 @@ const EditorParticipantsPanel = () => {
     return `Verify: ${method}`;
   };
 
+  /* ── Render a participant card (shared between flat and grouped views) ── */
+  const renderCard = (p: Participant) => {
+    const roleStyle = ROLE_STYLES[p.role];
+    const verifySummary = getVerificationSummary(p);
+    const isSigner = p.role === "signer";
+    const isApprover = p.role === "approver";
+
+    if (editingId === p.id) {
+      return (
+        <ParticipantFormCard
+          key={p.id}
+          form={editForm}
+          updateForm={updateEditFormField}
+          onSubmit={saveEdit}
+          onCancel={cancelEdit}
+          submitLabel="Save"
+          isDisabled={!editForm.name.trim()}
+        />
+      );
+    }
+
+    if (confirmRemoveId === p.id) {
+      return (
+        <div key={p.id} className="border border-destructive/50 rounded-lg p-3 space-y-2 animate-in fade-in duration-150">
+          <p className="text-sm">Remove <span className="font-medium">{p.name}</span>?</p>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => removeParticipant(p.id)}>
+              Remove
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setConfirmRemoveId(null)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={p.id} className="border rounded-lg p-3 space-y-1.5">
+        {/* Row 1 */}
+        <div className="flex items-center justify-between gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {/* Drag handle + step badge (only for signers when sequential) */}
+            {sequential && isSigner && (
+              <>
+                <GripVertical size={14} className="text-muted-foreground cursor-grab flex-shrink-0" />
+                <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0">
+                  {p.order}
+                </span>
+              </>
+            )}
+            {sequential && isApprover && (
+              <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0 opacity-50">
+                0
+              </span>
+            )}
+            <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+            <span className="text-sm font-medium truncate">{p.name}</span>
+            <span className="text-xs text-muted-foreground truncate">
+              {p.sendingMethod === "email" ? p.email : p.sendingPhone || ""}
+            </span>
+          </div>
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            {/* +/- stepper for signers in sequential mode */}
+            {sequential && isSigner && (
+              <div className="flex items-center gap-0.5 mr-1">
+                <button
+                  onClick={() => handleOrderChange(p.id, -1)}
+                  className="h-5 w-5 flex items-center justify-center rounded border text-muted-foreground hover:text-foreground hover:bg-accent"
+                >
+                  <Minus size={10} />
+                </button>
+                <button
+                  onClick={() => handleOrderChange(p.id, 1)}
+                  className="h-5 w-5 flex items-center justify-center rounded border text-muted-foreground hover:text-foreground hover:bg-accent"
+                >
+                  <Plus size={10} />
+                </button>
+              </div>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
+                  <MoreHorizontal size={14} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem className="gap-2 text-xs" onClick={() => startEditing(p)}>
+                  <Pencil size={12} />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 text-xs" onClick={() => handleDuplicate(p)}>
+                  <Copy size={12} />
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={() => setConfirmRemoveId(p.id)}>
+                  <Trash2 size={12} />
+                  Remove
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Row 2: Clickable badges */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="focus:outline-none">
+                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-medium border cursor-pointer hover:opacity-80", roleStyle.className)}>
+                  {roleStyle.label}
+                </Badge>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-[100px]">
+              {(["signer", "approver", "viewer"] as ParticipantRole[]).map((r) => (
+                <DropdownMenuItem key={r} className="text-xs gap-2" onClick={() => handleQuickRoleChange(p.id, r)}>
+                  <Badge variant="outline" className={cn("text-[9px] px-1 py-0 h-3.5 border", ROLE_STYLES[r].className)}>
+                    {ROLE_STYLES[r].label}
+                  </Badge>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="focus:outline-none">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border gap-1 flex items-center cursor-pointer hover:opacity-80">
+                  {getSendingIcon(p.sendingMethod)}
+                  {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
+                </Badge>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-[100px]">
+              {(["email", "sms", "whatsapp"] as SendingMethod[]).map((m) => (
+                <DropdownMenuItem key={m} className="text-xs gap-2" onClick={() => handleQuickSendingChange(p.id, m)}>
+                  {getSendingIcon(m)}
+                  {m === "email" ? "Email" : m === "sms" ? "SMS" : "WhatsApp"}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {p.language === "ar" && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border text-muted-foreground">
+              AR
+            </Badge>
+          )}
+        </div>
+
+        {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && p.sendingPhone && (
+          <p className="text-xs text-muted-foreground pl-4">{p.sendingPhone}</p>
+        )}
+        {verifySummary && (
+          <p className="text-[10px] text-muted-foreground pl-4">{verifySummary}</p>
+        )}
+      </div>
+    );
+  };
+
+  /* ── Build grouped participant list for sequential mode ── */
+  const renderSequentialList = () => {
+    const viewers = participants.filter((p) => p.role === "viewer" || p.role === "cc");
+    const signersByOrder = new Map<number, Participant[]>();
+    signers.forEach((s) => {
+      if (!signersByOrder.has(s.order)) signersByOrder.set(s.order, []);
+      signersByOrder.get(s.order)!.push(s);
+    });
+    const steps = Array.from(signersByOrder.entries()).sort(([a], [b]) => a - b);
+
+    return (
+      <div className="space-y-3">
+        {/* Step 0 — Approvers */}
+        {approvers.length > 0 && (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Step 0 — Approval</p>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            {approvers.map((a) => renderCard(a))}
+          </div>
+        )}
+
+        {/* Signer steps */}
+        {steps.map(([stepNum, stepParticipants]) => (
+          <div key={stepNum} className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Step {stepNum}</p>
+              {stepParticipants.length > 1 && (
+                <span className="text-[10px] text-muted-foreground italic whitespace-nowrap">Signing in parallel</span>
+              )}
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            <div className={cn(
+              "space-y-1.5",
+              stepParticipants.length > 1 && "border-l-2 border-[hsl(var(--brand-indigo))]/20 pl-2"
+            )}>
+              {stepParticipants.map((s) => renderCard(s))}
+            </div>
+          </div>
+        ))}
+
+        {/* Viewers (no signing required) */}
+        {viewers.length > 0 && (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">No signing required</p>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            {viewers.map((v) => renderCard(v))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-4 pb-6">
       <p className="text-xs text-muted-foreground">
         Add people who need to sign, review, or receive this document
       </p>
 
-      {/* ── Participant list or empty state ── */}
+      {/* ── Sequential signing toggle (above participant list) ── */}
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium">Sequential signing</p>
+          <div className="flex items-center gap-2">
+            {sequential && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 px-1.5">
+                    Workflow settings
+                    <ChevronDown size={10} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setShowSaveWorkflow(true)} className="gap-2 text-xs">
+                    <Bookmark size={14} />
+                    Save as workflow
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectWorkflowOpen(true)} className="gap-2 text-xs">
+                    <MousePointer size={14} />
+                    Load workflow
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setViewOrderOpen(true)} className="gap-2 text-xs">
+                    <List size={14} />
+                    View visual order
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Switch checked={sequential} onCheckedChange={setSequential} />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {sequential ? "Signers receive documents in order" : "All signers receive at the same time"}
+        </p>
+
+        {showSaveWorkflow && (
+          <div className="flex items-center gap-2 pt-1 animate-in slide-in-from-top-1 duration-150">
+            <Input
+              placeholder="Workflow name"
+              value={saveWorkflowName}
+              onChange={(e) => setSaveWorkflowName(e.target.value)}
+              className="h-7 text-xs flex-1"
+              autoFocus
+            />
+            <Button size="sm" className="h-7 text-xs" onClick={() => {
+              toast.success(`Workflow "${saveWorkflowName || "Untitled"}" saved`);
+              setSaveWorkflowName("");
+              setShowSaveWorkflow(false);
+            }}>
+              Save
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowSaveWorkflow(false)}>
+              <X size={12} />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
+      {/* ── Participant list ── */}
       {participants.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 gap-2">
           <Users size={48} className="text-muted-foreground opacity-40" />
           <p className="text-sm font-medium text-center">No participants added yet</p>
           <p className="text-xs text-muted-foreground text-center">Add signers, approvers, or viewers to this document</p>
         </div>
+      ) : sequential ? (
+        renderSequentialList()
       ) : (
         <div className="space-y-2">
-          {participants.map((p) => {
-            const roleStyle = ROLE_STYLES[p.role];
-            const verifySummary = getVerificationSummary(p);
-
-            /* ── Editing this participant ── */
-            if (editingId === p.id) {
-              return (
-                <ParticipantFormCard
-                  key={p.id}
-                  form={editForm}
-                  updateForm={updateEditFormField}
-                  onSubmit={saveEdit}
-                  onCancel={cancelEdit}
-                  submitLabel="Save"
-                  isDisabled={!editForm.name.trim()}
-                />
-              );
-            }
-
-            /* ── Remove confirmation ── */
-            if (confirmRemoveId === p.id) {
-              return (
-                <div key={p.id} className="border border-destructive/50 rounded-lg p-3 space-y-2 animate-in fade-in duration-150">
-                  <p className="text-sm">Remove <span className="font-medium">{p.name}</span>?</p>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => removeParticipant(p.id)}>
-                      Remove
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setConfirmRemoveId(null)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              );
-            }
-
-            /* ── Normal card ── */
-            return (
-              <div key={p.id} className="border rounded-lg p-3 space-y-1.5">
-                {/* Row 1 */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                    <span className="text-sm font-medium truncate">{p.name}</span>
-                    <span className="text-xs text-muted-foreground truncate">
-                      {p.sendingMethod === "email" ? p.email : p.sendingPhone || ""}
-                    </span>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
-                        <MoreHorizontal size={14} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem className="gap-2 text-xs" onClick={() => startEditing(p)}>
-                        <Pencil size={12} />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="gap-2 text-xs" onClick={() => handleDuplicate(p)}>
-                        <Copy size={12} />
-                        Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={() => setConfirmRemoveId(p.id)}>
-                        <Trash2 size={12} />
-                        Remove
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                {/* Row 2: Clickable badges */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {/* Clickable role badge */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="focus:outline-none">
-                        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-medium border cursor-pointer hover:opacity-80", roleStyle.className)}>
-                          {roleStyle.label}
-                        </Badge>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="min-w-[100px]">
-                      {(["signer", "approver", "viewer"] as ParticipantRole[]).map((r) => (
-                        <DropdownMenuItem
-                          key={r}
-                          className="text-xs gap-2"
-                          onClick={() => handleQuickRoleChange(p.id, r)}
-                        >
-                          <Badge variant="outline" className={cn("text-[9px] px-1 py-0 h-3.5 border", ROLE_STYLES[r].className)}>
-                            {ROLE_STYLES[r].label}
-                          </Badge>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Clickable sending method badge */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="focus:outline-none">
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border gap-1 flex items-center cursor-pointer hover:opacity-80">
-                          {getSendingIcon(p.sendingMethod)}
-                          {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
-                        </Badge>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="min-w-[100px]">
-                      {(["email", "sms", "whatsapp"] as SendingMethod[]).map((m) => (
-                        <DropdownMenuItem
-                          key={m}
-                          className="text-xs gap-2"
-                          onClick={() => handleQuickSendingChange(p.id, m)}
-                        >
-                          {getSendingIcon(m)}
-                          {m === "email" ? "Email" : m === "sms" ? "SMS" : "WhatsApp"}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {p.language === "ar" && (
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border text-muted-foreground">
-                      AR
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Row 3: Phone */}
-                {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && p.sendingPhone && (
-                  <p className="text-xs text-muted-foreground pl-4">{p.sendingPhone}</p>
-                )}
-
-                {/* Row 4: Verification */}
-                {verifySummary && (
-                  <p className="text-[10px] text-muted-foreground pl-4">{verifySummary}</p>
-                )}
-              </div>
-            );
-          })}
+          {participants.map((p) => renderCard(p))}
         </div>
       )}
 
@@ -874,129 +1015,6 @@ const EditorParticipantsPanel = () => {
         <User size={14} />
         Add me as a signer
       </Button>
-
-      <Separator />
-
-      {/* ── Signing Order ── */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">Sequential signing</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {sequential ? "Signers receive documents in order" : "All signers receive at the same time"}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {sequential && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
-                    Workflow settings
-                    <ChevronDown size={12} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setShowSaveWorkflow(true)} className="gap-2 text-xs">
-                    <Bookmark size={14} />
-                    Save as workflow
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectWorkflowOpen(true)} className="gap-2 text-xs">
-                    <MousePointer size={14} />
-                    Load workflow
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setViewOrderOpen(true)} className="gap-2 text-xs">
-                    <List size={14} />
-                    View visual order
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            <Switch checked={sequential} onCheckedChange={setSequential} />
-          </div>
-        </div>
-
-        {showSaveWorkflow && (
-          <div className="flex items-center gap-2 animate-in slide-in-from-top-1 duration-150">
-            <Input
-              placeholder="Workflow name"
-              value={saveWorkflowName}
-              onChange={(e) => setSaveWorkflowName(e.target.value)}
-              className="h-7 text-xs flex-1"
-              autoFocus
-            />
-            <Button size="sm" className="h-7 text-xs" onClick={() => {
-              toast.success(`Workflow "${saveWorkflowName || "Untitled"}" saved`);
-              setSaveWorkflowName("");
-              setShowSaveWorkflow(false);
-            }}>
-              Save
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowSaveWorkflow(false)}>
-              <X size={12} />
-            </Button>
-          </div>
-        )}
-
-        {sequential && (
-          <div className="space-y-3">
-            {approvers.length > 0 && (
-              <div className="space-y-1">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Step 0 — Approval</p>
-                {approvers.map((a) => (
-                  <div key={a.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md border border-dashed bg-muted/30 text-sm opacity-70">
-                    <Shield size={14} className="text-muted-foreground" />
-                    <Badge variant="secondary" className="h-5 w-5 p-0 justify-center text-[10px] font-bold flex-shrink-0">0</Badge>
-                    <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: a.color }} />
-                    <span className="truncate flex-1 text-xs">{a.name}</span>
-                    <span className="text-[10px] text-muted-foreground">Approver</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {(() => {
-              const signersByOrder = new Map<number, Participant[]>();
-              signers.forEach((s) => {
-                if (!signersByOrder.has(s.order)) signersByOrder.set(s.order, []);
-                signersByOrder.get(s.order)!.push(s);
-              });
-              const steps = Array.from(signersByOrder.entries()).sort(([a], [b]) => a - b);
-              return steps.map(([stepNum, stepParticipants]) => (
-                <div key={stepNum} className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Step {stepNum}</p>
-                    {stepParticipants.length > 1 && (
-                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 text-[hsl(var(--brand-indigo))] border-[hsl(var(--brand-indigo))]/30">
-                        Signing in parallel
-                      </Badge>
-                    )}
-                  </div>
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <SortableContext items={stepParticipants.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-                      {stepParticipants.map((s) => (
-                        <SortableStepItem key={s.id} participant={s} onOrderChange={handleOrderChange} />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
-                </div>
-              ));
-            })()}
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs gap-1 text-muted-foreground w-full"
-              onClick={() => {
-                const maxOrder = Math.max(0, ...signers.map((s) => s.order));
-                toast(`Step ${maxOrder + 1} created — drag participants into it`);
-              }}
-            >
-              <Plus size={12} />
-              Add step
-            </Button>
-          </div>
-        )}
-      </div>
 
       <Separator />
 
