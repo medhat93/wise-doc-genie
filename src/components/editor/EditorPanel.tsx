@@ -8,7 +8,7 @@ import EditorFieldSettings from "./EditorFieldSettings";
 import EditorSmartFieldsPanel from "./EditorSmartFieldsPanel";
 import EditorPropertiesPanel from "./EditorPropertiesPanel";
 import EditorCommentsPanel from "./EditorCommentsPanel";
-
+import EditorWorkflowPanel from "./EditorWorkflowPanel";
 const PANEL_TITLES: Record<PanelId, string> = {
   participants: "Participants",
   ai: "AI Assistant",
