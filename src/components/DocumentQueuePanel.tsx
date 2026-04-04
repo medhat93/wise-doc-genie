@@ -439,6 +439,7 @@ const DocumentQueuePanel = ({
   onEditDocuments,
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
+  const [rotateDoc, setRotateDoc] = useState<UploadedDocument | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(documents.length);
 
