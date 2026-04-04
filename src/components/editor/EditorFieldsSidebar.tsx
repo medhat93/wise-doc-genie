@@ -8,6 +8,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
   PenTool,
   Type,
   Calendar,
@@ -20,9 +32,12 @@ import {
   Building,
   User,
   Paperclip,
+  Plus,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useEditorContext } from "./EditorContext";
+import type { Participant, ParticipantRole, SendingMethod } from "./EditorParticipantsPanel";
 
 export interface SidebarFieldType {
   id: string;
