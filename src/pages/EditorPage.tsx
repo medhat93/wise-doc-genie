@@ -58,7 +58,7 @@ const EditorPageInner = () => {
   const initialMode = searchParams.get("mode") || "full";
   const [isEsign, setIsEsign] = useState(initialMode === "esign");
   const isMobile = useIsMobile();
-  const { selectedFieldId, setSelectedFieldId, setPreviousPanelId, setCommentsPanelOpen } = useEditorContext();
+  const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen } = useEditorContext();
 
   const [loading, setLoading] = useState(true);
   const [activePanel, setActivePanel] = useState<PanelId | null>("annotations");
