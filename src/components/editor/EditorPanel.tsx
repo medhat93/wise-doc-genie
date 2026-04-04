@@ -67,6 +67,8 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
           <EditorSmartFieldsPanel />
         ) : panelId === "properties" ? (
           <EditorPropertiesPanel />
+        ) : panelId === "comments" ? (
+          <EditorCommentsPanel />
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center">
             <p className="text-sm font-medium text-foreground mb-1">{PANEL_TITLES[panelId]}</p>
