@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
-import { Copy, Plus, Search, ChevronDown, MoreHorizontal, Trash2, Pencil, Check, AlertTriangle, X } from "lucide-react";
+import { Copy, Plus, Search, ChevronDown, MoreHorizontal, Trash2, Pencil, Check, AlertTriangle, X, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
@@ -16,24 +17,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useEditorContext } from "./EditorContext";
+import type { Participant } from "./EditorParticipantsPanel";
 
 /* ── Variable definition ── */
 export interface Variable {
   token: string;
   description: string;
-  category: "role" | "system" | "custom";
+  category: "role" | "system" | "custom" | "participant";
   defaultValue?: string;
 }
-
-const ROLE_VARIABLES: Variable[] = [
-  { token: "Signer.Name", description: "Full name of the signer", category: "role" },
-  { token: "Signer.Email", description: "Email address", category: "role" },
-  { token: "Signer.Phone", description: "Phone number", category: "role" },
-  { token: "Signer.Company", description: "Company name", category: "role" },
-  { token: "Signer.Title", description: "Job title", category: "role" },
-  { token: "Approver.Name", description: "Approver's full name", category: "role" },
-  { token: "Approver.Email", description: "Approver's email", category: "role" },
-];
 
 const SYSTEM_VARIABLES: Variable[] = [
   { token: "Document.Name", description: "Document title", category: "system" },
@@ -48,26 +40,82 @@ const SYSTEM_VARIABLES: Variable[] = [
   { token: "Sender.Company", description: "Sender's organization", category: "system" },
 ];
 
-export const ALL_VARIABLES = [...ROLE_VARIABLES, ...SYSTEM_VARIABLES];
+const ROLE_STYLES: Record<string, string> = {
+  signer: "bg-[hsl(var(--brand-indigo))]/15 text-[hsl(var(--brand-indigo))] border-[hsl(var(--brand-indigo))]/30",
+  approver: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+  viewer: "bg-muted text-muted-foreground border-border",
+  cc: "bg-muted text-muted-foreground border-border",
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  signer: "Signer",
+  approver: "Approver",
+  viewer: "Viewer",
+  cc: "CC",
+};
+
+/* ── Generate unique prefix from participant name ── */
+const generatePrefixes = (participants: Participant[]): Map<string, string> => {
+  const prefixMap = new Map<string, string>();
+  const firstNames = new Map<string, Participant[]>();
+
+  participants.forEach((p) => {
+    const firstName = p.name.split(" ")[0];
+    if (!firstNames.has(firstName)) firstNames.set(firstName, []);
+    firstNames.get(firstName)!.push(p);
+  });
+
+  firstNames.forEach((group, firstName) => {
+    if (group.length === 1) {
+      prefixMap.set(group[0].id, firstName);
+    } else {
+      group.forEach((p) => {
+        const lastInitial = p.name.split(" ").slice(1).map(n => n[0]).join("") || "X";
+        prefixMap.set(p.id, `${firstName}.${lastInitial}`);
+      });
+    }
+  });
+
+  return prefixMap;
+};
+
+const PARTICIPANT_FIELDS = ["Name", "Email", "Phone", "Company", "Title"] as const;
+
+const getParticipantFieldValue = (p: Participant, field: string): string => {
+  switch (field) {
+    case "Name": return p.name || "";
+    case "Email": return p.email || "";
+    case "Phone": return p.sendingPhone || p.phone || "";
+    case "Company": return "";
+    case "Title": return "";
+    default: return "";
+  }
+};
 
 /* ── Variable row ── */
 const VariableRow = ({
-  variable,
+  token,
+  value,
   onCopy,
   menuItems,
+  description,
 }: {
-  variable: Variable;
+  token: string;
+  value?: string;
   onCopy: (token: string) => void;
   menuItems?: React.ReactNode;
+  description?: string;
 }) => (
   <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent/50 transition-colors group">
     <span className="font-mono text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 rounded px-1.5 py-0.5 flex-shrink-0">
-      [{variable.token}]
+      [{token}]
     </span>
-    <span className="text-xs text-muted-foreground truncate flex-1">{variable.description}</span>
+    <span className="text-xs text-muted-foreground truncate flex-1">
+      {value || description || "—"}
+    </span>
     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
       <button
-        onClick={(e) => { e.stopPropagation(); onCopy(variable.token); }}
+        onClick={(e) => { e.stopPropagation(); onCopy(token); }}
         className="h-6 w-6 flex items-center justify-center rounded hover:bg-accent text-muted-foreground hover:text-foreground"
       >
         <Copy size={12} />
@@ -79,9 +127,9 @@ const VariableRow = ({
 
 /* ── Main panel ── */
 const EditorSmartFieldsPanel = () => {
-  const { variableValues, setVariableValues, usedVariables } = useEditorContext();
+  const { participants, variableValues, setVariableValues, usedVariables } = useEditorContext();
   const [search, setSearch] = useState("");
-  const [roleOpen, setRoleOpen] = useState(true);
+  const [participantOpen, setParticipantOpen] = useState(true);
   const [systemOpen, setSystemOpen] = useState(true);
   const [customOpen, setCustomOpen] = useState(true);
   const [unusedOpen, setUnusedOpen] = useState(false);
@@ -95,7 +143,31 @@ const EditorSmartFieldsPanel = () => {
     { token: "PO.Number", description: "Purchase order number", category: "custom", defaultValue: "" },
   ]);
 
-  const allVars = useMemo(() => [...ALL_VARIABLES, ...customVariables], [customVariables]);
+  const prefixes = useMemo(() => generatePrefixes(participants), [participants]);
+
+  // Build participant variables dynamically
+  const participantVariables = useMemo(() => {
+    const vars: { participant: Participant; prefix: string; variables: { token: string; value: string }[] }[] = [];
+    participants.forEach((p) => {
+      const prefix = prefixes.get(p.id) || p.name.split(" ")[0];
+      const fields = PARTICIPANT_FIELDS.map((field) => ({
+        token: `${prefix}.${field}`,
+        value: getParticipantFieldValue(p, field),
+      }));
+      vars.push({ participant: p, prefix, variables: fields });
+    });
+    return vars;
+  }, [participants, prefixes]);
+
+  const allTokens = useMemo(() => {
+    const tokens: Variable[] = [];
+    participantVariables.forEach(({ variables }) => {
+      variables.forEach((v) => {
+        tokens.push({ token: v.token, description: v.value || "—", category: "participant" });
+      });
+    });
+    return [...tokens, ...SYSTEM_VARIABLES, ...customVariables];
+  }, [participantVariables, customVariables]);
 
   const handleCopy = (token: string) => {
     navigator.clipboard?.writeText(`[${token}]`);
@@ -128,17 +200,16 @@ const EditorSmartFieldsPanel = () => {
 
   // Used vs unused
   const usedTokens = new Set(usedVariables);
-  const usedVarsList = allVars.filter(v => usedTokens.has(v.token));
-  const unusedVarsList = usedVarsList.length > 0
-    ? allVars.filter(v => usedTokens.has(v.token) === false)
-    : [];
-
+  const usedVarsList = allTokens.filter(v => usedTokens.has(v.token));
   const filledCount = usedVarsList.filter(v => variableValues[v.token]?.trim()).length;
   const unfilledCount = usedVarsList.length - filledCount;
 
   // Filter
+  const matchesSearch = (text: string) =>
+    !search || text.toLowerCase().includes(search.toLowerCase());
+
   const filterVars = (vars: Variable[]) =>
-    search ? vars.filter(v => v.token.toLowerCase().includes(search.toLowerCase()) || v.description.toLowerCase().includes(search.toLowerCase())) : vars;
+    search ? vars.filter(v => matchesSearch(v.token) || matchesSearch(v.description)) : vars;
 
   return (
     <div className="space-y-4">
@@ -200,41 +271,66 @@ const EditorSmartFieldsPanel = () => {
               </div>
             ))}
           </div>
-
-          {/* Not used section */}
-          {unusedVarsList.length > 0 && (
-            <Collapsible open={unusedOpen} onOpenChange={setUnusedOpen} className="mt-2">
-              <CollapsibleTrigger className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors">
-                <ChevronDown size={10} className={cn("transition-transform", unusedOpen && "rotate-180")} />
-                {unusedVarsList.length} not used
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="mt-1 space-y-0.5 opacity-60">
-                  {filterVars(unusedVarsList).map(v => (
-                    <VariableRow key={v.token} variable={v} onCopy={handleCopy} />
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          )}
         </div>
       )}
 
-      {/* ROLE VARIABLES */}
-      <Collapsible open={roleOpen} onOpenChange={setRoleOpen}>
+      {/* PARTICIPANT VARIABLES */}
+      <Collapsible open={participantOpen} onOpenChange={setParticipantOpen}>
         <CollapsibleTrigger className="flex items-center justify-between w-full py-1">
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Role Variables</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Participant Variables</h3>
             <p className="text-[10px] text-muted-foreground">Auto-fill from participant data</p>
           </div>
-          <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", roleOpen && "rotate-180")} />
+          <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", participantOpen && "rotate-180")} />
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="mt-1.5 space-y-0.5">
-            {filterVars(ROLE_VARIABLES).map(v => (
-              <VariableRow key={v.token} variable={v} onCopy={handleCopy} />
-            ))}
-          </div>
+          {participants.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-6 gap-2 mt-2">
+              <Users size={28} className="text-muted-foreground opacity-40" />
+              <p className="text-xs text-muted-foreground text-center">
+                Add participants in Step 2 to generate signer variables
+              </p>
+            </div>
+          ) : (
+            <div className="mt-2 space-y-3">
+              {participantVariables
+                .filter(({ participant, variables }) =>
+                  !search || matchesSearch(participant.name) || variables.some(v => matchesSearch(v.token))
+                )
+                .map(({ participant, variables }) => (
+                  <div key={participant.id} className="space-y-0.5">
+                    {/* Participant header */}
+                    <div className="flex items-center gap-2 px-2 py-1.5">
+                      <span
+                        className="h-2 w-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: participant.color }}
+                      />
+                      <span className="text-sm font-medium truncate">{participant.name}</span>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[9px] px-1.5 py-0 h-4 font-medium border",
+                          ROLE_STYLES[participant.role] || ROLE_STYLES.viewer
+                        )}
+                      >
+                        {ROLE_LABELS[participant.role] || participant.role}
+                      </Badge>
+                    </div>
+                    {/* Variable rows */}
+                    {variables
+                      .filter((v) => !search || matchesSearch(v.token))
+                      .map((v) => (
+                        <VariableRow
+                          key={v.token}
+                          token={v.token}
+                          value={v.value || "—"}
+                          onCopy={handleCopy}
+                        />
+                      ))}
+                  </div>
+                ))}
+            </div>
+          )}
         </CollapsibleContent>
       </Collapsible>
 
@@ -250,7 +346,7 @@ const EditorSmartFieldsPanel = () => {
         <CollapsibleContent>
           <div className="mt-1.5 space-y-0.5">
             {filterVars(SYSTEM_VARIABLES).map(v => (
-              <VariableRow key={v.token} variable={v} onCopy={handleCopy} />
+              <VariableRow key={v.token} token={v.token} description={v.description} onCopy={handleCopy} />
             ))}
           </div>
         </CollapsibleContent>
@@ -267,7 +363,6 @@ const EditorSmartFieldsPanel = () => {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="mt-2 space-y-1">
-            {/* Add button */}
             {!showCreateForm && (
               <Button
                 variant="outline"
@@ -280,7 +375,6 @@ const EditorSmartFieldsPanel = () => {
               </Button>
             )}
 
-            {/* Create form */}
             {showCreateForm && (
               <div className="border rounded-md p-3 space-y-2 bg-muted/30">
                 <Input
@@ -308,11 +402,11 @@ const EditorSmartFieldsPanel = () => {
               </div>
             )}
 
-            {/* Custom list */}
             {filterVars(customVariables).map(v => (
               <VariableRow
                 key={v.token}
-                variable={v}
+                token={v.token}
+                description={v.description}
                 onCopy={handleCopy}
                 menuItems={
                   <DropdownMenu>
@@ -340,4 +434,5 @@ const EditorSmartFieldsPanel = () => {
   );
 };
 
+export { SYSTEM_VARIABLES };
 export default EditorSmartFieldsPanel;
