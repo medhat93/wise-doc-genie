@@ -598,7 +598,7 @@ const CreateDocument = () => {
     >
       {/* ─── Header ──────────────────────────────────────────────────────── */}
       <header className="border-b bg-background flex-shrink-0">
-        <div className="h-auto min-h-[3.5rem] md:h-16 flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 gap-2 sm:gap-0">
+        <div className="relative h-auto min-h-[3.5rem] md:h-16 flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 gap-2 sm:gap-0">
           <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
             <button
               onClick={() => navigate(-1)}
