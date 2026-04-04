@@ -644,8 +644,8 @@ const CreateDocument = () => {
                 <Button
                   variant="default"
                   size="sm"
-                  disabled={isEmpty || !allComplete}
-                  className={isEmpty || !allComplete ? "opacity-50" : ""}
+                  disabled={isEmpty || !allComplete || !hasPrimary}
+                  className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
                 >
                   <HugeiconsIcon icon={SentIcon} size={16} className="mr-1.5" />
                   <span className="hidden sm:inline">Get signatures</span>
