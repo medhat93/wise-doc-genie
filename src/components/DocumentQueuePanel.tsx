@@ -18,12 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
@@ -205,8 +200,8 @@ function DocTypeBadge({
   const Icon = config.icon;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <button
           className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors hover:opacity-80 ${config.badgeBg} ${config.badgeText}`}
           onClick={(e) => e.stopPropagation()}
@@ -215,30 +210,30 @@ function DocTypeBadge({
           <Icon size={10} />
           {config.label}
         </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[140px]">
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[140px] p-1" sideOffset={4}>
         {(Object.keys(DOC_TYPE_CONFIG) as DocumentType[]).map((dtype) => {
           const c = DOC_TYPE_CONFIG[dtype];
           const TypeIcon = c.icon;
           return (
-            <DropdownMenuItem
+            <button
               key={dtype}
               onClick={(e) => {
                 e.stopPropagation();
                 onChangeType(doc.id, dtype);
               }}
-              className={`text-xs gap-2 ${doc.documentType === dtype ? "font-semibold" : ""}`}
+              className={`flex items-center gap-2 w-full px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors ${doc.documentType === dtype ? "font-semibold" : ""}`}
             >
               <TypeIcon size={14} className={c.badgeText} />
               {c.label}
               {doc.documentType === dtype && (
                 <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="ml-auto text-primary" />
               )}
-            </DropdownMenuItem>
+            </button>
           );
         })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverContent>
+    </Popover>
   );
 }
 
