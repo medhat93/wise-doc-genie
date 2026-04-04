@@ -304,33 +304,35 @@ const SelectionToolbar = ({
   </motion.div>
 );
 
-/* ── Margin comment card ── */
-const MarginComment = ({ comment, onClick }: { comment: Comment; onClick: () => void }) => (
-  <motion.div
-    initial={{ opacity: 0, x: 10 }}
-    animate={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: 10 }}
-    transition={{ duration: 0.2 }}
-    onClick={onClick}
-    className={cn(
-      "w-[200px] bg-card border rounded-md shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow",
-      comment.status === "resolved" && "opacity-40"
-    )}
-  >
-    <div className="flex items-center gap-1.5 mb-1">
-      <div
-        className="h-5 w-5 rounded-full flex items-center justify-center text-white text-[9px] font-semibold flex-shrink-0"
+/* ── Floating comment bubble ── */
+const CommentBubble = ({ comment, count, onClick }: { comment: Comment; count: number; onClick: () => void }) => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        transition={{ duration: 0.15 }}
+        onClick={onClick}
+        className={cn(
+          "relative h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shadow-sm hover:shadow-md hover:scale-110 transition-all cursor-pointer",
+          comment.status === "resolved" && "opacity-40"
+        )}
         style={{ backgroundColor: comment.authorColor }}
       >
         {comment.authorInitials}
-      </div>
-      <span className="text-[11px] font-medium text-foreground truncate">{comment.author}</span>
-    </div>
-    <p className="text-[11px] text-muted-foreground line-clamp-2">{comment.text}</p>
-    <p className="text-[10px] text-muted-foreground/60 mt-1">
-      {Math.floor((Date.now() - comment.timestamp.getTime()) / 3600000)}h ago
-    </p>
-  </motion.div>
+        {count > 1 && (
+          <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-foreground text-background text-[8px] flex items-center justify-center font-bold">
+            {count}
+          </span>
+        )}
+      </motion.button>
+    </TooltipTrigger>
+    <TooltipContent side="left" className="text-xs max-w-[200px]">
+      <p className="font-medium">{comment.author}</p>
+      <p className="text-muted-foreground line-clamp-2">{comment.text}</p>
+    </TooltipContent>
+  </Tooltip>
 );
 
 /* ── Field overlay component ── */
