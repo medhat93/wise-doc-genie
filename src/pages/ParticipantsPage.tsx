@@ -73,10 +73,4 @@ const ParticipantsPageInner = () => {
   );
 };
 
-const ParticipantsPage = () => (
-  <EditorProvider>
-    <ParticipantsPageInner />
-  </EditorProvider>
-);
-
-export default ParticipantsPage;
+export default ParticipantsPageInner;

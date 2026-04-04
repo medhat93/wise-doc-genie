@@ -185,10 +185,6 @@ const EditorPageInner = () => {
   );
 };
 
-const EditorPage = () => (
-  <EditorProvider>
-    <EditorPageInner />
-  </EditorProvider>
-);
+const EditorPage = () => <EditorPageInner />;
 
 export default EditorPage;
