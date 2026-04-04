@@ -588,22 +588,35 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
   // Inline comments for margin display (only when comments panel is closed)
   const inlineComments = comments.filter((c) => c.type === "inline");
 
-  // Map section refs to approximate vertical positions for margin comments
-  const KNOWN_SECTION_Y: Record<string, number> = {
-    "Section 2: Scope of Services": 320,
-    "Section 3: Payment Terms": 460,
-    "Section 5: Termination": 620,
-  };
+  // Group comments by sectionRef for bubble display
+  const commentsBySection = inlineComments.reduce<Record<string, Comment[]>>((acc, c) => {
+    (acc[c.sectionRef] = acc[c.sectionRef] || []).push(c);
+    return acc;
+  }, {});
 
-  // Build dynamic Y map: known sections keep their position, new comments stack below
-  const SECTION_Y_MAP = { ...KNOWN_SECTION_Y };
-  let nextY = 720;
-  inlineComments.forEach((c) => {
-    if (!SECTION_Y_MAP[c.sectionRef]) {
-      SECTION_Y_MAP[c.sectionRef] = nextY;
-      nextY += 80;
-    }
-  });
+  // Measure positions of comment sections relative to document container
+  const [sectionPositions, setSectionPositions] = useState<Record<string, number>>({});
+  const doc1Ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const measure = () => {
+      const container = doc1Ref.current;
+      if (!container) return;
+      const containerRect = container.getBoundingClientRect();
+      const positions: Record<string, number> = {};
+      const els = container.querySelectorAll("[data-comment-section]");
+      els.forEach((el) => {
+        const ref = el.getAttribute("data-comment-section");
+        if (ref && !positions[ref]) {
+          positions[ref] = el.getBoundingClientRect().top - containerRect.top;
+        }
+      });
+      setSectionPositions(positions);
+    };
+    measure();
+    const timer = setInterval(measure, 1000);
+    return () => clearInterval(timer);
+  }, [comments]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
