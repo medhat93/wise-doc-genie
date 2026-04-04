@@ -257,13 +257,15 @@ const CreateDocument = () => {
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
+    const existingParentId = documents.find((d) => d.role === "parent")?.id;
+    let firstNewParentId: string | undefined;
     const newDocs: UploadedDocument[] = fileArray.map((file, idx) => {
-      const hasParent = documents.length > 0 || idx > 0;
-      const parentId = hasParent
-        ? documents.find((d) => d.role === "parent")?.id ?? (idx > 0 ? undefined : undefined)
-        : undefined;
+      const isParent = !existingParentId && idx === 0;
+      const docId = crypto.randomUUID();
+      if (isParent) firstNewParentId = docId;
+      const parentId = isParent ? undefined : (existingParentId ?? firstNewParentId);
       return {
-        id: crypto.randomUUID(),
+        id: docId,
         file,
         name: file.name,
         size: file.size,
@@ -271,9 +273,9 @@ const CreateDocument = () => {
         progress: 0,
         status: "uploading" as const,
         pageCount: Math.floor(Math.random() * 20) + 1,
-        role: hasParent ? "child" as const : "parent" as const,
+        role: isParent ? "parent" as const : "child" as const,
         parentId,
-        childOrder: hasParent ? documents.filter((d) => d.role === "child").length + idx : undefined,
+        childOrder: isParent ? undefined : documents.filter((d) => d.role === "child").length + idx,
       };
     });
     setDocuments((prev) => [...prev, ...newDocs]);
