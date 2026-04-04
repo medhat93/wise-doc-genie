@@ -5,6 +5,8 @@ import type { PanelId } from "./EditorPanelToolbar";
 import EditorAIPanel from "./EditorAIPanel";
 import EditorParticipantsPanel from "./EditorParticipantsPanel";
 import EditorFieldSettings from "./EditorFieldSettings";
+import EditorSmartFieldsPanel from "./EditorSmartFieldsPanel";
+import EditorPropertiesPanel from "./EditorPropertiesPanel";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   participants: "Participants",
@@ -60,6 +62,10 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
           <EditorAIPanel docType={docType} />
         ) : panelId === "participants" ? (
           <EditorParticipantsPanel />
+        ) : panelId === "fields" ? (
+          <EditorSmartFieldsPanel />
+        ) : panelId === "properties" ? (
+          <EditorPropertiesPanel />
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center">
             <p className="text-sm font-medium text-foreground mb-1">{PANEL_TITLES[panelId]}</p>
