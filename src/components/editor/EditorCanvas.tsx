@@ -604,7 +604,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto bg-muted/20 relative"
+        className={cn("flex-1 overflow-y-auto relative", isEsign ? "bg-muted/40" : "bg-muted/20")}
         onScroll={handleScroll}
         onClick={handleCanvasClick}
         onMouseUp={handleMouseUp}
