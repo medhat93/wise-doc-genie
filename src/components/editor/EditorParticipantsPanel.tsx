@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useEditorContext } from "./EditorContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
