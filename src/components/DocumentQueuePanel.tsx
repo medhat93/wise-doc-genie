@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { UploadedDocument } from "@/types/document";
+import { UploadedDocument, DocumentType } from "@/types/document";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
@@ -32,6 +38,7 @@ import {
   Edit02Icon,
   SentIcon,
 } from "@hugeicons/core-free-icons";
+import { FileText, FilePlus, Paperclip } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AiIcon from "@/components/AiIcon";
 
@@ -64,6 +71,40 @@ interface DocumentQueuePanelProps {
   onEditDocuments?: () => void;
 }
 
+// ─── Document type config ──────────────────────────────────────────────────
+
+const DOC_TYPE_CONFIG: Record<DocumentType, {
+  label: string;
+  icon: typeof FileText;
+  borderClass: string;
+  badgeBg: string;
+  badgeText: string;
+}> = {
+  primary: {
+    label: "Primary",
+    icon: FileText,
+    borderClass: "border-l-primary",
+    badgeBg: "bg-primary/10",
+    badgeText: "text-primary",
+  },
+  supplement: {
+    label: "Supplement",
+    icon: FilePlus,
+    borderClass: "border-l-amber-500",
+    badgeBg: "bg-amber-500/10",
+    badgeText: "text-amber-600",
+  },
+  attachment: {
+    label: "Attachment",
+    icon: Paperclip,
+    borderClass: "border-l-muted-foreground",
+    badgeBg: "bg-muted",
+    badgeText: "text-muted-foreground",
+  },
+};
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
 function getFileIcon(type: string) {
   if (type.includes("pdf")) return { icon: File01Icon, bg: "bg-red-100", color: "text-red-600" };
   if (type.includes("word") || type.includes("doc"))
@@ -78,12 +119,13 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// Vertical thumbnail for the card
+// ─── Vertical thumbnail ────────────────────────────────────────────────────
+
 function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
   if (doc.isTemplate) {
     if (doc.isUserTemplate || !doc.gradient) {
       return (
-        <div className="w-full aspect-[4/3] rounded-t-lg bg-muted flex items-center justify-center">
+        <div className="w-full aspect-[4/3] rounded-tr-lg bg-muted flex items-center justify-center">
           <div className="w-[80px] space-y-1.5 p-2 bg-background rounded shadow-sm">
             <div className="h-[3px] bg-muted-foreground/20 rounded w-full" />
             <div className="h-[3px] bg-muted-foreground/15 rounded w-4/5" />
@@ -95,7 +137,7 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
     }
     return (
       <div
-        className={`w-full aspect-[4/3] rounded-t-lg bg-gradient-to-br ${doc.gradient} flex items-center justify-center`}
+        className={`w-full aspect-[4/3] rounded-tr-lg bg-gradient-to-br ${doc.gradient} flex items-center justify-center`}
       >
         <div className="w-[80px] space-y-1.5 p-2 bg-white/90 rounded shadow-sm">
           <div className="h-[3px] bg-gray-200 rounded w-full" />
@@ -111,7 +153,7 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
     const isGenerating = doc.status === "uploading";
     return (
       <div
-        className={`w-full aspect-[4/3] rounded-t-lg bg-muted/50 border-b flex items-center justify-center ${isGenerating ? "animate-pulse" : ""}`}
+        className={`w-full aspect-[4/3] rounded-tr-lg bg-muted/50 border-b flex items-center justify-center ${isGenerating ? "animate-pulse" : ""}`}
       >
         <AiIcon size={32} className={isGenerating ? "animate-spin" : ""} />
       </div>
@@ -120,8 +162,8 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
 
   if (doc.status === "uploading") {
     return (
-      <div className="w-full aspect-[4/3] rounded-t-lg relative">
-        <Skeleton className="w-full h-full rounded-t-lg rounded-b-none" />
+      <div className="w-full aspect-[4/3] rounded-tr-lg relative">
+        <Skeleton className="w-full h-full rounded-tr-lg rounded-b-none rounded-tl-none" />
         {doc.isDriveImport && (
           <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-background border flex items-center justify-center">
             <HugeiconsIcon icon={CloudIcon} size={10} className="text-muted-foreground" />
@@ -137,7 +179,7 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={`w-full aspect-[4/3] rounded-t-lg flex items-center justify-center ${fileStyle.bg}`}
+        className={`w-full aspect-[4/3] rounded-tr-lg flex items-center justify-center ${fileStyle.bg}`}
       >
         <HugeiconsIcon icon={fileStyle.icon} size={36} className={fileStyle.color} />
       </motion.div>
@@ -150,19 +192,74 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
   );
 }
 
+// ─── Document type badge with dropdown ──────────────────────────────────────
+
+function DocTypeBadge({
+  doc,
+  onChangeType,
+}: {
+  doc: UploadedDocument;
+  onChangeType: (id: string, type: DocumentType) => void;
+}) {
+  const config = DOC_TYPE_CONFIG[doc.documentType];
+  const Icon = config.icon;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors hover:opacity-80 ${config.badgeBg} ${config.badgeText}`}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <Icon size={10} />
+          {config.label}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[140px]">
+        {(Object.keys(DOC_TYPE_CONFIG) as DocumentType[]).map((dtype) => {
+          const c = DOC_TYPE_CONFIG[dtype];
+          const TypeIcon = c.icon;
+          return (
+            <DropdownMenuItem
+              key={dtype}
+              onClick={(e) => {
+                e.stopPropagation();
+                onChangeType(doc.id, dtype);
+              }}
+              className={`text-xs gap-2 ${doc.documentType === dtype ? "font-semibold" : ""}`}
+            >
+              <TypeIcon size={14} className={c.badgeText} />
+              {c.label}
+              {doc.documentType === dtype && (
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="ml-auto text-primary" />
+              )}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// ─── Sortable card ──────────────────────────────────────────────────────────
+
 function SortableDocCard({
   doc,
   onRemove,
   onPreview,
+  onChangeType,
 }: {
   doc: UploadedDocument;
   onRemove: (id: string) => void;
   onPreview: (doc: UploadedDocument) => void;
+  onChangeType: (id: string, type: DocumentType) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: doc.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   const isUploading = doc.status === "uploading" && !doc.isTemplate && !doc.isAI;
+  const typeConfig = DOC_TYPE_CONFIG[doc.documentType];
 
   return (
     <Card
@@ -170,7 +267,7 @@ function SortableDocCard({
       style={style}
       {...attributes}
       {...listeners}
-      className="group relative overflow-hidden cursor-grab active:cursor-grabbing"
+      className={`group relative overflow-hidden cursor-grab active:cursor-grabbing border-l-[3px] transition-colors ${typeConfig.borderClass}`}
     >
       {/* Drag handle indicator */}
       <div className="absolute top-1.5 left-1.5 z-10 bg-background/80 backdrop-blur-sm rounded p-0.5 pointer-events-none">
@@ -193,7 +290,7 @@ function SortableDocCard({
       <div className="relative">
         <VerticalThumbnail doc={doc} />
         <button
-          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-t-lg"
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-tr-lg"
           onClick={(e) => { e.stopPropagation(); onPreview(doc); }}
           onPointerDown={(e) => e.stopPropagation()}
         >
@@ -203,65 +300,70 @@ function SortableDocCard({
         </button>
       </div>
 
-      {/* Info + remove row */}
-      <div className="p-2.5 flex items-start gap-1">
-        <div className="flex-1 min-w-0">
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-[200px] break-words text-xs">
-              {doc.name}
-            </TooltipContent>
-          </Tooltip>
-          {doc.isAI && doc.status === "uploading" ? (
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={doc.aiThinkingStep || "generating"}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.2 }}
-                className="text-[11px] ai-thinking-text truncate mt-0.5"
+      {/* Info + type badge + remove */}
+      <div className="p-2.5 flex flex-col gap-1.5">
+        <div className="flex items-start gap-1">
+          <div className="flex-1 min-w-0">
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[200px] break-words text-xs">
+                {doc.name}
+              </TooltipContent>
+            </Tooltip>
+            {doc.isAI && doc.status === "uploading" ? (
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={doc.aiThinkingStep || "generating"}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-[11px] ai-thinking-text truncate mt-0.5"
+                >
+                  {doc.aiThinkingStep || "AI is generating..."}
+                </motion.p>
+              </AnimatePresence>
+            ) : (
+              <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                {doc.isTemplate
+                  ? `${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
+                  : doc.status === "uploading"
+                    ? doc.isDriveImport
+                      ? "Importing..."
+                      : "Uploading..."
+                    : `${doc.pageCount ?? 0} pages`}
+              </p>
+            )}
+          </div>
+
+          {/* Remove button */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
               >
-                {doc.aiThinkingStep || "AI is generating..."}
-              </motion.p>
-            </AnimatePresence>
-          ) : (
-            <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-              {doc.isTemplate
-                ? `${doc.pageCount ?? 0} ${(doc.pageCount ?? 0) === 1 ? "page" : "pages"}`
-                : doc.status === "uploading"
-                  ? doc.isDriveImport
-                    ? "Importing..."
-                    : "Uploading..."
-                  : `${doc.pageCount ?? 0} pages`}
-            </p>
-          )}
+                <HugeiconsIcon icon={Delete02Icon} size={14} className="text-destructive" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove from queue?</AlertDialogTitle>
+                <AlertDialogDescription>"{doc.name}" will be removed from the queue.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onRemove(doc.id)}>Remove</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
-        {/* Remove button */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 flex-shrink-0"
-              onClick={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              <HugeiconsIcon icon={Delete02Icon} size={14} className="text-destructive" />
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remove from queue?</AlertDialogTitle>
-              <AlertDialogDescription>"{doc.name}" will be removed from the queue.</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onRemove(doc.id)}>Remove</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Type badge */}
+        <DocTypeBadge doc={doc} onChangeType={onChangeType} />
       </div>
 
       {/* Upload progress */}
@@ -276,7 +378,8 @@ function SortableDocCard({
   );
 }
 
-// Preview dialog thumbnail (reused from old code)
+// ─── Preview dialog thumbnail ───────────────────────────────────────────────
+
 function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
   if (doc.isTemplate) {
     if (doc.isUserTemplate || !doc.gradient) {
@@ -311,6 +414,8 @@ function QueueItemThumbnail({ doc }: { doc: UploadedDocument }) {
   );
 }
 
+// ─── Main panel ─────────────────────────────────────────────────────────────
+
 const DocumentQueuePanel = ({
   documents,
   setDocuments,
@@ -336,8 +441,11 @@ const DocumentQueuePanel = ({
   );
 
   const isEmpty = documents.length === 0;
-  const totalPages = documents.reduce((sum, d) => sum + (d.pageCount ?? 0), 0);
   const count = documents.length;
+  const primaryCount = documents.filter((d) => d.documentType === "primary").length;
+  const supplementCount = documents.filter((d) => d.documentType === "supplement").length;
+  const attachmentCount = documents.filter((d) => d.documentType === "attachment").length;
+  const hasPrimary = primaryCount > 0;
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -353,6 +461,18 @@ const DocumentQueuePanel = ({
   function handleRemove(id: string) {
     setDocuments((prev) => prev.filter((d) => d.id !== id));
   }
+
+  function handleChangeType(id: string, newType: DocumentType) {
+    setDocuments((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, documentType: newType } : d))
+    );
+  }
+
+  // Build footer summary
+  const footerParts: string[] = [];
+  if (primaryCount > 0) footerParts.push(`${primaryCount} primary`);
+  if (supplementCount > 0) footerParts.push(`${supplementCount} supplement`);
+  if (attachmentCount > 0) footerParts.push(`${attachmentCount} attachment`);
 
   return (
     <div className={isMobile ? "flex flex-col" : "w-[260px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
@@ -372,7 +492,13 @@ const DocumentQueuePanel = ({
             <SortableContext items={documents.map((d) => d.id)} strategy={verticalListSortingStrategy}>
               <div className="grid grid-cols-1 gap-2">
                 {documents.map((doc) => (
-                  <SortableDocCard key={doc.id} doc={doc} onRemove={handleRemove} onPreview={setPreviewDoc} />
+                  <SortableDocCard
+                    key={doc.id}
+                    doc={doc}
+                    onRemove={handleRemove}
+                    onPreview={setPreviewDoc}
+                    onChangeType={handleChangeType}
+                  />
                 ))}
               </div>
             </SortableContext>
@@ -380,12 +506,18 @@ const DocumentQueuePanel = ({
         )}
       </div>
 
-      <div className="border-t px-3 py-3 flex-shrink-0">
+      <div className="border-t px-3 py-3 flex-shrink-0 space-y-1.5">
+        {/* Warning if no primary */}
+        {!isEmpty && !hasPrimary && (
+          <p className="text-[10px] text-amber-600 font-medium">
+            At least one primary document is required
+          </p>
+        )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <HugeiconsIcon icon={File01Icon} size={13} className="text-muted-foreground" />
             <span className="text-[11px] font-medium text-muted-foreground">
-              {isEmpty ? "Queue empty" : `${count} doc${count !== 1 ? "s" : ""} · ${totalPages} pages`}
+              {isEmpty ? "Queue empty" : footerParts.join(" · ")}
             </span>
           </div>
           {!isEmpty && (
@@ -455,8 +587,8 @@ const DocumentQueuePanel = ({
                   </div>
                 )}
                 <div>
-                  <p className="text-xs text-muted-foreground">Status</p>
-                  <p className="font-medium mt-0.5 capitalize">{previewDoc.status}</p>
+                  <p className="text-xs text-muted-foreground">Classification</p>
+                  <p className="font-medium mt-0.5 capitalize">{previewDoc.documentType}</p>
                 </div>
               </div>
             </div>
