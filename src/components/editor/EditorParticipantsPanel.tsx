@@ -23,11 +23,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
@@ -44,20 +39,19 @@ import {
   MoreHorizontal,
   GripVertical,
   ChevronDown,
-  ChevronRight,
   Plus,
   Minus,
   Shield,
   Phone,
   Mail,
   Eye,
-  ArrowRight,
   User,
   Bookmark,
   MousePointer,
   List,
   Info,
   MessageSquare,
+  X,
 } from "lucide-react";
 import {
   DndContext,
@@ -80,7 +74,7 @@ import { MOCK_DOCUMENTS } from "./EditorCanvas";
 import { toast } from "sonner";
 
 /* ── Types ── */
-export type ParticipantRole = "signer" | "reviewer" | "approver" | "cc";
+export type ParticipantRole = "signer" | "approver" | "viewer" | "cc";
 export type SendingMethod = "email" | "sms" | "whatsapp";
 export type VerificationMethodType = "sms" | "whatsapp" | "absher" | "nafath_only" | "nafath_digital";
 export type VerificationSpecs = "without_id" | "with_id" | "with_id_biometrics";
@@ -92,6 +86,7 @@ export interface Participant {
   role: ParticipantRole;
   color: string;
   order: number;
+  language: "en" | "ar";
   sendingMethod: SendingMethod;
   sendingPhone?: string;
   needsVerification: boolean;
@@ -110,8 +105,8 @@ const COLORS = [
 
 const ROLE_STYLES: Record<ParticipantRole, { label: string; className: string }> = {
   signer: { label: "Signer", className: "bg-[hsl(var(--brand-indigo))]/15 text-[hsl(var(--brand-indigo))] border-[hsl(var(--brand-indigo))]/30" },
-  reviewer: { label: "Reviewer", className: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" },
   approver: { label: "Approver", className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
+  viewer: { label: "Viewer", className: "bg-muted text-muted-foreground border-border" },
   cc: { label: "CC", className: "bg-muted text-muted-foreground border-border" },
 };
 
@@ -129,26 +124,20 @@ const VERIFICATION_SPECS_LABELS: Record<VerificationSpecs, { label: string; tool
   with_id_biometrics: { label: "With national ID & Biometrics", tooltip: "Highest security — requires national ID plus biometric verification via Nafath" },
 };
 
-const SENDING_METHOD_LABELS: Record<SendingMethod, string> = {
-  email: "Email",
-  sms: "SMS",
-  whatsapp: "WhatsApp",
-};
-
 /* ── Mock data ── */
 const INITIAL_PARTICIPANTS: Participant[] = [
-  { id: "p1", name: "Ahmed Al-Rashid", email: "ahmed@signit.sa", role: "signer", color: COLORS[0], order: 1, sendingMethod: "email", needsVerification: false },
-  { id: "p2", name: "Sarah Johnson", email: "sarah@acme.com", role: "signer", color: COLORS[1], order: 2, sendingMethod: "email", needsVerification: true, verificationMethod: "sms" },
-  { id: "p3", name: "Adel Al-Dossary", email: "adel@enterprise.sa", role: "signer", color: COLORS[3], order: 2, sendingMethod: "email", needsVerification: true, verificationMethod: "nafath_only", verificationSpecs: "with_id_biometrics", nationalId: "1087654321" },
-  { id: "p4", name: "Mohammed Al-Faisal", email: "mohammed@legal.sa", role: "approver", color: COLORS[2], order: 3, sendingMethod: "sms", sendingPhone: "+966 50 123 4567", needsVerification: true, verificationMethod: "nafath_only", verificationSpecs: "with_id", nationalId: "1012345678" },
+  { id: "p1", name: "Ahmed Al-Rashid", email: "ahmed@signit.sa", role: "signer", color: COLORS[0], order: 1, language: "en", sendingMethod: "email", needsVerification: false },
+  { id: "p2", name: "Sarah Johnson", email: "sarah@acme.com", role: "signer", color: COLORS[1], order: 2, language: "en", sendingMethod: "email", needsVerification: true, verificationMethod: "sms" },
+  { id: "p3", name: "Adel Al-Dossary", email: "adel@enterprise.sa", role: "signer", color: COLORS[3], order: 2, language: "en", sendingMethod: "email", needsVerification: true, verificationMethod: "nafath_only", verificationSpecs: "with_id_biometrics", nationalId: "1087654321" },
+  { id: "p4", name: "Mohammed Al-Faisal", email: "mohammed@legal.sa", role: "approver", color: COLORS[2], order: 0, language: "ar", sendingMethod: "sms", sendingPhone: "+966 50 123 4567", needsVerification: true, verificationMethod: "nafath_only", verificationSpecs: "with_id", nationalId: "1012345678" },
 ];
 
 const MOCK_WORKFLOWS = [
   { id: "w1", name: "Standard 2-Signer Flow", desc: "2 signers, sequential" },
-  { id: "w2", name: "Legal Review + Sign", desc: "1 approver → 2 signers parallel → 1 CC" },
+  { id: "w2", name: "Legal Review + Sign", desc: "1 approver → 2 signers parallel" },
 ];
 
-/* ── Sortable signer item for signing order ── */
+/* ── Sortable signer item ── */
 const SortableStepItem = ({
   participant,
   onOrderChange,
@@ -173,7 +162,7 @@ const SortableStepItem = ({
       </button>
       <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: participant.color }} />
       <span className="truncate flex-1 text-xs">{participant.name}</span>
-      <span className="text-[10px] text-muted-foreground">{participant.email}</span>
+      <span className="text-[10px] text-muted-foreground truncate">{participant.email}</span>
       <div className="flex items-center gap-0.5 ml-1">
         <button
           onClick={() => onOrderChange(participant.id, -1)}
@@ -193,16 +182,57 @@ const SortableStepItem = ({
   );
 };
 
+/* ── Add Participant Form ── */
+interface AddFormState {
+  role: ParticipantRole;
+  language: "en" | "ar";
+  sendingMethod: SendingMethod;
+  name: string;
+  email: string;
+  phoneCode: string;
+  phoneNumber: string;
+  needsVerification: boolean;
+  verificationMethod: VerificationMethodType;
+  verificationSpecs: VerificationSpecs;
+  nationalId: string;
+}
+
+const INITIAL_FORM: AddFormState = {
+  role: "signer",
+  language: "en",
+  sendingMethod: "email",
+  name: "",
+  email: "",
+  phoneCode: "+966",
+  phoneNumber: "",
+  needsVerification: false,
+  verificationMethod: "sms",
+  verificationSpecs: "without_id",
+  nationalId: "",
+};
+
+const hasSpecs = (method?: VerificationMethodType) => method === "nafath_only" || method === "nafath_digital";
+
+const needsNationalId = (method?: VerificationMethodType, specs?: VerificationSpecs) => {
+  if (method === "absher") return true;
+  if ((method === "nafath_only" || method === "nafath_digital") && (specs === "with_id" || specs === "with_id_biometrics")) return true;
+  return false;
+};
+
+const showNafathBanner = (method?: VerificationMethodType) => {
+  return method === "absher" || method === "nafath_only" || method === "nafath_digital";
+};
+
 /* ══════════ MAIN PANEL ══════════ */
 const EditorParticipantsPanel = () => {
   const [participants, setParticipants] = useState<Participant[]>(INITIAL_PARTICIPANTS);
-  const [nameInput, setNameInput] = useState("");
-  const [roleInput, setRoleInput] = useState<ParticipantRole>("signer");
   const [sequential, setSequential] = useState(true);
-  const [setWorkflow, setSetWorkflow] = useState(false);
-  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [form, setForm] = useState<AddFormState>(INITIAL_FORM);
   const [selectWorkflowOpen, setSelectWorkflowOpen] = useState(false);
   const [viewOrderOpen, setViewOrderOpen] = useState(false);
+  const [saveWorkflowName, setSaveWorkflowName] = useState("");
+  const [showSaveWorkflow, setShowSaveWorkflow] = useState(false);
   const [visibility, setVisibility] = useState<DocumentVisibility>(() => {
     const v: DocumentVisibility = {};
     MOCK_DOCUMENTS.forEach((d) => {
@@ -219,38 +249,9 @@ const EditorParticipantsPanel = () => {
   );
 
   /* ── Helpers ── */
-  const signers = participants.filter((p) => p.role === "signer" || p.role === "reviewer").sort((a, b) => a.order - b.order);
+  const signers = participants.filter((p) => p.role === "signer").sort((a, b) => a.order - b.order);
   const approvers = participants.filter((p) => p.role === "approver");
   const nextColor = COLORS[participants.length % COLORS.length];
-
-  const addParticipant = useCallback(() => {
-    const trimmed = nameInput.trim();
-    if (!trimmed) return;
-    const isEmail = trimmed.includes("@");
-    const email = isEmail ? trimmed : "";
-    const name = isEmail ? trimmed.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : trimmed;
-
-    const maxOrder = Math.max(0, ...participants.filter(p => p.role === "signer").map(p => p.order));
-    const newP: Participant = {
-      id: `p${Date.now()}`,
-      name,
-      email: email || `${name.toLowerCase().replace(/\s+/g, ".")}@example.com`,
-      role: roleInput,
-      color: nextColor,
-      order: roleInput === "signer" ? maxOrder + 1 : 0,
-      sendingMethod: "email",
-      needsVerification: false,
-    };
-    setParticipants((prev) => [...prev, newP]);
-    setVisibility((prev) => {
-      const next = { ...prev };
-      Object.keys(next).forEach((docId) => {
-        next[docId] = [...next[docId], newP.id];
-      });
-      return next;
-    });
-    setNameInput("");
-  }, [nameInput, roleInput, nextColor, participants]);
 
   const removeParticipant = (id: string) => {
     setParticipants((prev) => prev.filter((p) => p.id !== id));
@@ -301,28 +302,6 @@ const EditorParticipantsPanel = () => {
     });
   };
 
-  const handleSelfSign = () => {
-    const selfSigner: Participant = {
-      id: "p-self",
-      name: "Ahmed Al-Rashid",
-      email: "ahmed@signit.sa",
-      role: "signer",
-      color: COLORS[0],
-      order: 1,
-      sendingMethod: "email",
-      needsVerification: false,
-    };
-    setParticipants([selfSigner]);
-    setVisibility((prev) => {
-      const next: DocumentVisibility = {};
-      Object.keys(prev).forEach((docId) => {
-        next[docId] = [selfSigner.id];
-      });
-      return next;
-    });
-    toast.success("Self-signing mode — you are the only signer");
-  };
-
   const handleAddMe = () => {
     if (participants.some((p) => p.email === "ahmed@signit.sa")) {
       toast.error("You are already added as a participant");
@@ -336,6 +315,7 @@ const EditorParticipantsPanel = () => {
       role: "signer",
       color: COLORS[participants.length % COLORS.length],
       order: maxOrder + 1,
+      language: "en",
       sendingMethod: "email",
       needsVerification: false,
     };
@@ -350,9 +330,44 @@ const EditorParticipantsPanel = () => {
     toast.success("Added you as a participant");
   };
 
-  /* Build steps for signing order display */
+  const handleAddParticipant = () => {
+    if (!form.name.trim()) return;
+    const maxOrder = Math.max(0, ...participants.filter(p => p.role === "signer").map(p => p.order));
+    const newP: Participant = {
+      id: `p${Date.now()}`,
+      name: form.name.trim(),
+      email: form.sendingMethod === "email" ? form.email.trim() : "",
+      role: form.role,
+      color: nextColor,
+      order: form.role === "signer" ? maxOrder + 1 : 0,
+      language: form.language,
+      sendingMethod: form.sendingMethod,
+      sendingPhone: form.sendingMethod !== "email" ? `${form.phoneCode} ${form.phoneNumber}` : undefined,
+      needsVerification: form.needsVerification,
+      verificationMethod: form.needsVerification ? form.verificationMethod : undefined,
+      verificationSpecs: form.needsVerification && hasSpecs(form.verificationMethod) ? form.verificationSpecs : undefined,
+      nationalId: form.needsVerification && needsNationalId(form.verificationMethod, form.verificationSpecs) ? form.nationalId : undefined,
+      phone: form.needsVerification && (form.verificationMethod === "sms" || form.verificationMethod === "whatsapp") && form.sendingMethod === "email"
+        ? `${form.phoneCode} ${form.phoneNumber}` : undefined,
+    };
+    setParticipants((prev) => [...prev, newP]);
+    setVisibility((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((docId) => {
+        next[docId] = [...next[docId], newP.id];
+      });
+      return next;
+    });
+    setForm(INITIAL_FORM);
+    setShowAddForm(false);
+    toast.success(`Added ${newP.name}`);
+  };
+
+  const updateForm = (updates: Partial<AddFormState>) => setForm((prev) => ({ ...prev, ...updates }));
+
+  /* Build steps for visual order */
   const buildSteps = () => {
-    const allSignable = participants.filter((p) => p.role !== "cc");
+    const allSignable = participants.filter((p) => p.role === "signer" || p.role === "approver");
     const stepMap = new Map<number, Participant[]>();
     allSignable.forEach((p) => {
       const order = p.role === "approver" ? 0 : p.order;
@@ -362,124 +377,43 @@ const EditorParticipantsPanel = () => {
     return Array.from(stepMap.entries()).sort(([a], [b]) => a - b);
   };
 
-  const needsVerificationPhone = (p: Participant) => {
-    if (!p.needsVerification) return false;
-    if (p.verificationMethod === "sms" || p.verificationMethod === "whatsapp") {
-      return p.sendingMethod !== "sms" && p.sendingMethod !== "whatsapp";
+  const getSendingIcon = (method: SendingMethod) => {
+    if (method === "sms") return <Phone size={10} className="flex-shrink-0" />;
+    if (method === "whatsapp") return <MessageSquare size={10} className="flex-shrink-0" />;
+    return <Mail size={10} className="flex-shrink-0" />;
+  };
+
+  const getVerificationSummary = (p: Participant) => {
+    if (!p.needsVerification || !p.verificationMethod) return null;
+    const method = VERIFICATION_METHOD_LABELS[p.verificationMethod];
+    if (hasSpecs(p.verificationMethod) && p.verificationSpecs) {
+      return `Verify: ${method} · ${VERIFICATION_SPECS_LABELS[p.verificationSpecs].label}`;
     }
-    return false;
-  };
-
-  const needsNationalId = (p: Participant) => {
-    if (!p.needsVerification) return false;
-    if (p.verificationMethod === "absher") return true;
-    if (
-      (p.verificationMethod === "nafath_only" || p.verificationMethod === "nafath_digital") &&
-      (p.verificationSpecs === "with_id" || p.verificationSpecs === "with_id_biometrics")
-    ) return true;
-    return false;
-  };
-
-  const showNafathBanner = (p: Participant) => {
-    if (!p.needsVerification) return false;
-    return p.verificationMethod === "absher" || p.verificationMethod === "nafath_only" || p.verificationMethod === "nafath_digital";
-  };
-
-  const hasSpecs = (method?: VerificationMethodType) => {
-    return method === "nafath_only" || method === "nafath_digital";
+    return `Verify: ${method}`;
   };
 
   return (
     <div className="flex flex-col gap-4 pb-6">
-      {/* Header text */}
+      {/* Header */}
       <p className="text-xs text-muted-foreground">
         Add people who need to sign, review, or receive this document
       </p>
 
-      {/* ── Self-sign card ── */}
-      <button
-        onClick={handleSelfSign}
-        className="flex items-center justify-between gap-2 border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors text-left w-full"
-      >
-        <span className="text-sm font-medium">I will sign it by myself only</span>
-        <ArrowRight size={16} className="text-muted-foreground flex-shrink-0" />
-      </button>
-
-      {/* ── Workflow settings row ── */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Switch checked={setWorkflow} onCheckedChange={setSetWorkflow} />
-          <span className="text-sm font-medium">Set workflow</span>
-        </div>
-        {setWorkflow && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
-                Workflow settings
-                <ChevronDown size={12} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => toast.success("Workflow saved")} className="gap-2 text-xs">
-                <Bookmark size={14} />
-                Save workflow
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSelectWorkflowOpen(true)} className="gap-2 text-xs">
-                <MousePointer size={14} />
-                Select workflow
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setViewOrderOpen(true)} className="gap-2 text-xs">
-                <List size={14} />
-                View order
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
-
-      <Separator />
-
-      {/* ── Section 1: Add participant ── */}
-      <div className="flex items-center gap-1.5">
-        <Input
-          placeholder="Name or email"
-          value={nameInput}
-          onChange={(e) => setNameInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addParticipant()}
-          className="h-8 text-xs flex-1"
-        />
-        <Select value={roleInput} onValueChange={(v) => setRoleInput(v as ParticipantRole)}>
-          <SelectTrigger className="h-8 w-[90px] text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="signer" className="text-xs">Signer</SelectItem>
-            <SelectItem value="reviewer" className="text-xs">Reviewer</SelectItem>
-            <SelectItem value="approver" className="text-xs">Approver</SelectItem>
-            <SelectItem value="cc" className="text-xs">CC</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button size="sm" className="h-8 px-2.5" onClick={addParticipant} disabled={!nameInput.trim()}>
-          <Plus size={14} />
-        </Button>
-      </div>
-
-      <Separator />
-
-      {/* ── Section 2: Participant list ── */}
+      {/* ── Participant list ── */}
       <div className="space-y-2">
         {participants.map((p) => {
           const roleStyle = ROLE_STYLES[p.role];
+          const verifySummary = getVerificationSummary(p);
           return (
-            <div key={p.id} className="border rounded-lg p-3 space-y-2.5">
-              {/* Row 1: Name + actions */}
-              <div className="flex items-start justify-between gap-2">
+            <div key={p.id} className="border rounded-lg p-3 space-y-1.5">
+              {/* Row 1: Name + email/phone + menu */}
+              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{p.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{p.email}</p>
-                  </div>
+                  <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                  <span className="text-sm font-medium truncate">{p.name}</span>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {p.sendingMethod === "email" ? p.email : p.sendingPhone || ""}
+                  </span>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -497,212 +431,326 @@ const EditorParticipantsPanel = () => {
                 </DropdownMenu>
               </div>
 
-              {/* Row 2: Role, Sending method, Language */}
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* Row 2: Badges */}
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-medium border", roleStyle.className)}>
                   {roleStyle.label}
                 </Badge>
-                <Select
-                  value={p.sendingMethod}
-                  onValueChange={(v) => updateParticipant(p.id, { sendingMethod: v as SendingMethod })}
-                >
-                  <SelectTrigger className="h-5 w-auto min-w-[80px] text-[10px] border-0 bg-transparent p-0 gap-1 text-[hsl(var(--brand-indigo))] font-medium [&>svg]:h-3 [&>svg]:w-3">
-                    <Mail size={10} className="flex-shrink-0" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="email" className="text-xs">Email</SelectItem>
-                    <SelectItem value="sms" className="text-xs">SMS</SelectItem>
-                    <SelectItem value="whatsapp" className="text-xs">WhatsApp</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Sending phone (for SMS/WhatsApp sending) */}
-              {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && (
-                <div className="flex items-center gap-1.5">
-                  <Select defaultValue="+966">
-                    <SelectTrigger className="h-7 w-[72px] text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="+966" className="text-xs">+966</SelectItem>
-                      <SelectItem value="+1" className="text-xs">+1</SelectItem>
-                      <SelectItem value="+44" className="text-xs">+44</SelectItem>
-                      <SelectItem value="+971" className="text-xs">+971</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    placeholder="Phone number"
-                    defaultValue={p.sendingPhone?.replace(/^\+\d+\s*/, "")}
-                    className="h-7 text-xs flex-1"
-                  />
-                </div>
-              )}
-
-              {/* Signing order badge */}
-              {p.role === "signer" && sequential && (
-                <div className="flex items-center gap-1.5">
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                    Order: {p.order}
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border gap-1 flex items-center">
+                  {getSendingIcon(p.sendingMethod)}
+                  {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
+                </Badge>
+                {p.language === "ar" && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border text-muted-foreground">
+                    AR
                   </Badge>
-                </div>
-              )}
-
-              {/* ── Verification section ── */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-medium text-muted-foreground">Needs to verify</span>
-                  <Switch
-                    checked={p.needsVerification}
-                    onCheckedChange={(checked) => updateParticipant(p.id, {
-                      needsVerification: checked,
-                      verificationMethod: checked ? "sms" : undefined,
-                      verificationSpecs: undefined,
-                    })}
-                    className="scale-75 origin-right"
-                  />
-                </div>
-
-                {p.needsVerification && (
-                  <div className="space-y-2 pl-0">
-                    {/* Method + Specs row */}
-                    <div className="flex gap-2">
-                      <div className={cn("flex-1", hasSpecs(p.verificationMethod) ? "w-1/2" : "w-full")}>
-                        <label className="text-[9px] text-muted-foreground mb-0.5 block">Verification method</label>
-                        <Select
-                          value={p.verificationMethod}
-                          onValueChange={(v) => {
-                            const method = v as VerificationMethodType;
-                            updateParticipant(p.id, {
-                              verificationMethod: method,
-                              verificationSpecs: hasSpecs(method) ? "without_id" : undefined,
-                              nationalId: undefined,
-                            });
-                          }}
-                        >
-                          <SelectTrigger className="h-7 text-xs w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(Object.keys(VERIFICATION_METHOD_LABELS) as VerificationMethodType[]).map((m) => (
-                              <SelectItem key={m} value={m} className="text-xs">{VERIFICATION_METHOD_LABELS[m]}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {hasSpecs(p.verificationMethod) && (
-                        <div className="flex-1 w-1/2">
-                          <label className="text-[9px] text-muted-foreground mb-0.5 block">Verification specs</label>
-                          <Select
-                            value={p.verificationSpecs || "without_id"}
-                            onValueChange={(v) => updateParticipant(p.id, { verificationSpecs: v as VerificationSpecs })}
-                          >
-                            <SelectTrigger className="h-7 text-xs w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(Object.keys(VERIFICATION_SPECS_LABELS) as VerificationSpecs[]).map((s) => (
-                                <SelectItem key={s} value={s} className="text-xs">
-                                  <div className="flex items-center gap-1">
-                                    {VERIFICATION_SPECS_LABELS[s].label}
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Info size={10} className="text-muted-foreground" />
-                                      </TooltipTrigger>
-                                      <TooltipContent side="right" className="max-w-[200px] text-xs">
-                                        {VERIFICATION_SPECS_LABELS[s].tooltip}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* National ID input */}
-                    {needsNationalId(p) && (
-                      <Input
-                        placeholder="National ID number"
-                        value={p.nationalId || ""}
-                        onChange={(e) => updateParticipant(p.id, { nationalId: e.target.value })}
-                        className="h-7 text-xs"
-                      />
-                    )}
-
-                    {/* Phone for verification */}
-                    {needsVerificationPhone(p) && (
-                      <div className="flex items-center gap-1.5">
-                        <Select defaultValue="+966">
-                          <SelectTrigger className="h-7 w-[72px] text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="+966" className="text-xs">+966</SelectItem>
-                            <SelectItem value="+1" className="text-xs">+1</SelectItem>
-                            <SelectItem value="+44" className="text-xs">+44</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          placeholder="Phone number for verification"
-                          defaultValue={p.phone}
-                          className="h-7 text-xs flex-1"
-                        />
-                      </div>
-                    )}
-
-                    {/* Info banner */}
-                    {showNafathBanner(p) && (
-                      <div className="flex items-start gap-2 rounded-lg p-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
-                        <Info size={14} className="flex-shrink-0 mt-0.5" />
-                        <p className="text-[10px] leading-relaxed">
-                          {p.verificationMethod === "absher"
-                            ? "Absher service is available only for Saudi citizens or expats with an active Absher account."
-                            : "Nafath service is available only for Saudi citizens or expats with an active Nafath account."}
-                        </p>
-                      </div>
-                    )}
-                  </div>
                 )}
               </div>
+
+              {/* Row 3: Phone (if SMS/WhatsApp sending) */}
+              {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && p.sendingPhone && (
+                <p className="text-xs text-muted-foreground pl-4">{p.sendingPhone}</p>
+              )}
+
+              {/* Row 4: Verification summary */}
+              {verifySummary && (
+                <p className="text-[10px] text-muted-foreground pl-4">{verifySummary}</p>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Add participant button */}
-      <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 w-full" onClick={() => document.querySelector<HTMLInputElement>('[placeholder="Name or email"]')?.focus()}>
-        <Plus size={14} />
-        Add new participant
-      </Button>
+      {/* ── Add participant button / form ── */}
+      {!showAddForm ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs gap-1.5 w-full"
+          onClick={() => setShowAddForm(true)}
+        >
+          <Plus size={14} />
+          Add new participant
+        </Button>
+      ) : (
+        <div className="border rounded-lg p-3 bg-card space-y-3 animate-in slide-in-from-top-2 duration-200">
+          {/* Row 1: Role, Language, Sending method, Close */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={form.role} onValueChange={(v) => updateForm({ role: v as ParticipantRole })}>
+              <SelectTrigger className="h-7 w-[100px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="signer" className="text-xs">Signer</SelectItem>
+                <SelectItem value="approver" className="text-xs">Approver</SelectItem>
+                <SelectItem value="viewer" className="text-xs">Viewer</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={form.language} onValueChange={(v) => updateForm({ language: v as "en" | "ar" })}>
+              <SelectTrigger className="h-7 w-[90px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en" className="text-xs">English</SelectItem>
+                <SelectItem value="ar" className="text-xs">Arabic</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={form.sendingMethod} onValueChange={(v) => updateForm({ sendingMethod: v as SendingMethod })}>
+              <SelectTrigger className="h-7 w-[100px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="email" className="text-xs">Email</SelectItem>
+                <SelectItem value="sms" className="text-xs">SMS</SelectItem>
+                <SelectItem value="whatsapp" className="text-xs">WhatsApp</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto" onClick={() => { setShowAddForm(false); setForm(INITIAL_FORM); }}>
+              <X size={14} />
+            </Button>
+          </div>
 
-      {/* Add me button */}
+          {/* Row 2: Dynamic fields */}
+          <div className="flex gap-2">
+            <Input
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => updateForm({ name: e.target.value })}
+              className="h-7 text-xs flex-1"
+            />
+            {form.sendingMethod === "email" ? (
+              <Input
+                placeholder="Email"
+                type="email"
+                value={form.email}
+                onChange={(e) => updateForm({ email: e.target.value })}
+                className="h-7 text-xs flex-1"
+              />
+            ) : (
+              <div className="flex gap-1 flex-1">
+                <Select value={form.phoneCode} onValueChange={(v) => updateForm({ phoneCode: v })}>
+                  <SelectTrigger className="h-7 w-[68px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="+966" className="text-xs">+966</SelectItem>
+                    <SelectItem value="+1" className="text-xs">+1</SelectItem>
+                    <SelectItem value="+44" className="text-xs">+44</SelectItem>
+                    <SelectItem value="+971" className="text-xs">+971</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Phone number"
+                  value={form.phoneNumber}
+                  onChange={(e) => updateForm({ phoneNumber: e.target.value })}
+                  className="h-7 text-xs flex-1"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Row 3: Verification */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-medium text-muted-foreground">Needs to verify</span>
+              <Switch
+                checked={form.needsVerification}
+                onCheckedChange={(checked) => updateForm({
+                  needsVerification: checked,
+                  verificationMethod: "sms",
+                  verificationSpecs: "without_id",
+                  nationalId: "",
+                })}
+                className="scale-75 origin-right"
+              />
+            </div>
+            {form.needsVerification && (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className={cn("flex-1", hasSpecs(form.verificationMethod) ? "" : "")}>
+                    <label className="text-[9px] text-muted-foreground mb-0.5 block">Verification method</label>
+                    <Select
+                      value={form.verificationMethod}
+                      onValueChange={(v) => {
+                        const method = v as VerificationMethodType;
+                        updateForm({
+                          verificationMethod: method,
+                          verificationSpecs: hasSpecs(method) ? "without_id" : "without_id",
+                          nationalId: "",
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(VERIFICATION_METHOD_LABELS) as VerificationMethodType[]).map((m) => (
+                          <SelectItem key={m} value={m} className="text-xs">{VERIFICATION_METHOD_LABELS[m]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {hasSpecs(form.verificationMethod) && (
+                    <div className="flex-1">
+                      <label className="text-[9px] text-muted-foreground mb-0.5 block">Verification specs</label>
+                      <Select
+                        value={form.verificationSpecs}
+                        onValueChange={(v) => updateForm({ verificationSpecs: v as VerificationSpecs })}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(Object.keys(VERIFICATION_SPECS_LABELS) as VerificationSpecs[]).map((s) => (
+                            <SelectItem key={s} value={s} className="text-xs">
+                              <div className="flex items-center gap-1">
+                                {VERIFICATION_SPECS_LABELS[s].label}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info size={10} className="text-muted-foreground" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="right" className="max-w-[200px] text-xs">
+                                    {VERIFICATION_SPECS_LABELS[s].tooltip}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
+                {needsNationalId(form.verificationMethod, form.verificationSpecs) && (
+                  <Input
+                    placeholder="National ID number"
+                    value={form.nationalId}
+                    onChange={(e) => updateForm({ nationalId: e.target.value })}
+                    className="h-7 text-xs"
+                  />
+                )}
+
+                {/* Phone for verification if sending method is email */}
+                {(form.verificationMethod === "sms" || form.verificationMethod === "whatsapp") && form.sendingMethod === "email" && (
+                  <div className="flex gap-1">
+                    <Select value={form.phoneCode} onValueChange={(v) => updateForm({ phoneCode: v })}>
+                      <SelectTrigger className="h-7 w-[68px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="+966" className="text-xs">+966</SelectItem>
+                        <SelectItem value="+1" className="text-xs">+1</SelectItem>
+                        <SelectItem value="+44" className="text-xs">+44</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      placeholder="Phone for verification"
+                      value={form.phoneNumber}
+                      onChange={(e) => updateForm({ phoneNumber: e.target.value })}
+                      className="h-7 text-xs flex-1"
+                    />
+                  </div>
+                )}
+
+                {showNafathBanner(form.verificationMethod) && (
+                  <div className="flex items-start gap-2 rounded-lg p-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                    <Info size={14} className="flex-shrink-0 mt-0.5" />
+                    <p className="text-[10px] leading-relaxed">
+                      {form.verificationMethod === "absher"
+                        ? "Absher service is available only for Saudi citizens or expats with an active Absher account."
+                        : "Nafath service is available only for Saudi citizens or expats with an active Nafath account."}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Row 4: Add / Cancel */}
+          <div className="flex items-center gap-2">
+            <Button size="sm" className="h-7 text-xs" onClick={handleAddParticipant} disabled={!form.name.trim()}>
+              Add participant
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setShowAddForm(false); setForm(INITIAL_FORM); }}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Add me as a signer */}
       <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 w-full text-muted-foreground hover:text-foreground" onClick={handleAddMe}>
         <User size={14} />
-        Add me as a participant
+        Add me as a signer
       </Button>
 
       <Separator />
 
-      {/* ── Section 3: Signing order ── */}
+      {/* ── Signing Order Section ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-medium">Sequential signing</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {sequential ? "Signers receive documents in order" : "All signers receive at the same time"}
             </p>
           </div>
-          <Switch checked={sequential} onCheckedChange={setSequential} />
+          <div className="flex items-center gap-2">
+            {sequential && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                    Workflow settings
+                    <ChevronDown size={12} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setShowSaveWorkflow(true)} className="gap-2 text-xs">
+                    <Bookmark size={14} />
+                    Save as workflow
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectWorkflowOpen(true)} className="gap-2 text-xs">
+                    <MousePointer size={14} />
+                    Load workflow
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setViewOrderOpen(true)} className="gap-2 text-xs">
+                    <List size={14} />
+                    View visual order
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Switch checked={sequential} onCheckedChange={setSequential} />
+          </div>
         </div>
+
+        {/* Save workflow inline input */}
+        {showSaveWorkflow && (
+          <div className="flex items-center gap-2 animate-in slide-in-from-top-1 duration-150">
+            <Input
+              placeholder="Workflow name"
+              value={saveWorkflowName}
+              onChange={(e) => setSaveWorkflowName(e.target.value)}
+              className="h-7 text-xs flex-1"
+              autoFocus
+            />
+            <Button size="sm" className="h-7 text-xs" onClick={() => {
+              toast.success(`Workflow "${saveWorkflowName || "Untitled"}" saved`);
+              setSaveWorkflowName("");
+              setShowSaveWorkflow(false);
+            }}>
+              Save
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowSaveWorkflow(false)}>
+              <X size={12} />
+            </Button>
+          </div>
+        )}
 
         {sequential && (
           <div className="space-y-3">
-            {/* Approvers locked at step 0 */}
+            {/* Step 0: Approvers */}
             {approvers.length > 0 && (
               <div className="space-y-1">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Step 0 — Approval</p>
@@ -718,7 +766,7 @@ const EditorParticipantsPanel = () => {
               </div>
             )}
 
-            {/* Grouped steps */}
+            {/* Grouped steps for signers */}
             {(() => {
               const signersByOrder = new Map<number, Participant[]>();
               signers.forEach((s) => {
@@ -747,7 +795,6 @@ const EditorParticipantsPanel = () => {
               ));
             })()}
 
-            {/* Add step button */}
             <Button
               variant="ghost"
               size="sm"
@@ -766,7 +813,7 @@ const EditorParticipantsPanel = () => {
 
       <Separator />
 
-      {/* ── Section 5: Document visibility ── */}
+      {/* ── Document visibility ── */}
       <div ref={visibilityRef} className="space-y-3">
         <div className="flex items-center gap-1.5">
           <Eye size={14} className="text-muted-foreground" />
@@ -822,11 +869,11 @@ const EditorParticipantsPanel = () => {
         </div>
       </div>
 
-      {/* ── Select Workflow Dialog ── */}
+      {/* ── Load Workflow Dialog ── */}
       <Dialog open={selectWorkflowOpen} onOpenChange={setSelectWorkflowOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm">Select Workflow</DialogTitle>
+            <DialogTitle className="text-sm">Load Workflow</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             {MOCK_WORKFLOWS.map((w) => (
