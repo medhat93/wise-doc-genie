@@ -36,7 +36,7 @@ const PANELS: PanelItem[] = [
   { id: "ai", label: "AI Assistant", useAiIcon: true },
   { id: "comments", label: "Comments", icon: Comment01Icon },
   { id: "properties", label: "Properties", icon: PropertyEditIcon },
-  { id: "fields", label: "Smart Fields", icon: TextFieldIcon },
+  { id: "fields", label: "Smart Fields", icon: TextField },
   { id: "workflow", label: "Workflow", icon: WorkflowSquare10Icon },
   { id: "annotations", label: "Annotations", icon: CursorAddSelection02Icon },
 ];
