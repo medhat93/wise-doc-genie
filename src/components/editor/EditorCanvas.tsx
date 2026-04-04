@@ -388,6 +388,13 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) 
     if (e.dataTransfer.types.includes("application/field-type")) {
       e.preventDefault();
       e.dataTransfer.dropEffect = "copy";
+      setIsDragOverCanvas(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOverCanvas(false);
     }
   }, []);
 
