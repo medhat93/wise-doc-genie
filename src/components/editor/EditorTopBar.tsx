@@ -490,16 +490,14 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
       <MissingFieldsWarningDialog
         open={warningOpen}
         onOpenChange={setWarningOpen}
-        affectedParticipants={signersWithNoFields}
-        allSignersAffected={signersWithNoFields.length === participants.filter(p => p.role === "signer").length}
-        onGoBack={() => {
+        participantIssues={participantIssues}
+        onGoBack={() => setWarningOpen(false)}
+        onAddFields={(participantId) => {
           setWarningOpen(false);
-          const first = signersWithNoFields[0];
-          if (first && onOpenFieldsPanel) {
-            onOpenFieldsPanel(first.id);
-          }
+          if (onOpenFieldsPanel) onOpenFieldsPanel(participantId);
         }}
-        onSendAnyway={() => {
+        onContinue={(acks) => {
+          setDocumentAcknowledgments(acks);
           setWarningOpen(false);
           setSendOpen(true);
         }}
