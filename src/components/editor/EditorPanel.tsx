@@ -9,7 +9,10 @@ import EditorSmartFieldsPanel from "./EditorSmartFieldsPanel";
 import EditorPropertiesPanel from "./EditorPropertiesPanel";
 import EditorCommentsPanel from "./EditorCommentsPanel";
 import EditorWorkflowPanel from "./EditorWorkflowPanel";
+import EditorFieldsSidebar from "./EditorFieldsSidebar";
+
 const PANEL_TITLES: Record<PanelId, string> = {
+  annotations: "Fields",
   participants: "Participants",
   ai: "AI Assistant",
   comments: "Comments",
@@ -59,7 +62,9 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
 
       {/* Body */}
       <div className="flex-1 overflow-y-auto p-4">
-        {panelId === "ai" ? (
+        {panelId === "annotations" ? (
+          <EditorFieldsSidebar asPanel />
+        ) : panelId === "ai" ? (
           <EditorAIPanel docType={docType} />
         ) : panelId === "participants" ? (
           <EditorParticipantsPanel />
