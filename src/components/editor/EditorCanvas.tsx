@@ -61,6 +61,7 @@ const CommentHighlight = ({
     <Tooltip>
       <TooltipTrigger asChild>
         <span
+          data-comment-section={sectionRef}
           className={cn("rounded-sm px-0.5 cursor-pointer transition-colors hover:opacity-80", bgClass)}
           onClick={(e) => { e.stopPropagation(); onClickHighlight(sectionRef); }}
         >
@@ -303,33 +304,35 @@ const SelectionToolbar = ({
   </motion.div>
 );
 
-/* ── Margin comment card ── */
-const MarginComment = ({ comment, onClick }: { comment: Comment; onClick: () => void }) => (
-  <motion.div
-    initial={{ opacity: 0, x: 10 }}
-    animate={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: 10 }}
-    transition={{ duration: 0.2 }}
-    onClick={onClick}
-    className={cn(
-      "w-[200px] bg-card border rounded-md shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow",
-      comment.status === "resolved" && "opacity-40"
-    )}
-  >
-    <div className="flex items-center gap-1.5 mb-1">
-      <div
-        className="h-5 w-5 rounded-full flex items-center justify-center text-white text-[9px] font-semibold flex-shrink-0"
+/* ── Floating comment bubble ── */
+const CommentBubble = ({ comment, count, onClick }: { comment: Comment; count: number; onClick: () => void }) => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        transition={{ duration: 0.15 }}
+        onClick={onClick}
+        className={cn(
+          "relative h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shadow-sm hover:shadow-md hover:scale-110 transition-all cursor-pointer",
+          comment.status === "resolved" && "opacity-40"
+        )}
         style={{ backgroundColor: comment.authorColor }}
       >
         {comment.authorInitials}
-      </div>
-      <span className="text-[11px] font-medium text-foreground truncate">{comment.author}</span>
-    </div>
-    <p className="text-[11px] text-muted-foreground line-clamp-2">{comment.text}</p>
-    <p className="text-[10px] text-muted-foreground/60 mt-1">
-      {Math.floor((Date.now() - comment.timestamp.getTime()) / 3600000)}h ago
-    </p>
-  </motion.div>
+        {count > 1 && (
+          <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-foreground text-background text-[8px] flex items-center justify-center font-bold">
+            {count}
+          </span>
+        )}
+      </motion.button>
+    </TooltipTrigger>
+    <TooltipContent side="left" className="text-xs max-w-[200px]">
+      <p className="font-medium">{comment.author}</p>
+      <p className="text-muted-foreground line-clamp-2">{comment.text}</p>
+    </TooltipContent>
+  </Tooltip>
 );
 
 /* ── Field overlay component ── */
@@ -585,22 +588,35 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
   // Inline comments for margin display (only when comments panel is closed)
   const inlineComments = comments.filter((c) => c.type === "inline");
 
-  // Map section refs to approximate vertical positions for margin comments
-  const KNOWN_SECTION_Y: Record<string, number> = {
-    "Section 2: Scope of Services": 320,
-    "Section 3: Payment Terms": 460,
-    "Section 5: Termination": 620,
-  };
+  // Group comments by sectionRef for bubble display
+  const commentsBySection = inlineComments.reduce<Record<string, Comment[]>>((acc, c) => {
+    (acc[c.sectionRef] = acc[c.sectionRef] || []).push(c);
+    return acc;
+  }, {});
 
-  // Build dynamic Y map: known sections keep their position, new comments stack below
-  const SECTION_Y_MAP = { ...KNOWN_SECTION_Y };
-  let nextY = 720;
-  inlineComments.forEach((c) => {
-    if (!SECTION_Y_MAP[c.sectionRef]) {
-      SECTION_Y_MAP[c.sectionRef] = nextY;
-      nextY += 80;
-    }
-  });
+  // Measure positions of comment sections relative to document container
+  const [sectionPositions, setSectionPositions] = useState<Record<string, number>>({});
+  const doc1Ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const measure = () => {
+      const container = doc1Ref.current;
+      if (!container) return;
+      const containerRect = container.getBoundingClientRect();
+      const positions: Record<string, number> = {};
+      const els = container.querySelectorAll("[data-comment-section]");
+      els.forEach((el) => {
+        const ref = el.getAttribute("data-comment-section");
+        if (ref && !positions[ref]) {
+          positions[ref] = el.getBoundingClientRect().top - containerRect.top;
+        }
+      });
+      setSectionPositions(positions);
+    };
+    measure();
+    const timer = setInterval(measure, 1000);
+    return () => clearInterval(timer);
+  }, [comments]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -649,13 +665,15 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
                       DOC_BORDER[doc.docType]
                     )}
                   >
-                    {doc.id === "doc-1" ? (
-                      <Doc1Content comments={comments} onClickHighlight={handleClickHighlight} />
-                    ) : doc.id === "doc-2" ? (
-                      <Doc2Content />
-                    ) : (
-                      <Doc3Content />
-                    )}
+                    <div ref={doc.id === "doc-1" ? doc1Ref : undefined}>
+                      {doc.id === "doc-1" ? (
+                        <Doc1Content comments={comments} onClickHighlight={handleClickHighlight} />
+                      ) : doc.id === "doc-2" ? (
+                        <Doc2Content />
+                      ) : (
+                        <Doc3Content />
+                      )}
+                    </div>
                     {docFields.map((f) => (
                       <FieldOverlay
                         key={f.id}
@@ -668,20 +686,24 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
                     ))}
                   </div>
 
-                  {/* Margin comments — only for doc-1 and only when panel is closed */}
+                  {/* Floating comment bubbles — aligned to actual text */}
                   {doc.id === "doc-1" && !commentsPanelOpen && (
-                    <div className="absolute top-0 right-0 translate-x-[calc(100%+12px)] hidden xl:block" style={{ width: 200 }}>
+                    <div className="absolute top-0 right-0 translate-x-[calc(100%+8px)] hidden xl:block" style={{ width: 36 }}>
                       <AnimatePresence>
-                        {inlineComments.map((c) => (
-                            <div key={c.id} style={{ position: "absolute", top: SECTION_Y_MAP[c.sectionRef] || 0 }} className="mb-2">
-                              <MarginComment
-                                comment={c}
-                                onClick={() => {
-                                  onOpenComments?.();
-                                }}
+                        {Object.entries(commentsBySection).map(([sectionRef, sectionComments]) => {
+                          const yPos = sectionPositions[sectionRef];
+                          if (yPos === undefined) return null;
+                          const first = sectionComments[0];
+                          return (
+                            <div key={sectionRef} style={{ position: "absolute", top: yPos }} className="flex items-center">
+                              <CommentBubble
+                                comment={first}
+                                count={sectionComments.length}
+                                onClick={() => onOpenComments?.()}
                               />
                             </div>
-                          ))}
+                          );
+                        })}
                       </AnimatePresence>
                     </div>
                   )}
