@@ -54,6 +54,9 @@ import {
   MessageSquare,
   X,
   Sparkles,
+  Copy,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import {
   DndContext,
@@ -126,7 +129,7 @@ const VERIFICATION_SPECS_LABELS: Record<VerificationSpecs, { label: string; tool
   with_id_biometrics: { label: "With national ID & Biometrics", tooltip: "Highest security — requires national ID plus biometric verification via Nafath" },
 };
 
-/* ── Demo data (loaded on demand) ── */
+/* ── Demo data ── */
 const DEMO_PARTICIPANTS: Participant[] = [
   { id: "p1", name: "Ahmed Al-Rashid", email: "ahmed@signit.sa", role: "signer", color: COLORS[0], order: 1, language: "en", sendingMethod: "email", needsVerification: false },
   { id: "p2", name: "Sarah Johnson", email: "sarah@acme.com", role: "signer", color: COLORS[1], order: 2, language: "en", sendingMethod: "email", needsVerification: true, verificationMethod: "sms" },
@@ -184,7 +187,7 @@ const SortableStepItem = ({
   );
 };
 
-/* ── Add Participant Form ── */
+/* ── Form state ── */
 interface AddFormState {
   role: ParticipantRole;
   language: "en" | "ar";
@@ -225,12 +228,254 @@ const showNafathBanner = (method?: VerificationMethodType) => {
   return method === "absher" || method === "nafath_only" || method === "nafath_digital";
 };
 
+const participantToForm = (p: Participant): AddFormState => {
+  const phoneCode = p.sendingPhone?.match(/^\+\d+/)?.[0] || "+966";
+  const phoneNumber = p.sendingPhone?.replace(/^\+\d+\s*/, "") || "";
+  return {
+    role: p.role,
+    language: p.language,
+    sendingMethod: p.sendingMethod,
+    name: p.name,
+    email: p.email,
+    phoneCode,
+    phoneNumber,
+    needsVerification: p.needsVerification,
+    verificationMethod: p.verificationMethod || "sms",
+    verificationSpecs: p.verificationSpecs || "without_id",
+    nationalId: p.nationalId || "",
+  };
+};
+
+/* ── Inline form component (shared between add & edit) ── */
+const ParticipantFormCard = ({
+  form,
+  updateForm,
+  onSubmit,
+  onCancel,
+  submitLabel,
+  isDisabled,
+}: {
+  form: AddFormState;
+  updateForm: (u: Partial<AddFormState>) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  submitLabel: string;
+  isDisabled: boolean;
+}) => (
+  <div className="border rounded-lg p-3 bg-card space-y-3 animate-in slide-in-from-top-2 duration-200">
+    {/* Row 1: Role, Language, Sending method, Close */}
+    <div className="flex items-center gap-2 flex-wrap">
+      <Select value={form.role} onValueChange={(v) => updateForm({ role: v as ParticipantRole })}>
+        <SelectTrigger className="h-7 w-[100px] text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="signer" className="text-xs">Signer</SelectItem>
+          <SelectItem value="approver" className="text-xs">Approver</SelectItem>
+          <SelectItem value="viewer" className="text-xs">Viewer</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select value={form.language} onValueChange={(v) => updateForm({ language: v as "en" | "ar" })}>
+        <SelectTrigger className="h-7 w-[90px] text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="en" className="text-xs">English</SelectItem>
+          <SelectItem value="ar" className="text-xs">Arabic</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select value={form.sendingMethod} onValueChange={(v) => updateForm({ sendingMethod: v as SendingMethod })}>
+        <SelectTrigger className="h-7 w-[100px] text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="email" className="text-xs">Email</SelectItem>
+          <SelectItem value="sms" className="text-xs">SMS</SelectItem>
+          <SelectItem value="whatsapp" className="text-xs">WhatsApp</SelectItem>
+        </SelectContent>
+      </Select>
+      <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto" onClick={onCancel}>
+        <X size={14} />
+      </Button>
+    </div>
+
+    {/* Row 2: Dynamic fields */}
+    <div className="flex gap-2">
+      <Input
+        placeholder="Name"
+        value={form.name}
+        onChange={(e) => updateForm({ name: e.target.value })}
+        className="h-7 text-xs flex-1"
+      />
+      {form.sendingMethod === "email" ? (
+        <Input
+          placeholder="Email"
+          type="email"
+          value={form.email}
+          onChange={(e) => updateForm({ email: e.target.value })}
+          className="h-7 text-xs flex-1"
+        />
+      ) : (
+        <div className="flex gap-1 flex-1">
+          <Select value={form.phoneCode} onValueChange={(v) => updateForm({ phoneCode: v })}>
+            <SelectTrigger className="h-7 w-[68px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="+966" className="text-xs">+966</SelectItem>
+              <SelectItem value="+1" className="text-xs">+1</SelectItem>
+              <SelectItem value="+44" className="text-xs">+44</SelectItem>
+              <SelectItem value="+971" className="text-xs">+971</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input
+            placeholder="Phone number"
+            value={form.phoneNumber}
+            onChange={(e) => updateForm({ phoneNumber: e.target.value })}
+            className="h-7 text-xs flex-1"
+          />
+        </div>
+      )}
+    </div>
+
+    {/* Row 3: Verification */}
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-medium text-muted-foreground">Needs to verify</span>
+        <Switch
+          checked={form.needsVerification}
+          onCheckedChange={(checked) => updateForm({
+            needsVerification: checked,
+            verificationMethod: "sms",
+            verificationSpecs: "without_id",
+            nationalId: "",
+          })}
+          className="scale-75 origin-right"
+        />
+      </div>
+      {form.needsVerification && (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="text-[9px] text-muted-foreground mb-0.5 block">Verification method</label>
+              <Select
+                value={form.verificationMethod}
+                onValueChange={(v) => {
+                  const method = v as VerificationMethodType;
+                  updateForm({
+                    verificationMethod: method,
+                    verificationSpecs: hasSpecs(method) ? "without_id" : "without_id",
+                    nationalId: "",
+                  });
+                }}
+              >
+                <SelectTrigger className="h-7 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(VERIFICATION_METHOD_LABELS) as VerificationMethodType[]).map((m) => (
+                    <SelectItem key={m} value={m} className="text-xs">{VERIFICATION_METHOD_LABELS[m]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {hasSpecs(form.verificationMethod) && (
+              <div className="flex-1">
+                <label className="text-[9px] text-muted-foreground mb-0.5 block">Verification specs</label>
+                <Select
+                  value={form.verificationSpecs}
+                  onValueChange={(v) => updateForm({ verificationSpecs: v as VerificationSpecs })}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(VERIFICATION_SPECS_LABELS) as VerificationSpecs[]).map((s) => (
+                      <SelectItem key={s} value={s} className="text-xs">
+                        <div className="flex items-center gap-1">
+                          {VERIFICATION_SPECS_LABELS[s].label}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info size={10} className="text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="max-w-[200px] text-xs">
+                              {VERIFICATION_SPECS_LABELS[s].tooltip}
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          {needsNationalId(form.verificationMethod, form.verificationSpecs) && (
+            <Input
+              placeholder="National ID number"
+              value={form.nationalId}
+              onChange={(e) => updateForm({ nationalId: e.target.value })}
+              className="h-7 text-xs"
+            />
+          )}
+
+          {(form.verificationMethod === "sms" || form.verificationMethod === "whatsapp") && form.sendingMethod === "email" && (
+            <div className="flex gap-1">
+              <Select value={form.phoneCode} onValueChange={(v) => updateForm({ phoneCode: v })}>
+                <SelectTrigger className="h-7 w-[68px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="+966" className="text-xs">+966</SelectItem>
+                  <SelectItem value="+1" className="text-xs">+1</SelectItem>
+                  <SelectItem value="+44" className="text-xs">+44</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Phone for verification"
+                value={form.phoneNumber}
+                onChange={(e) => updateForm({ phoneNumber: e.target.value })}
+                className="h-7 text-xs flex-1"
+              />
+            </div>
+          )}
+
+          {showNafathBanner(form.verificationMethod) && (
+            <div className="flex items-start gap-2 rounded-lg p-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+              <Info size={14} className="flex-shrink-0 mt-0.5" />
+              <p className="text-[10px] leading-relaxed">
+                {form.verificationMethod === "absher"
+                  ? "Absher service is available only for Saudi citizens or expats with an active Absher account."
+                  : "Nafath service is available only for Saudi citizens or expats with an active Nafath account."}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+
+    {/* Row 4: Submit / Cancel */}
+    <div className="flex items-center gap-2">
+      <Button size="sm" className="h-7 text-xs" onClick={onSubmit} disabled={isDisabled}>
+        {submitLabel}
+      </Button>
+      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onCancel}>
+        Cancel
+      </Button>
+    </div>
+  </div>
+);
+
 /* ══════════ MAIN PANEL ══════════ */
 const EditorParticipantsPanel = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [sequential, setSequential] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<AddFormState>(INITIAL_FORM);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<AddFormState>(INITIAL_FORM);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [selectWorkflowOpen, setSelectWorkflowOpen] = useState(false);
   const [viewOrderOpen, setViewOrderOpen] = useState(false);
   const [saveWorkflowName, setSaveWorkflowName] = useState("");
@@ -248,7 +493,6 @@ const EditorParticipantsPanel = () => {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  /* ── Helpers ── */
   const signers = participants.filter((p) => p.role === "signer").sort((a, b) => a.order - b.order);
   const approvers = participants.filter((p) => p.role === "approver");
   const nextColor = COLORS[participants.length % COLORS.length];
@@ -262,6 +506,8 @@ const EditorParticipantsPanel = () => {
       });
       return next;
     });
+    setConfirmRemoveId(null);
+    if (editingId === id) setEditingId(null);
   };
 
   const updateParticipant = (id: string, updates: Partial<Participant>) => {
@@ -272,8 +518,7 @@ const EditorParticipantsPanel = () => {
     setParticipants((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p;
-        const newOrder = Math.max(1, p.order + delta);
-        return { ...p, order: newOrder };
+        return { ...p, order: Math.max(1, p.order + delta) };
       })
     );
   };
@@ -322,40 +567,38 @@ const EditorParticipantsPanel = () => {
     setParticipants((prev) => [...prev, me]);
     setVisibility((prev) => {
       const next = { ...prev };
-      Object.keys(next).forEach((docId) => {
-        next[docId] = [...next[docId], me.id];
-      });
+      Object.keys(next).forEach((docId) => { next[docId] = [...next[docId], me.id]; });
       return next;
     });
     toast.success("Added you as a participant");
   };
 
+  const buildFormParticipant = (f: AddFormState, id: string, color: string, order: number): Participant => ({
+    id,
+    name: f.name.trim(),
+    email: f.sendingMethod === "email" ? f.email.trim() : "",
+    role: f.role,
+    color,
+    order: f.role === "signer" ? order : 0,
+    language: f.language,
+    sendingMethod: f.sendingMethod,
+    sendingPhone: f.sendingMethod !== "email" ? `${f.phoneCode} ${f.phoneNumber}` : undefined,
+    needsVerification: f.needsVerification,
+    verificationMethod: f.needsVerification ? f.verificationMethod : undefined,
+    verificationSpecs: f.needsVerification && hasSpecs(f.verificationMethod) ? f.verificationSpecs : undefined,
+    nationalId: f.needsVerification && needsNationalId(f.verificationMethod, f.verificationSpecs) ? f.nationalId : undefined,
+    phone: f.needsVerification && (f.verificationMethod === "sms" || f.verificationMethod === "whatsapp") && f.sendingMethod === "email"
+      ? `${f.phoneCode} ${f.phoneNumber}` : undefined,
+  });
+
   const handleAddParticipant = () => {
     if (!form.name.trim()) return;
     const maxOrder = Math.max(0, ...participants.filter(p => p.role === "signer").map(p => p.order));
-    const newP: Participant = {
-      id: `p${Date.now()}`,
-      name: form.name.trim(),
-      email: form.sendingMethod === "email" ? form.email.trim() : "",
-      role: form.role,
-      color: nextColor,
-      order: form.role === "signer" ? maxOrder + 1 : 0,
-      language: form.language,
-      sendingMethod: form.sendingMethod,
-      sendingPhone: form.sendingMethod !== "email" ? `${form.phoneCode} ${form.phoneNumber}` : undefined,
-      needsVerification: form.needsVerification,
-      verificationMethod: form.needsVerification ? form.verificationMethod : undefined,
-      verificationSpecs: form.needsVerification && hasSpecs(form.verificationMethod) ? form.verificationSpecs : undefined,
-      nationalId: form.needsVerification && needsNationalId(form.verificationMethod, form.verificationSpecs) ? form.nationalId : undefined,
-      phone: form.needsVerification && (form.verificationMethod === "sms" || form.verificationMethod === "whatsapp") && form.sendingMethod === "email"
-        ? `${form.phoneCode} ${form.phoneNumber}` : undefined,
-    };
+    const newP = buildFormParticipant(form, `p${Date.now()}`, nextColor, maxOrder + 1);
     setParticipants((prev) => [...prev, newP]);
     setVisibility((prev) => {
       const next = { ...prev };
-      Object.keys(next).forEach((docId) => {
-        next[docId] = [...next[docId], newP.id];
-      });
+      Object.keys(next).forEach((docId) => { next[docId] = [...next[docId], newP.id]; });
       return next;
     });
     setForm(INITIAL_FORM);
@@ -363,9 +606,63 @@ const EditorParticipantsPanel = () => {
     toast.success(`Added ${newP.name}`);
   };
 
-  const updateForm = (updates: Partial<AddFormState>) => setForm((prev) => ({ ...prev, ...updates }));
+  const startEditing = (p: Participant) => {
+    setEditingId(p.id);
+    setEditForm(participantToForm(p));
+    setShowAddForm(false);
+  };
 
-  /* Build steps for visual order */
+  const saveEdit = () => {
+    if (!editingId) return;
+    const existing = participants.find((p) => p.id === editingId);
+    if (!existing) return;
+    const updated = buildFormParticipant(editForm, editingId, existing.color, existing.order);
+    // Preserve order if role didn't change to non-signer
+    if (updated.role === "signer") updated.order = existing.order;
+    setParticipants((prev) => prev.map((p) => (p.id === editingId ? updated : p)));
+    setEditingId(null);
+    toast.success("Participant updated");
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const handleDuplicate = (p: Participant) => {
+    setForm({
+      ...participantToForm(p),
+      name: "",
+      email: "",
+      phoneNumber: "",
+    });
+    setShowAddForm(true);
+    setEditingId(null);
+  };
+
+  const handleQuickRoleChange = (id: string, newRole: ParticipantRole) => {
+    const p = participants.find((pp) => pp.id === id);
+    if (!p) return;
+    const maxOrder = Math.max(0, ...participants.filter(pp => pp.role === "signer").map(pp => pp.order));
+    updateParticipant(id, {
+      role: newRole,
+      order: newRole === "signer" ? (p.role === "signer" ? p.order : maxOrder + 1) : 0,
+    });
+    toast.success(`Role updated to ${ROLE_STYLES[newRole].label}`);
+  };
+
+  const handleQuickSendingChange = (id: string, newMethod: SendingMethod) => {
+    const p = participants.find((pp) => pp.id === id);
+    if (!p) return;
+    if ((newMethod === "sms" || newMethod === "whatsapp") && !p.sendingPhone) {
+      startEditing({ ...p, sendingMethod: newMethod });
+      return;
+    }
+    updateParticipant(id, { sendingMethod: newMethod });
+  };
+
+  const updateFormField = (updates: Partial<AddFormState>) => setForm((prev) => ({ ...prev, ...updates }));
+  const updateEditFormField = (updates: Partial<AddFormState>) => setEditForm((prev) => ({ ...prev, ...updates }));
+
   const buildSteps = () => {
     const allSignable = participants.filter((p) => p.role === "signer" || p.role === "approver");
     const stepMap = new Map<number, Participant[]>();
@@ -394,7 +691,6 @@ const EditorParticipantsPanel = () => {
 
   return (
     <div className="flex flex-col gap-4 pb-6">
-      {/* Header */}
       <p className="text-xs text-muted-foreground">
         Add people who need to sign, review, or receive this document
       </p>
@@ -411,8 +707,43 @@ const EditorParticipantsPanel = () => {
           {participants.map((p) => {
             const roleStyle = ROLE_STYLES[p.role];
             const verifySummary = getVerificationSummary(p);
+
+            /* ── Editing this participant ── */
+            if (editingId === p.id) {
+              return (
+                <ParticipantFormCard
+                  key={p.id}
+                  form={editForm}
+                  updateForm={updateEditFormField}
+                  onSubmit={saveEdit}
+                  onCancel={cancelEdit}
+                  submitLabel="Save"
+                  isDisabled={!editForm.name.trim()}
+                />
+              );
+            }
+
+            /* ── Remove confirmation ── */
+            if (confirmRemoveId === p.id) {
+              return (
+                <div key={p.id} className="border border-destructive/50 rounded-lg p-3 space-y-2 animate-in fade-in duration-150">
+                  <p className="text-sm">Remove <span className="font-medium">{p.name}</span>?</p>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => removeParticipant(p.id)}>
+                      Remove
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setConfirmRemoveId(null)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              );
+            }
+
+            /* ── Normal card ── */
             return (
               <div key={p.id} className="border rounded-lg p-3 space-y-1.5">
+                {/* Row 1 */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
@@ -428,31 +759,85 @@ const EditorParticipantsPanel = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Change role</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => removeParticipant(p.id)}>
+                      <DropdownMenuItem className="gap-2 text-xs" onClick={() => startEditing(p)}>
+                        <Pencil size={12} />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 text-xs" onClick={() => handleDuplicate(p)}>
+                        <Copy size={12} />
+                        Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={() => setConfirmRemoveId(p.id)}>
+                        <Trash2 size={12} />
                         Remove
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
+
+                {/* Row 2: Clickable badges */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-medium border", roleStyle.className)}>
-                    {roleStyle.label}
-                  </Badge>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border gap-1 flex items-center">
-                    {getSendingIcon(p.sendingMethod)}
-                    {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
-                  </Badge>
+                  {/* Clickable role badge */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="focus:outline-none">
+                        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-medium border cursor-pointer hover:opacity-80", roleStyle.className)}>
+                          {roleStyle.label}
+                        </Badge>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="min-w-[100px]">
+                      {(["signer", "approver", "viewer"] as ParticipantRole[]).map((r) => (
+                        <DropdownMenuItem
+                          key={r}
+                          className="text-xs gap-2"
+                          onClick={() => handleQuickRoleChange(p.id, r)}
+                        >
+                          <Badge variant="outline" className={cn("text-[9px] px-1 py-0 h-3.5 border", ROLE_STYLES[r].className)}>
+                            {ROLE_STYLES[r].label}
+                          </Badge>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Clickable sending method badge */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="focus:outline-none">
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border gap-1 flex items-center cursor-pointer hover:opacity-80">
+                          {getSendingIcon(p.sendingMethod)}
+                          {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
+                        </Badge>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="min-w-[100px]">
+                      {(["email", "sms", "whatsapp"] as SendingMethod[]).map((m) => (
+                        <DropdownMenuItem
+                          key={m}
+                          className="text-xs gap-2"
+                          onClick={() => handleQuickSendingChange(p.id, m)}
+                        >
+                          {getSendingIcon(m)}
+                          {m === "email" ? "Email" : m === "sms" ? "SMS" : "WhatsApp"}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
                   {p.language === "ar" && (
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border text-muted-foreground">
                       AR
                     </Badge>
                   )}
                 </div>
+
+                {/* Row 3: Phone */}
                 {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && p.sendingPhone && (
                   <p className="text-xs text-muted-foreground pl-4">{p.sendingPhone}</p>
                 )}
+
+                {/* Row 4: Verification */}
                 {verifySummary && (
                   <p className="text-[10px] text-muted-foreground pl-4">{verifySummary}</p>
                 )}
@@ -468,219 +853,23 @@ const EditorParticipantsPanel = () => {
           variant="outline"
           size="sm"
           className="h-8 text-xs gap-1.5 w-full"
-          onClick={() => setShowAddForm(true)}
+          onClick={() => { setShowAddForm(true); setEditingId(null); }}
         >
           <Plus size={14} />
           Add new participant
         </Button>
       ) : (
-        <div className="border rounded-lg p-3 bg-card space-y-3 animate-in slide-in-from-top-2 duration-200">
-          {/* Row 1: Role, Language, Sending method, Close */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <Select value={form.role} onValueChange={(v) => updateForm({ role: v as ParticipantRole })}>
-              <SelectTrigger className="h-7 w-[100px] text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="signer" className="text-xs">Signer</SelectItem>
-                <SelectItem value="approver" className="text-xs">Approver</SelectItem>
-                <SelectItem value="viewer" className="text-xs">Viewer</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={form.language} onValueChange={(v) => updateForm({ language: v as "en" | "ar" })}>
-              <SelectTrigger className="h-7 w-[90px] text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en" className="text-xs">English</SelectItem>
-                <SelectItem value="ar" className="text-xs">Arabic</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={form.sendingMethod} onValueChange={(v) => updateForm({ sendingMethod: v as SendingMethod })}>
-              <SelectTrigger className="h-7 w-[100px] text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="email" className="text-xs">Email</SelectItem>
-                <SelectItem value="sms" className="text-xs">SMS</SelectItem>
-                <SelectItem value="whatsapp" className="text-xs">WhatsApp</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto" onClick={() => { setShowAddForm(false); setForm(INITIAL_FORM); }}>
-              <X size={14} />
-            </Button>
-          </div>
-
-          {/* Row 2: Dynamic fields */}
-          <div className="flex gap-2">
-            <Input
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => updateForm({ name: e.target.value })}
-              className="h-7 text-xs flex-1"
-            />
-            {form.sendingMethod === "email" ? (
-              <Input
-                placeholder="Email"
-                type="email"
-                value={form.email}
-                onChange={(e) => updateForm({ email: e.target.value })}
-                className="h-7 text-xs flex-1"
-              />
-            ) : (
-              <div className="flex gap-1 flex-1">
-                <Select value={form.phoneCode} onValueChange={(v) => updateForm({ phoneCode: v })}>
-                  <SelectTrigger className="h-7 w-[68px] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="+966" className="text-xs">+966</SelectItem>
-                    <SelectItem value="+1" className="text-xs">+1</SelectItem>
-                    <SelectItem value="+44" className="text-xs">+44</SelectItem>
-                    <SelectItem value="+971" className="text-xs">+971</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  placeholder="Phone number"
-                  value={form.phoneNumber}
-                  onChange={(e) => updateForm({ phoneNumber: e.target.value })}
-                  className="h-7 text-xs flex-1"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Row 3: Verification */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-medium text-muted-foreground">Needs to verify</span>
-              <Switch
-                checked={form.needsVerification}
-                onCheckedChange={(checked) => updateForm({
-                  needsVerification: checked,
-                  verificationMethod: "sms",
-                  verificationSpecs: "without_id",
-                  nationalId: "",
-                })}
-                className="scale-75 origin-right"
-              />
-            </div>
-            {form.needsVerification && (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <div className={cn("flex-1", hasSpecs(form.verificationMethod) ? "" : "")}>
-                    <label className="text-[9px] text-muted-foreground mb-0.5 block">Verification method</label>
-                    <Select
-                      value={form.verificationMethod}
-                      onValueChange={(v) => {
-                        const method = v as VerificationMethodType;
-                        updateForm({
-                          verificationMethod: method,
-                          verificationSpecs: hasSpecs(method) ? "without_id" : "without_id",
-                          nationalId: "",
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(Object.keys(VERIFICATION_METHOD_LABELS) as VerificationMethodType[]).map((m) => (
-                          <SelectItem key={m} value={m} className="text-xs">{VERIFICATION_METHOD_LABELS[m]}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {hasSpecs(form.verificationMethod) && (
-                    <div className="flex-1">
-                      <label className="text-[9px] text-muted-foreground mb-0.5 block">Verification specs</label>
-                      <Select
-                        value={form.verificationSpecs}
-                        onValueChange={(v) => updateForm({ verificationSpecs: v as VerificationSpecs })}
-                      >
-                        <SelectTrigger className="h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(Object.keys(VERIFICATION_SPECS_LABELS) as VerificationSpecs[]).map((s) => (
-                            <SelectItem key={s} value={s} className="text-xs">
-                              <div className="flex items-center gap-1">
-                                {VERIFICATION_SPECS_LABELS[s].label}
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Info size={10} className="text-muted-foreground" />
-                                  </TooltipTrigger>
-                                  <TooltipContent side="right" className="max-w-[200px] text-xs">
-                                    {VERIFICATION_SPECS_LABELS[s].tooltip}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-
-                {needsNationalId(form.verificationMethod, form.verificationSpecs) && (
-                  <Input
-                    placeholder="National ID number"
-                    value={form.nationalId}
-                    onChange={(e) => updateForm({ nationalId: e.target.value })}
-                    className="h-7 text-xs"
-                  />
-                )}
-
-                {/* Phone for verification if sending method is email */}
-                {(form.verificationMethod === "sms" || form.verificationMethod === "whatsapp") && form.sendingMethod === "email" && (
-                  <div className="flex gap-1">
-                    <Select value={form.phoneCode} onValueChange={(v) => updateForm({ phoneCode: v })}>
-                      <SelectTrigger className="h-7 w-[68px] text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="+966" className="text-xs">+966</SelectItem>
-                        <SelectItem value="+1" className="text-xs">+1</SelectItem>
-                        <SelectItem value="+44" className="text-xs">+44</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      placeholder="Phone for verification"
-                      value={form.phoneNumber}
-                      onChange={(e) => updateForm({ phoneNumber: e.target.value })}
-                      className="h-7 text-xs flex-1"
-                    />
-                  </div>
-                )}
-
-                {showNafathBanner(form.verificationMethod) && (
-                  <div className="flex items-start gap-2 rounded-lg p-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
-                    <Info size={14} className="flex-shrink-0 mt-0.5" />
-                    <p className="text-[10px] leading-relaxed">
-                      {form.verificationMethod === "absher"
-                        ? "Absher service is available only for Saudi citizens or expats with an active Absher account."
-                        : "Nafath service is available only for Saudi citizens or expats with an active Nafath account."}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Row 4: Add / Cancel */}
-          <div className="flex items-center gap-2">
-            <Button size="sm" className="h-7 text-xs" onClick={handleAddParticipant} disabled={!form.name.trim()}>
-              Add participant
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setShowAddForm(false); setForm(INITIAL_FORM); }}>
-              Cancel
-            </Button>
-          </div>
-        </div>
+        <ParticipantFormCard
+          form={form}
+          updateForm={updateFormField}
+          onSubmit={handleAddParticipant}
+          onCancel={() => { setShowAddForm(false); setForm(INITIAL_FORM); }}
+          submitLabel="Add participant"
+          isDisabled={!form.name.trim()}
+        />
       )}
 
-      {/* Add me as a signer */}
+      {/* Add me */}
       <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 w-full text-muted-foreground hover:text-foreground" onClick={handleAddMe}>
         <User size={14} />
         Add me as a signer
@@ -688,7 +877,7 @@ const EditorParticipantsPanel = () => {
 
       <Separator />
 
-      {/* ── Signing Order Section ── */}
+      {/* ── Signing Order ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
@@ -726,7 +915,6 @@ const EditorParticipantsPanel = () => {
           </div>
         </div>
 
-        {/* Save workflow inline input */}
         {showSaveWorkflow && (
           <div className="flex items-center gap-2 animate-in slide-in-from-top-1 duration-150">
             <Input
@@ -751,7 +939,6 @@ const EditorParticipantsPanel = () => {
 
         {sequential && (
           <div className="space-y-3">
-            {/* Step 0: Approvers */}
             {approvers.length > 0 && (
               <div className="space-y-1">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Step 0 — Approval</p>
@@ -767,7 +954,6 @@ const EditorParticipantsPanel = () => {
               </div>
             )}
 
-            {/* Grouped steps for signers */}
             {(() => {
               const signersByOrder = new Map<number, Participant[]>();
               signers.forEach((s) => {
@@ -823,7 +1009,7 @@ const EditorParticipantsPanel = () => {
         <div className="space-y-2">
           {MOCK_DOCUMENTS.map((doc) => {
             const visibleIds = visibility[doc.id] || [];
-            const allVisible = visibleIds.length === participants.length;
+            const allVisible = participants.length === 0 || visibleIds.length === participants.length;
             return (
               <div key={doc.id} className="flex items-center justify-between gap-2 p-2 rounded-md border">
                 <div className="min-w-0 flex-1">
@@ -849,19 +1035,23 @@ const EditorParticipantsPanel = () => {
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-2" align="end">
                     <p className="text-xs font-medium mb-2">Who can see this document?</p>
-                    {participants.map((p) => (
-                      <label
-                        key={p.id}
-                        className="flex items-center gap-2 px-1 py-1 rounded hover:bg-accent cursor-pointer"
-                      >
-                        <Checkbox
-                          checked={visibleIds.includes(p.id)}
-                          onCheckedChange={() => toggleDocVisibility(doc.id, p.id)}
-                        />
-                        <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                        <span className="text-xs truncate">{p.name}</span>
-                      </label>
-                    ))}
+                    {participants.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No participants added yet</p>
+                    ) : (
+                      participants.map((p) => (
+                        <label
+                          key={p.id}
+                          className="flex items-center gap-2 px-1 py-1 rounded hover:bg-accent cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={visibleIds.includes(p.id)}
+                            onCheckedChange={() => toggleDocVisibility(doc.id, p.id)}
+                          />
+                          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                          <span className="text-xs truncate">{p.name}</span>
+                        </label>
+                      ))
+                    )}
                   </PopoverContent>
                 </Popover>
               </div>
@@ -881,6 +1071,8 @@ const EditorParticipantsPanel = () => {
           if (participants.length > 0) {
             setParticipants([]);
             setSequential(false);
+            setEditingId(null);
+            setConfirmRemoveId(null);
             setVisibility(() => {
               const v: DocumentVisibility = {};
               MOCK_DOCUMENTS.forEach((d) => { v[d.id] = []; });
@@ -892,9 +1084,7 @@ const EditorParticipantsPanel = () => {
             setSequential(true);
             setVisibility(() => {
               const v: DocumentVisibility = {};
-              MOCK_DOCUMENTS.forEach((d) => {
-                v[d.id] = DEMO_PARTICIPANTS.map((p) => p.id);
-              });
+              MOCK_DOCUMENTS.forEach((d) => { v[d.id] = DEMO_PARTICIPANTS.map((p) => p.id); });
               return v;
             });
             toast.success("Demo participants loaded");
@@ -905,6 +1095,7 @@ const EditorParticipantsPanel = () => {
         {participants.length > 0 ? "Clear demo participants" : "Load demo participants"}
       </Button>
 
+      {/* ── Load Workflow Dialog ── */}
       <Dialog open={selectWorkflowOpen} onOpenChange={setSelectWorkflowOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
