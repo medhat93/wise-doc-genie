@@ -448,9 +448,13 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) 
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto bg-muted/20 relative"
+        className={cn(
+          "flex-1 overflow-y-auto bg-muted/20 relative transition-all duration-200",
+          isDraggingField && "ring-2 ring-primary/20 ring-inset"
+        )}
         onScroll={handleScroll}
         onClick={handleCanvasClick}
+        onDragLeave={handleDragLeave}
       >
         <ScrollIndicator doc={showIndicator ? activeDoc : null} />
 
@@ -471,6 +475,19 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) 
                     DOC_BORDER[doc.docType]
                   )}
                 >
+                  {Content && <Content />}
+
+                  {/* Alignment guide lines — visible during drag */}
+                  {isDraggingField && isDragOverCanvas && (
+                    <>
+                      <div className="absolute top-0 left-1/4 w-px h-full border-l border-dashed border-primary/10 pointer-events-none z-0" />
+                      <div className="absolute top-0 left-1/2 w-px h-full border-l border-dashed border-primary/15 pointer-events-none z-0" />
+                      <div className="absolute top-0 left-3/4 w-px h-full border-l border-dashed border-primary/10 pointer-events-none z-0" />
+                      <div className="absolute left-0 top-1/4 h-px w-full border-t border-dashed border-primary/10 pointer-events-none z-0" />
+                      <div className="absolute left-0 top-1/2 h-px w-full border-t border-dashed border-primary/15 pointer-events-none z-0" />
+                      <div className="absolute left-0 top-3/4 h-px w-full border-t border-dashed border-primary/10 pointer-events-none z-0" />
+                    </>
+                  )}
                   {Content && <Content />}
                   {/* Field overlays */}
                   {docFields.map((f) => (
