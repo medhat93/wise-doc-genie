@@ -365,26 +365,18 @@ const CreateDocument = () => {
   }, []);
 
   const handleDriveImport = useCallback((files: DriveFile[], providerName: string) => {
-    const newDocs: UploadedDocument[] = files.map((file, idx) => {
-      const hasParent = documents.length > 0 || idx > 0;
-      const parentId = hasParent
-        ? documents.find((d) => d.role === "parent")?.id
-        : undefined;
-      return {
-        id: crypto.randomUUID(),
-        name: file.name,
-        size: file.size,
-        type: file.mimeType || "application/octet-stream",
-        progress: 0,
-        status: "uploading" as const,
-        pageCount: Math.floor(Math.random() * 15) + 1,
-        role: hasParent ? "child" as const : "parent" as const,
-        parentId,
-        childOrder: hasParent ? documents.filter((d) => d.role === "child").length + idx : undefined,
-        isDriveImport: true,
-        driveProvider: providerName,
-      };
-    });
+    const newDocs: UploadedDocument[] = files.map((file) => ({
+      id: crypto.randomUUID(),
+      name: file.name,
+      size: file.size,
+      type: file.mimeType || "application/octet-stream",
+      progress: 0,
+      status: "uploading" as const,
+      pageCount: Math.floor(Math.random() * 15) + 1,
+      documentType: "primary" as const,
+      isDriveImport: true,
+      driveProvider: providerName,
+    }));
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
     toast({
