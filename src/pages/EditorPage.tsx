@@ -147,7 +147,7 @@ const EditorPageInner = () => {
         {/* Desktop toolbar strip */}
         {!isMobile && (
           <EditorPanelToolbar
-            activePanel={activePanel === "field-settings" ? null : activePanel}
+            activePanel={activePanel}
             onPanelToggle={handlePanelToggle}
             isEsign={isEsign}
           />
