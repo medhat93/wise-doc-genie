@@ -329,7 +329,8 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) 
   const [showIndicator, setShowIndicator] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId } = useEditorContext();
+  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, isDraggingField } = useEditorContext();
+  const [isDragOverCanvas, setIsDragOverCanvas] = useState(false);
 
   const removePlacedField = useCallback((id: string) => {
     setPlacedFields((prev) => prev.filter((f) => f.id !== id));
