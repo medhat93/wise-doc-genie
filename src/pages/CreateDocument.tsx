@@ -658,7 +658,7 @@ const CreateDocument = () => {
             <>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={isEmpty} className={isEmpty ? "opacity-50" : ""}>
+                  <Button variant="outline" size="sm" disabled={isEmpty || !hasPrimary} className={isEmpty || !hasPrimary ? "opacity-50" : ""}>
                     <HugeiconsIcon icon={FileValidationIcon} size={16} className="sm:mr-1.5" />
                     <span className="hidden sm:inline">Get signature</span>
                   </Button>
