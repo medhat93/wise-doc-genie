@@ -76,6 +76,8 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
           <EditorCommentsPanel />
         ) : panelId === "workflow" ? (
           <EditorWorkflowPanel />
+        ) : panelId === "tasks" ? (
+          <EditorTasksPanel />
         ) : panelId === "participants" ? (
           <EditorParticipantsViewPanel />
         ) : (
