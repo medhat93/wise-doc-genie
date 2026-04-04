@@ -666,12 +666,14 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
                     )}
                   >
                     <div ref={doc.id === "doc-1" ? doc1Ref : undefined}>
-                    {doc.id === "doc-1" ? (
-                    ) : doc.id === "doc-2" ? (
-                      <Doc2Content />
-                    ) : (
-                      <Doc3Content />
-                    )}
+                      {doc.id === "doc-1" ? (
+                        <Doc1Content comments={comments} onClickHighlight={handleClickHighlight} />
+                      ) : doc.id === "doc-2" ? (
+                        <Doc2Content />
+                      ) : (
+                        <Doc3Content />
+                      )}
+                    </div>
                     {docFields.map((f) => (
                       <FieldOverlay
                         key={f.id}
@@ -684,20 +686,24 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
                     ))}
                   </div>
 
-                  {/* Margin comments — only for doc-1 and only when panel is closed */}
+                  {/* Floating comment bubbles — aligned to actual text */}
                   {doc.id === "doc-1" && !commentsPanelOpen && (
-                    <div className="absolute top-0 right-0 translate-x-[calc(100%+12px)] hidden xl:block" style={{ width: 200 }}>
+                    <div className="absolute top-0 right-0 translate-x-[calc(100%+8px)] hidden xl:block" style={{ width: 36 }}>
                       <AnimatePresence>
-                        {inlineComments.map((c) => (
-                            <div key={c.id} style={{ position: "absolute", top: SECTION_Y_MAP[c.sectionRef] || 0 }} className="mb-2">
-                              <MarginComment
-                                comment={c}
-                                onClick={() => {
-                                  onOpenComments?.();
-                                }}
+                        {Object.entries(commentsBySection).map(([sectionRef, sectionComments]) => {
+                          const yPos = sectionPositions[sectionRef];
+                          if (yPos === undefined) return null;
+                          const first = sectionComments[0];
+                          return (
+                            <div key={sectionRef} style={{ position: "absolute", top: yPos }} className="flex items-center">
+                              <CommentBubble
+                                comment={first}
+                                count={sectionComments.length}
+                                onClick={() => onOpenComments?.()}
                               />
                             </div>
-                          ))}
+                          );
+                        })}
                       </AnimatePresence>
                     </div>
                   )}
