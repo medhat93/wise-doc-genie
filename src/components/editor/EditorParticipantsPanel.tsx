@@ -469,7 +469,7 @@ const ParticipantFormCard = ({
 
 /* ══════════ MAIN PANEL ══════════ */
 const EditorParticipantsPanel = () => {
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const { participants, setParticipants } = useEditorContext();
   const [sequential, setSequential] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<AddFormState>(INITIAL_FORM);
