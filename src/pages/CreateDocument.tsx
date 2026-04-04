@@ -642,9 +642,9 @@ const CreateDocument = () => {
                 size="sm"
                 disabled={isEmpty || !allComplete || !hasPrimary}
                 className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
-                onClick={() => navigate("/editor", { state: { documents, mode } })}
+                onClick={() => navigate("/participants", { state: { documents, mode } })}
               >
-                <span className="hidden sm:inline">Next: Add Fields</span>
+                <span className="hidden sm:inline">Next: Add Participants</span>
                 <span className="sm:hidden">Next</span>
                 <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
               </Button>
@@ -654,9 +654,9 @@ const CreateDocument = () => {
                 size="sm"
                 disabled={isEmpty || !allComplete || !hasPrimary}
                 className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
-                onClick={() => navigate("/editor", { state: { documents, mode } })}
+                onClick={() => navigate("/participants", { state: { documents, mode } })}
               >
-                <span className="hidden sm:inline">Next: Prepare Document</span>
+                <span className="hidden sm:inline">Next: Add Participants</span>
                 <span className="sm:hidden">Next</span>
                 <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
               </Button>
