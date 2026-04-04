@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { PanelId } from "./EditorPanelToolbar";
 import EditorAIPanel from "./EditorAIPanel";
 import EditorParticipantsPanel from "./EditorParticipantsPanel";
-import EditorFieldsPanel from "./EditorFieldsPanel";
+import EditorFieldSettings from "./EditorFieldSettings";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   participants: "Participants",
@@ -13,7 +13,7 @@ const PANEL_TITLES: Record<PanelId, string> = {
   properties: "Properties",
   fields: "Smart Fields",
   workflow: "Workflow",
-  annotations: "Fields",
+  "field-settings": "Field Settings",
 };
 
 interface EditorPanelProps {
@@ -23,6 +23,21 @@ interface EditorPanelProps {
 }
 
 const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
+  // Field settings has its own header
+  if (panelId === "field-settings") {
+    return (
+      <motion.div
+        initial={{ width: 0, opacity: 0 }}
+        animate={{ width: 380, opacity: 1 }}
+        exit={{ width: 0, opacity: 0 }}
+        transition={{ duration: 0.25, ease: "easeInOut" }}
+        className="border-l bg-card flex flex-col overflow-hidden flex-shrink-0"
+      >
+        <EditorFieldSettings onClose={onClose} />
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ width: 0, opacity: 0 }}
@@ -33,12 +48,7 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
     >
       {/* Header */}
       <div className="h-12 px-4 flex items-center justify-between border-b flex-shrink-0">
-        <div>
-          <span className="font-semibold text-sm">{PANEL_TITLES[panelId]}</span>
-          {panelId === "annotations" && (
-            <p className="text-[10px] text-muted-foreground -mt-0.5">Drag fields onto the document</p>
-          )}
-        </div>
+        <span className="font-semibold text-sm">{PANEL_TITLES[panelId]}</span>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
           <X size={14} />
         </Button>
@@ -50,8 +60,6 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
           <EditorAIPanel docType={docType} />
         ) : panelId === "participants" ? (
           <EditorParticipantsPanel />
-        ) : panelId === "annotations" ? (
-          <EditorFieldsPanel />
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center">
             <p className="text-sm font-medium text-foreground mb-1">{PANEL_TITLES[panelId]}</p>

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { useEditorContext } from "./EditorContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -469,7 +470,7 @@ const ParticipantFormCard = ({
 
 /* ══════════ MAIN PANEL ══════════ */
 const EditorParticipantsPanel = () => {
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const { participants, setParticipants } = useEditorContext();
   const [sequential, setSequential] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<AddFormState>(INITIAL_FORM);
