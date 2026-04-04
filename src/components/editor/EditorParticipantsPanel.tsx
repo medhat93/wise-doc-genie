@@ -237,9 +237,7 @@ const EditorParticipantsPanel = () => {
   const [showSaveWorkflow, setShowSaveWorkflow] = useState(false);
   const [visibility, setVisibility] = useState<DocumentVisibility>(() => {
     const v: DocumentVisibility = {};
-    MOCK_DOCUMENTS.forEach((d) => {
-      v[d.id] = INITIAL_PARTICIPANTS.map((p) => p.id);
-    });
+    MOCK_DOCUMENTS.forEach((d) => { v[d.id] = []; });
     return v;
   });
 
