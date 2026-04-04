@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { PanelId } from "./EditorPanelToolbar";
 import EditorAIPanel from "./EditorAIPanel";
+import EditorParticipantsPanel from "./EditorParticipantsPanel";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   participants: "Participants",
@@ -41,6 +42,8 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
       <div className="flex-1 overflow-y-auto p-4">
         {panelId === "ai" ? (
           <EditorAIPanel docType={docType} />
+        ) : panelId === "participants" ? (
+          <EditorParticipantsPanel />
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center">
             <p className="text-sm font-medium text-foreground mb-1">{PANEL_TITLES[panelId]}</p>
