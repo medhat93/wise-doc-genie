@@ -20,23 +20,25 @@ const EditorPageInner = () => {
   const docType = searchParams.get("type") || "";
   const mode = searchParams.get("mode") || "full";
   const isMobile = useIsMobile();
-  const { selectedFieldId, setSelectedFieldId, setPreviousPanelId } = useEditorContext();
+  const { selectedFieldId, setSelectedFieldId, setPreviousPanelId, setCommentsPanelOpen } = useEditorContext();
 
   // Default to participants panel open
   const [activePanel, setActivePanel] = useState<PanelId | null>("participants");
 
+  // Sync commentsPanelOpen with context
+  useEffect(() => {
+    setCommentsPanelOpen(activePanel === "comments");
+  }, [activePanel, setCommentsPanelOpen]);
+
   const handlePanelToggle = (id: PanelId) => {
     setActivePanel((prev) => (prev === id ? null : id));
-    // Deselect field when switching away from field-settings
     if (activePanel === "field-settings" && id !== "field-settings") {
       setSelectedFieldId(null);
     }
   };
 
-  // When a field is selected on canvas, open field settings
   const handleFieldSelect = (fieldId: string | null) => {
     if (fieldId) {
-      // Save current panel so we can return to it
       if (activePanel && activePanel !== "field-settings") {
         setPreviousPanelId(activePanel);
       }
@@ -54,6 +56,10 @@ const EditorPageInner = () => {
     setSelectedFieldId(null);
     setActivePanel(null);
   };
+
+  const handleOpenComments = useCallback(() => {
+    setActivePanel("comments");
+  }, []);
 
   const showToolbar = mode !== "esign";
 

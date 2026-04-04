@@ -7,11 +7,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { X, Copy, Trash2 } from "lucide-react";
+import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare } from "lucide-react";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
-import { useEditorContext } from "./EditorContext";
+import { useEditorContext, COMMENT_SECTIONS, type Comment } from "./EditorContext";
 import { toast } from "sonner";
 
 /* ── Mock documents ── */
@@ -39,8 +39,44 @@ const DOC_BORDER: Record<string, string> = {
   attachment: "border-l-[3px] border-l-muted-foreground/30 bg-muted/30",
 };
 
-/* ── Document content blocks ── */
-const Doc1Content = () => (
+/* ── Document content blocks with comment highlights ── */
+const CommentHighlight = ({
+  children,
+  sectionRef,
+  comments,
+  onClickHighlight,
+}: {
+  children: React.ReactNode;
+  sectionRef: string;
+  comments: Comment[];
+  onClickHighlight: (sectionRef: string) => void;
+}) => {
+  const sectionComments = comments.filter((c) => c.type === "inline" && c.sectionRef === sectionRef);
+  if (sectionComments.length === 0) return <>{children}</>;
+
+  const hasOpen = sectionComments.some((c) => c.status === "open");
+  const bgClass = hasOpen ? "bg-amber-100/50 dark:bg-amber-900/20" : "bg-emerald-100/30 dark:bg-emerald-900/15";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          className={cn("rounded-sm px-0.5 cursor-pointer transition-colors hover:opacity-80", bgClass)}
+          onClick={(e) => { e.stopPropagation(); onClickHighlight(sectionRef); }}
+        >
+          {children}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs max-w-[200px]">
+        {sectionComments.length === 1
+          ? `${sectionComments[0].author}: "${sectionComments[0].text.slice(0, 60)}..."`
+          : `${sectionComments.length} comments on this section`}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
+const Doc1Content = ({ comments, onClickHighlight }: { comments: Comment[]; onClickHighlight: (ref: string) => void }) => (
   <>
     <h1 className="text-2xl font-bold text-foreground mb-1">Master Services Agreement</h1>
     <p className="text-xs text-muted-foreground mb-8">Effective Date: April 4, 2026</p>
@@ -55,17 +91,29 @@ const Doc1Content = () => (
       under this Agreement. "Deliverables" means all work product, reports, and materials
       produced by the Service Provider in connection with the Services.
     </p>
-    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">2. Scope of Services</h2>
+    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
+      <CommentHighlight sectionRef="Section 2: Scope of Services" comments={comments} onClickHighlight={onClickHighlight}>
+        2. Scope of Services
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      The Service Provider agrees to perform the Services as described in one or more Statements
-      of Work to be mutually agreed upon and executed by both parties. Each Statement of Work
-      shall specify the scope, timeline, deliverables, and fees for the applicable Services.
+      <CommentHighlight sectionRef="Section 2: Scope of Services" comments={comments} onClickHighlight={onClickHighlight}>
+        The Service Provider agrees to perform the Services as described in one or more Statements
+        of Work to be mutually agreed upon and executed by both parties. Each Statement of Work
+        shall specify the scope, timeline, deliverables, and fees for the applicable Services.
+      </CommentHighlight>
     </p>
-    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">3. Payment Terms</h2>
+    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
+      <CommentHighlight sectionRef="Section 3: Payment Terms" comments={comments} onClickHighlight={onClickHighlight}>
+        3. Payment Terms
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      Client shall pay the Service Provider the fees set forth in each Statement of Work. Unless
-      otherwise specified, invoices shall be issued monthly and are due within thirty (30) days
-      of the invoice date. Late payments shall accrue interest at the rate of 1.5% per month.
+      <CommentHighlight sectionRef="Section 3: Payment Terms" comments={comments} onClickHighlight={onClickHighlight}>
+        Client shall pay the Service Provider the fees set forth in each Statement of Work. Unless
+        otherwise specified, invoices shall be issued monthly and are due within thirty (30) days
+        of the invoice date. Late payments shall accrue interest at the rate of 1.5% per month.
+      </CommentHighlight>
     </p>
     <h2 className="text-base font-semibold text-foreground mt-8 mb-3">4. Confidentiality</h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
@@ -73,11 +121,17 @@ const Doc1Content = () => (
       other party. "Confidential Information" includes any non-public technical, business, or
       financial information disclosed by either party during the term of this Agreement.
     </p>
-    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">5. Term and Termination</h2>
+    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
+      <CommentHighlight sectionRef="Section 5: Termination" comments={comments} onClickHighlight={onClickHighlight}>
+        5. Term and Termination
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      This Agreement shall commence on the Effective Date and continue for a period of twelve
-      (12) months unless terminated earlier. Either party may terminate this Agreement with
-      thirty (30) days' prior written notice.
+      <CommentHighlight sectionRef="Section 5: Termination" comments={comments} onClickHighlight={onClickHighlight}>
+        This Agreement shall commence on the Effective Date and continue for a period of twelve
+        (12) months unless terminated earlier. Either party may terminate this Agreement with
+        thirty (30) days' prior written notice.
+      </CommentHighlight>
     </p>
     <h2 className="text-base font-semibold text-foreground mt-8 mb-3">6. Limitation of Liability</h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
@@ -179,12 +233,6 @@ const Doc3Content = () => (
   </>
 );
 
-const DOC_CONTENT: Record<string, React.FC> = {
-  "doc-1": Doc1Content,
-  "doc-2": Doc2Content,
-  "doc-3": Doc3Content,
-};
-
 /* ── Divider ── */
 const DocumentDivider = ({ doc }: { doc: EditorDocument }) => {
   const style = DOC_TYPE_LABEL[doc.docType];
@@ -215,6 +263,73 @@ const ScrollIndicator = ({ doc }: { doc: EditorDocument | null }) => (
       </motion.div>
     )}
   </AnimatePresence>
+);
+
+/* ── Text selection toolbar ── */
+const SelectionToolbar = ({
+  position,
+  onComment,
+  onDismiss,
+}: {
+  position: { x: number; y: number };
+  onComment: () => void;
+  onDismiss: () => void;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 4 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 4 }}
+    transition={{ duration: 0.15 }}
+    className="fixed z-50 flex items-center gap-0.5 bg-card border shadow-lg rounded-lg px-1 py-1"
+    style={{ left: position.x, top: position.y }}
+    onMouseDown={(e) => e.preventDefault()}
+  >
+    <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
+      <Bold size={14} />
+    </button>
+    <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
+      <Italic size={14} />
+    </button>
+    <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
+      <Highlighter size={14} />
+    </button>
+    <div className="w-px h-5 bg-border mx-0.5" />
+    <button
+      className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent"
+      onClick={onComment}
+    >
+      <MessageSquare size={14} />
+    </button>
+  </motion.div>
+);
+
+/* ── Margin comment card ── */
+const MarginComment = ({ comment, onClick }: { comment: Comment; onClick: () => void }) => (
+  <motion.div
+    initial={{ opacity: 0, x: 10 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: 10 }}
+    transition={{ duration: 0.2 }}
+    onClick={onClick}
+    className={cn(
+      "w-[200px] bg-card border rounded-md shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow",
+      comment.status === "resolved" && "opacity-40"
+    )}
+  >
+    <div className="flex items-center gap-1.5 mb-1">
+      <div
+        className="h-5 w-5 rounded-full flex items-center justify-center text-white text-[9px] font-semibold flex-shrink-0"
+        style={{ backgroundColor: comment.authorColor }}
+      >
+        {comment.authorInitials}
+      </div>
+      <span className="text-[11px] font-medium text-foreground truncate">{comment.author}</span>
+    </div>
+    <p className="text-[11px] text-muted-foreground line-clamp-2">{comment.text}</p>
+    <p className="text-[10px] text-muted-foreground/60 mt-1">
+      {Math.floor((Date.now() - comment.timestamp.getTime()) / 3600000)}h ago
+    </p>
+  </motion.div>
 );
 
 /* ── Field overlay component ── */
@@ -256,7 +371,6 @@ const FieldOverlay = ({
             borderRadius: 4,
           }}
         >
-          {/* Placeholder text */}
           <div className="flex items-center gap-1 px-2 h-full overflow-hidden">
             {Icon && <Icon size={11} style={{ color: field.participantColor }} className="flex-shrink-0" />}
             <span className="text-[10px] truncate" style={{ color: field.participantColor }}>
@@ -264,7 +378,6 @@ const FieldOverlay = ({
             </span>
           </div>
 
-          {/* Resize handle (selected) */}
           {isSelected && (
             <div
               className="absolute -bottom-0.5 -right-0.5 h-2 w-2 cursor-nwse-resize rounded-sm"
@@ -272,22 +385,15 @@ const FieldOverlay = ({
             />
           )}
 
-          {/* Floating toolbar (selected) */}
           {isSelected && (
             <div
               className="absolute -bottom-8 left-0 flex items-center gap-1 bg-card border shadow-sm rounded-md px-1.5 py-0.5 z-30"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={onDuplicate}
-                className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent"
-              >
+              <button onClick={onDuplicate} className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent">
                 <Copy size={10} />
               </button>
-              <button
-                onClick={onRemove}
-                className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-accent"
-              >
+              <button onClick={onRemove} className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-accent">
                 <Trash2 size={10} />
               </button>
               <div className="h-3 w-px bg-border mx-0.5" />
@@ -296,7 +402,6 @@ const FieldOverlay = ({
             </div>
           )}
 
-          {/* Delete button (hover, unselected) */}
           {!isSelected && (
             <button
               onClick={(e) => { e.stopPropagation(); onRemove(); }}
@@ -320,16 +425,20 @@ const FieldOverlay = ({
 interface EditorCanvasProps {
   showToolbar?: boolean;
   onFieldSelect?: (fieldId: string | null) => void;
+  onOpenComments?: () => void;
 }
 
-const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) => {
+const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
   const [showIndicator, setShowIndicator] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId } = useEditorContext();
+  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, commentsPanelOpen, setPendingCommentRef } = useEditorContext();
+
+  // Text selection toolbar state
+  const [selectionToolbar, setSelectionToolbar] = useState<{ x: number; y: number; text: string } | null>(null);
 
   const removePlacedField = useCallback((id: string) => {
     setPlacedFields((prev) => prev.filter((f) => f.id !== id));
@@ -352,7 +461,6 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) 
     onFieldSelect?.(fieldId);
   }, [setSelectedFieldId, onFieldSelect]);
 
-  /* Handle drop from sidebar */
   const handleDrop = useCallback((e: React.DragEvent, docId: string) => {
     e.preventDefault();
     const data = e.dataTransfer.getData("application/field-type");
@@ -392,7 +500,50 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) 
       setSelectedFieldId(null);
       onFieldSelect?.(null);
     }
+    setSelectionToolbar(null);
   }, [selectedFieldId, setSelectedFieldId, onFieldSelect]);
+
+  // Text selection handler
+  const handleMouseUp = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.toString().trim()) {
+      return;
+    }
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    const text = selection.toString().trim();
+    if (text.length > 0) {
+      setSelectionToolbar({
+        x: rect.left + rect.width / 2 - 80,
+        y: rect.top - 48,
+        text: text.length > 50 ? text.slice(0, 50) + "..." : text,
+      });
+    }
+  }, []);
+
+  // Handle comment from selection toolbar
+  const handleSelectionComment = useCallback(() => {
+    if (!selectionToolbar) return;
+    setPendingCommentRef(selectionToolbar.text);
+    setSelectionToolbar(null);
+    window.getSelection()?.removeAllRanges();
+    onOpenComments?.();
+  }, [selectionToolbar, setPendingCommentRef, onOpenComments]);
+
+  // Handle clicking comment highlights in document
+  const handleClickHighlight = useCallback((sectionRef: string) => {
+    setPendingCommentRef(null);
+    onOpenComments?.();
+  }, [setPendingCommentRef, onOpenComments]);
+
+  // Dismiss selection toolbar on scroll/escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectionToolbar(null);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const root = scrollRef.current;
@@ -415,6 +566,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) 
 
   const handleScroll = useCallback(() => {
     setShowIndicator(true);
+    setSelectionToolbar(null);
     clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => setShowIndicator(false), 2000);
   }, []);
@@ -424,6 +576,16 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) 
   }, []);
 
   const activeDoc = MOCK_DOCUMENTS.find((d) => d.id === activeDocId) ?? null;
+
+  // Inline comments for margin display (only when comments panel is closed)
+  const inlineComments = comments.filter((c) => c.type === "inline");
+
+  // Map section refs to approximate vertical positions for margin comments
+  const SECTION_Y_MAP: Record<string, number> = {
+    "Section 2: Scope of Services": 320,
+    "Section 3: Payment Terms": 460,
+    "Section 5: Termination": 620,
+  };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -440,38 +602,76 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) 
         className="flex-1 overflow-y-auto bg-muted/20 relative"
         onScroll={handleScroll}
         onClick={handleCanvasClick}
+        onMouseUp={handleMouseUp}
       >
         <ScrollIndicator doc={showIndicator ? activeDoc : null} />
 
+        {/* Selection toolbar */}
+        <AnimatePresence>
+          {selectionToolbar && (
+            <SelectionToolbar
+              position={{ x: selectionToolbar.x, y: selectionToolbar.y }}
+              onComment={handleSelectionComment}
+              onDismiss={() => setSelectionToolbar(null)}
+            />
+          )}
+        </AnimatePresence>
+
         <div className="p-6 md:p-10 space-y-0">
           {MOCK_DOCUMENTS.map((doc, idx) => {
-            const Content = DOC_CONTENT[doc.id];
             const docFields = placedFields.filter((f) => f.page === idx + 1);
             return (
               <div key={doc.id}>
                 {idx > 0 && <DocumentDivider doc={doc} />}
-                <div
-                  ref={(el) => { docRefs.current[doc.id] = el; }}
-                  data-doc-id={doc.id}
-                  onDrop={(e) => handleDrop(e, doc.id)}
-                  onDragOver={handleDragOver}
-                  className={cn(
-                    "max-w-[816px] mx-auto bg-card shadow-sm border rounded-sm min-h-[800px] p-12 md:p-16 relative",
-                    DOC_BORDER[doc.docType]
+                <div className="relative">
+                  <div
+                    ref={(el) => { docRefs.current[doc.id] = el; }}
+                    data-doc-id={doc.id}
+                    onDrop={(e) => handleDrop(e, doc.id)}
+                    onDragOver={handleDragOver}
+                    className={cn(
+                      "max-w-[816px] mx-auto bg-card shadow-sm border rounded-sm min-h-[800px] p-12 md:p-16 relative",
+                      DOC_BORDER[doc.docType]
+                    )}
+                  >
+                    {doc.id === "doc-1" ? (
+                      <Doc1Content comments={comments} onClickHighlight={handleClickHighlight} />
+                    ) : doc.id === "doc-2" ? (
+                      <Doc2Content />
+                    ) : (
+                      <Doc3Content />
+                    )}
+                    {docFields.map((f) => (
+                      <FieldOverlay
+                        key={f.id}
+                        field={f}
+                        isSelected={selectedFieldId === f.id}
+                        onSelect={() => handleFieldSelect(f.id)}
+                        onRemove={() => removePlacedField(f.id)}
+                        onDuplicate={() => duplicateField(f)}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Margin comments — only for doc-1 and only when panel is closed */}
+                  {doc.id === "doc-1" && !commentsPanelOpen && (
+                    <div className="absolute top-0 right-0 translate-x-[calc(100%+12px)] hidden xl:block" style={{ width: 200 }}>
+                      <AnimatePresence>
+                        {inlineComments
+                          .filter((c) => SECTION_Y_MAP[c.sectionRef] !== undefined)
+                          .map((c) => (
+                            <div key={c.id} style={{ position: "absolute", top: SECTION_Y_MAP[c.sectionRef] || 0 }} className="mb-2">
+                              <MarginComment
+                                comment={c}
+                                onClick={() => {
+                                  onOpenComments?.();
+                                }}
+                              />
+                            </div>
+                          ))}
+                      </AnimatePresence>
+                    </div>
                   )}
-                >
-                  {Content && <Content />}
-                  {/* Field overlays */}
-                  {docFields.map((f) => (
-                    <FieldOverlay
-                      key={f.id}
-                      field={f}
-                      isSelected={selectedFieldId === f.id}
-                      onSelect={() => handleFieldSelect(f.id)}
-                      onRemove={() => removePlacedField(f.id)}
-                      onDuplicate={() => duplicateField(f)}
-                    />
-                  ))}
                 </div>
               </div>
             );
