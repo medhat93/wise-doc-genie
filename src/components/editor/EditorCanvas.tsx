@@ -2,8 +2,15 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { X } from "lucide-react";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
+import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
 
 /* ── Mock documents ── */
 export const MOCK_DOCUMENTS: EditorDocument[] = [
