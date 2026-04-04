@@ -119,7 +119,7 @@ const EditorPageInner = () => {
       transition={{ duration: 0.3 }}
       className="h-screen flex flex-col bg-background"
     >
-      <EditorTopBar />
+      <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Center — Document canvas (full width now) */}
