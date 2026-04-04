@@ -54,8 +54,8 @@ const EditorSkeleton = () => (
 const EditorPageInner = () => {
   const [searchParams] = useSearchParams();
   const docType = searchParams.get("type") || "";
-  const mode = searchParams.get("mode") || "full";
-  const isEsign = mode === "esign";
+  const initialMode = searchParams.get("mode") || "full";
+  const [isEsign, setIsEsign] = useState(initialMode === "esign");
   const isMobile = useIsMobile();
   const { selectedFieldId, setSelectedFieldId, setPreviousPanelId, setCommentsPanelOpen } = useEditorContext();
 
