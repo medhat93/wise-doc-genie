@@ -422,7 +422,7 @@ const EditorTopBar = () => {
       <AssignDialog open={assignOpen} onOpenChange={setAssignOpen} />
       <ShareDialog open={shareOpen} onOpenChange={setShareOpen} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <SendDialog open={sendOpen} onOpenChange={onOpenChange => setSendOpen(onOpenChange)} onConfirm={handleSend} />
+      <SendDialog open={sendOpen} onOpenChange={setSendOpen} onConfirm={handleSend} />
     </>
   );
 };
