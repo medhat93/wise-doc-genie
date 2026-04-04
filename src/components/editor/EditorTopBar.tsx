@@ -302,11 +302,6 @@ const EditorTopBar = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
 
-  const handleSend = () => {
-    setSendOpen(false);
-    toast.success("Document sent for signature!");
-    navigate("/");
-  };
 
   return (
     <>
