@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import StepIndicator from "@/components/StepIndicator";
 import EditorParticipantsPanel from "@/components/editor/EditorParticipantsPanel";
-import { EditorProvider, useEditorContext } from "@/components/editor/EditorContext";
+import { useEditorContext } from "@/components/editor/EditorContext";
 
 const ParticipantsPageInner = () => {
   const navigate = useNavigate();
