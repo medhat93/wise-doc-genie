@@ -51,7 +51,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays } from "date-fns";
-import { CalendarIcon, Check, Copy, Link, Send, Trash2 } from "lucide-react";
+import { CalendarIcon, Check, Copy, Link, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
