@@ -122,10 +122,7 @@ const EditorPageInner = () => {
       <EditorTopBar />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left sidebar — Fields */}
-        {!isMobile && <EditorFieldsSidebar />}
-
-        {/* Center — Document canvas */}
+        {/* Center — Document canvas (full width now) */}
         <EditorCanvas
           showToolbar={!isEsign}
           onFieldSelect={handleFieldSelect}
