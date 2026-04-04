@@ -54,8 +54,8 @@ const EditorSkeleton = () => (
 const EditorPageInner = () => {
   const [searchParams] = useSearchParams();
   const docType = searchParams.get("type") || "";
-  const mode = searchParams.get("mode") || "full";
-  const isEsign = mode === "esign";
+  const initialMode = searchParams.get("mode") || "full";
+  const [isEsign, setIsEsign] = useState(initialMode === "esign");
   const isMobile = useIsMobile();
   const { selectedFieldId, setSelectedFieldId, setPreviousPanelId, setCommentsPanelOpen } = useEditorContext();
 
@@ -119,7 +119,7 @@ const EditorPageInner = () => {
       transition={{ duration: 0.3 }}
       className="h-screen flex flex-col bg-background"
     >
-      <EditorTopBar />
+      <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Center — Document canvas (full width now) */}
