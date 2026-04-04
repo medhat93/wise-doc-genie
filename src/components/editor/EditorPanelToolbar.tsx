@@ -37,7 +37,7 @@ const PANELS: PanelItem[] = [
   { id: "ai", label: "AI Assistant", shortcut: "⌘2", useAiIcon: true, clmOnly: true },
   { id: "comments", label: "Comments", shortcut: "⌘3", icon: Comment01Icon },
   { id: "properties", label: "Properties", shortcut: "⌘4", icon: PropertyEditIcon, clmOnly: true },
-  { id: "fields", label: "Smart Fields", shortcut: "⌘5", icon: TextField, clmOnly: true },
+  { id: "fields", label: "Variables", shortcut: "⌘5", icon: TextField, clmOnly: true },
   { id: "workflow", label: "Workflow", shortcut: "⌘6", icon: WorkflowSquare10Icon, clmOnly: true },
 ];
 
