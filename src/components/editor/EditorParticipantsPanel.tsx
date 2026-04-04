@@ -126,8 +126,8 @@ const VERIFICATION_SPECS_LABELS: Record<VerificationSpecs, { label: string; tool
   with_id_biometrics: { label: "With national ID & Biometrics", tooltip: "Highest security — requires national ID plus biometric verification via Nafath" },
 };
 
-/* ── Mock data ── */
-const INITIAL_PARTICIPANTS: Participant[] = [
+/* ── Demo data (loaded on demand) ── */
+const DEMO_PARTICIPANTS: Participant[] = [
   { id: "p1", name: "Ahmed Al-Rashid", email: "ahmed@signit.sa", role: "signer", color: COLORS[0], order: 1, language: "en", sendingMethod: "email", needsVerification: false },
   { id: "p2", name: "Sarah Johnson", email: "sarah@acme.com", role: "signer", color: COLORS[1], order: 2, language: "en", sendingMethod: "email", needsVerification: true, verificationMethod: "sms" },
   { id: "p3", name: "Adel Al-Dossary", email: "adel@enterprise.sa", role: "signer", color: COLORS[3], order: 2, language: "en", sendingMethod: "email", needsVerification: true, verificationMethod: "nafath_only", verificationSpecs: "with_id_biometrics", nationalId: "1087654321" },
