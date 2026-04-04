@@ -72,7 +72,7 @@ const EditorPageInner = () => {
         {!isMobile && <EditorFieldsSidebar />}
 
         {/* Center — Document canvas */}
-        <EditorCanvas showToolbar={showToolbar} onFieldSelect={handleFieldSelect} />
+        <EditorCanvas showToolbar={showToolbar} onFieldSelect={handleFieldSelect} onOpenComments={handleOpenComments} />
 
         {/* Desktop panel */}
         {!isMobile && (
