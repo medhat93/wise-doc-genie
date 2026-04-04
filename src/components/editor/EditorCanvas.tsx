@@ -586,11 +586,21 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
   const inlineComments = comments.filter((c) => c.type === "inline");
 
   // Map section refs to approximate vertical positions for margin comments
-  const SECTION_Y_MAP: Record<string, number> = {
+  const KNOWN_SECTION_Y: Record<string, number> = {
     "Section 2: Scope of Services": 320,
     "Section 3: Payment Terms": 460,
     "Section 5: Termination": 620,
   };
+
+  // Build dynamic Y map: known sections keep their position, new comments stack below
+  const SECTION_Y_MAP = { ...KNOWN_SECTION_Y };
+  let nextY = 720;
+  inlineComments.forEach((c) => {
+    if (!SECTION_Y_MAP[c.sectionRef]) {
+      SECTION_Y_MAP[c.sectionRef] = nextY;
+      nextY += 80;
+    }
+  });
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -662,9 +672,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
                   {doc.id === "doc-1" && !commentsPanelOpen && (
                     <div className="absolute top-0 right-0 translate-x-[calc(100%+12px)] hidden xl:block" style={{ width: 200 }}>
                       <AnimatePresence>
-                        {inlineComments
-                          .filter((c) => SECTION_Y_MAP[c.sectionRef] !== undefined)
-                          .map((c) => (
+                        {inlineComments.map((c) => (
                             <div key={c.id} style={{ position: "absolute", top: SECTION_Y_MAP[c.sectionRef] || 0 }} className="mb-2">
                               <MarginComment
                                 comment={c}
