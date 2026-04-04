@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useEditorContext } from "./EditorContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -129,6 +129,18 @@ const VERIFICATION_SPECS_LABELS: Record<VerificationSpecs, { label: string; tool
   with_id: { label: "With national ID", tooltip: "Signer's national ID is pre-validated before Nafath prompt" },
   with_id_biometrics: { label: "With national ID & Biometrics", tooltip: "Highest security — requires national ID plus biometric verification via Nafath" },
 };
+
+/* ── Contacts list (mock) ── */
+const CONTACTS = [
+  { name: "Ahmed Al-Rashid", email: "ahmed@signit.sa", phone: "+966 50 111 2222" },
+  { name: "Sarah Johnson", email: "sarah@acme.com", phone: "+1 555 123 4567" },
+  { name: "Adel Al-Dossary", email: "adel@enterprise.sa", phone: "+966 55 333 4444" },
+  { name: "Mohammed Al-Faisal", email: "mohammed@legal.sa", phone: "+966 50 123 4567" },
+  { name: "Fatima Al-Zahra", email: "fatima@company.com", phone: "+966 54 555 6666" },
+  { name: "Ali Hassan", email: "ali@corp.sa", phone: "+966 56 777 8888" },
+  { name: "Amal Khouri", email: "amal@design.sa", phone: "+966 50 999 0000" },
+  { name: "David Chen", email: "david@company.com", phone: "+1 555 987 6543" },
+];
 
 /* ── Demo data ── */
 const DEMO_PARTICIPANTS: Participant[] = [
@@ -300,26 +312,66 @@ const ParticipantFormCard = ({
       </Button>
     </div>
 
-    {/* Row 2: Dynamic fields */}
-    <div className="flex gap-2">
-      <Input
-        placeholder="Name"
-        value={form.name}
-        onChange={(e) => updateForm({ name: e.target.value })}
-        className="h-7 text-xs flex-1"
-      />
+    {/* Row 2: Name with contact autocomplete */}
+    <div className="space-y-2">
+      <div className="relative">
+        <Input
+          placeholder="Name"
+          value={form.name}
+          onChange={(e) => updateForm({ name: e.target.value })}
+          className="h-8 text-xs"
+          autoComplete="off"
+        />
+        {form.name.length >= 1 && (() => {
+          const matches = CONTACTS.filter(c =>
+            c.name.toLowerCase().includes(form.name.toLowerCase()) &&
+            c.name.toLowerCase() !== form.name.toLowerCase()
+          );
+          if (matches.length === 0) return null;
+          return (
+            <div className="absolute z-50 top-full left-0 right-0 mt-1 border rounded-lg bg-popover shadow-md max-h-[160px] overflow-y-auto">
+              {matches.map((c) => (
+                <button
+                  key={c.email}
+                  type="button"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent transition-colors"
+                  onClick={() => {
+                    updateForm({
+                      name: c.name,
+                      email: c.email,
+                      phoneNumber: c.phone.replace(/^\+\d+\s*/, ""),
+                    });
+                  }}
+                >
+                  <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[9px] font-semibold text-primary">
+                      {c.name.split(" ").map(n => n[0]).join("")}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium truncate">{c.name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{c.email}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* Row 3: Email or Phone */}
       {form.sendingMethod === "email" ? (
         <Input
           placeholder="Email"
           type="email"
           value={form.email}
           onChange={(e) => updateForm({ email: e.target.value })}
-          className="h-7 text-xs flex-1"
+          className="h-8 text-xs"
         />
       ) : (
-        <div className="flex gap-1 flex-1">
+        <div className="flex gap-1">
           <Select value={form.phoneCode} onValueChange={(v) => updateForm({ phoneCode: v })}>
-            <SelectTrigger className="h-7 w-[68px] text-xs">
+            <SelectTrigger className="h-8 w-[72px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -333,7 +385,7 @@ const ParticipantFormCard = ({
             placeholder="Phone number"
             value={form.phoneNumber}
             onChange={(e) => updateForm({ phoneNumber: e.target.value })}
-            className="h-7 text-xs flex-1"
+            className="h-8 text-xs flex-1"
           />
         </div>
       )}
