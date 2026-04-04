@@ -405,7 +405,7 @@ const EditorTopBar = ({ onOpenFieldsPanel }: { onOpenFieldsPanel?: (participantI
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="sm" className="h-8 text-xs ml-1 gap-1.5" onClick={() => setSendOpen(true)}>
+              <Button size="sm" className="h-8 text-xs ml-1 gap-1.5" onClick={handleSendClick}>
                 <HugeiconsIcon icon={SentIcon} size={14} />
                 Send
               </Button>
@@ -419,6 +419,23 @@ const EditorTopBar = ({ onOpenFieldsPanel }: { onOpenFieldsPanel?: (participantI
       <ShareDialog open={shareOpen} onOpenChange={setShareOpen} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <ReviewSendDialog open={sendOpen} onOpenChange={setSendOpen} />
+      <MissingFieldsWarningDialog
+        open={warningOpen}
+        onOpenChange={setWarningOpen}
+        affectedParticipants={signersWithNoFields}
+        allSignersAffected={signersWithNoFields.length === participants.filter(p => p.role === "signer").length}
+        onGoBack={() => {
+          setWarningOpen(false);
+          const first = signersWithNoFields[0];
+          if (first && onOpenFieldsPanel) {
+            onOpenFieldsPanel(first.id);
+          }
+        }}
+        onSendAnyway={() => {
+          setWarningOpen(false);
+          setSendOpen(true);
+        }}
+      />
     </>
   );
 };
