@@ -70,6 +70,8 @@ export const COMMENT_SECTIONS: Record<string, { docIndex: number; selector: stri
   "Section 5: Termination": { docIndex: 0, selector: "5. Term and Termination" },
 };
 
+export type AcknowledgmentLevel = 'none' | 'must_view' | 'must_view_accept';
+
 interface EditorContextType {
   participants: Participant[];
   setParticipants: React.Dispatch<React.SetStateAction<Participant[]>>;
@@ -88,6 +90,8 @@ interface EditorContextType {
   variableValues: Record<string, string>;
   setVariableValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   usedVariables: string[];
+  documentAcknowledgments: Record<string, Record<string, AcknowledgmentLevel>>;
+  setDocumentAcknowledgments: React.Dispatch<React.SetStateAction<Record<string, Record<string, AcknowledgmentLevel>>>>;
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
