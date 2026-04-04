@@ -65,8 +65,7 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
         {panelId === "annotations" ? (
           <EditorFieldsSidebar asPanel />
         ) : panelId === "ai" ? (
-        ) : panelId === "participants" ? (
-          <EditorParticipantsPanel />
+          <EditorAIPanel docType={docType} />
         ) : panelId === "fields" ? (
           <EditorSmartFieldsPanel />
         ) : panelId === "properties" ? (
