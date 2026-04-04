@@ -336,6 +336,34 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-medium text-muted-foreground">
             Draft
           </Badge>
+
+          {/* eSign / CLM mode switcher */}
+          {onToggleEsign && (
+            <div className="flex items-center h-7 rounded-md border bg-muted/50 p-0.5 ml-1">
+              <button
+                onClick={!isEsign ? undefined : onToggleEsign}
+                className={cn(
+                  "h-6 px-2.5 rounded text-[10px] font-medium transition-all",
+                  !isEsign
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                CLM
+              </button>
+              <button
+                onClick={isEsign ? undefined : onToggleEsign}
+                className={cn(
+                  "h-6 px-2.5 rounded text-[10px] font-medium transition-all",
+                  isEsign
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                eSign
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Center — Step indicator */}
