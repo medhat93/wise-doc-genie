@@ -33,9 +33,10 @@ import {
   Edit02Icon,
   SentIcon,
 } from "@hugeicons/core-free-icons";
-import { FileText, FilePlus, Paperclip } from "lucide-react";
+import { FileText, FilePlus, Paperclip, RotateCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AiIcon from "@/components/AiIcon";
+import RotatePagesDialog from "@/components/RotatePagesDialog";
 
 import {
   DndContext,
