@@ -22,7 +22,7 @@ export type PanelId =
   | "properties"
   | "fields"
   | "workflow"
-  | "annotations";
+  | "field-settings";
 
 interface PanelItem {
   id: PanelId;
