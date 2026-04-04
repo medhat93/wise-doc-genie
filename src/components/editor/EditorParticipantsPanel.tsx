@@ -46,12 +46,14 @@ import {
   Mail,
   Eye,
   User,
+  Users,
   Bookmark,
   MousePointer,
   List,
   Info,
   MessageSquare,
   X,
+  Sparkles,
 } from "lucide-react";
 import {
   DndContext,
@@ -124,8 +126,8 @@ const VERIFICATION_SPECS_LABELS: Record<VerificationSpecs, { label: string; tool
   with_id_biometrics: { label: "With national ID & Biometrics", tooltip: "Highest security — requires national ID plus biometric verification via Nafath" },
 };
 
-/* ── Mock data ── */
-const INITIAL_PARTICIPANTS: Participant[] = [
+/* ── Demo data (loaded on demand) ── */
+const DEMO_PARTICIPANTS: Participant[] = [
   { id: "p1", name: "Ahmed Al-Rashid", email: "ahmed@signit.sa", role: "signer", color: COLORS[0], order: 1, language: "en", sendingMethod: "email", needsVerification: false },
   { id: "p2", name: "Sarah Johnson", email: "sarah@acme.com", role: "signer", color: COLORS[1], order: 2, language: "en", sendingMethod: "email", needsVerification: true, verificationMethod: "sms" },
   { id: "p3", name: "Adel Al-Dossary", email: "adel@enterprise.sa", role: "signer", color: COLORS[3], order: 2, language: "en", sendingMethod: "email", needsVerification: true, verificationMethod: "nafath_only", verificationSpecs: "with_id_biometrics", nationalId: "1087654321" },
@@ -225,8 +227,8 @@ const showNafathBanner = (method?: VerificationMethodType) => {
 
 /* ══════════ MAIN PANEL ══════════ */
 const EditorParticipantsPanel = () => {
-  const [participants, setParticipants] = useState<Participant[]>(INITIAL_PARTICIPANTS);
-  const [sequential, setSequential] = useState(true);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [sequential, setSequential] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<AddFormState>(INITIAL_FORM);
   const [selectWorkflowOpen, setSelectWorkflowOpen] = useState(false);
@@ -235,9 +237,7 @@ const EditorParticipantsPanel = () => {
   const [showSaveWorkflow, setShowSaveWorkflow] = useState(false);
   const [visibility, setVisibility] = useState<DocumentVisibility>(() => {
     const v: DocumentVisibility = {};
-    MOCK_DOCUMENTS.forEach((d) => {
-      v[d.id] = INITIAL_PARTICIPANTS.map((p) => p.id);
-    });
+    MOCK_DOCUMENTS.forEach((d) => { v[d.id] = []; });
     return v;
   });
 
@@ -399,67 +399,68 @@ const EditorParticipantsPanel = () => {
         Add people who need to sign, review, or receive this document
       </p>
 
-      {/* ── Participant list ── */}
-      <div className="space-y-2">
-        {participants.map((p) => {
-          const roleStyle = ROLE_STYLES[p.role];
-          const verifySummary = getVerificationSummary(p);
-          return (
-            <div key={p.id} className="border rounded-lg p-3 space-y-1.5">
-              {/* Row 1: Name + email/phone + menu */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                  <span className="text-sm font-medium truncate">{p.name}</span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {p.sendingMethod === "email" ? p.email : p.sendingPhone || ""}
-                  </span>
+      {/* ── Participant list or empty state ── */}
+      {participants.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 gap-2">
+          <Users size={48} className="text-muted-foreground opacity-40" />
+          <p className="text-sm font-medium text-center">No participants added yet</p>
+          <p className="text-xs text-muted-foreground text-center">Add signers, approvers, or viewers to this document</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {participants.map((p) => {
+            const roleStyle = ROLE_STYLES[p.role];
+            const verifySummary = getVerificationSummary(p);
+            return (
+              <div key={p.id} className="border rounded-lg p-3 space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                    <span className="text-sm font-medium truncate">{p.name}</span>
+                    <span className="text-xs text-muted-foreground truncate">
+                      {p.sendingMethod === "email" ? p.email : p.sendingPhone || ""}
+                    </span>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
+                        <MoreHorizontal size={14} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem>Change role</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => removeParticipant(p.id)}>
+                        Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
-                      <MoreHorizontal size={14} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                    <DropdownMenuItem>Change role</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={() => removeParticipant(p.id)}>
-                      Remove
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Row 2: Badges */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-medium border", roleStyle.className)}>
-                  {roleStyle.label}
-                </Badge>
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border gap-1 flex items-center">
-                  {getSendingIcon(p.sendingMethod)}
-                  {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
-                </Badge>
-                {p.language === "ar" && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border text-muted-foreground">
-                    AR
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-medium border", roleStyle.className)}>
+                    {roleStyle.label}
                   </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border gap-1 flex items-center">
+                    {getSendingIcon(p.sendingMethod)}
+                    {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
+                  </Badge>
+                  {p.language === "ar" && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border text-muted-foreground">
+                      AR
+                    </Badge>
+                  )}
+                </div>
+                {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && p.sendingPhone && (
+                  <p className="text-xs text-muted-foreground pl-4">{p.sendingPhone}</p>
+                )}
+                {verifySummary && (
+                  <p className="text-[10px] text-muted-foreground pl-4">{verifySummary}</p>
                 )}
               </div>
-
-              {/* Row 3: Phone (if SMS/WhatsApp sending) */}
-              {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && p.sendingPhone && (
-                <p className="text-xs text-muted-foreground pl-4">{p.sendingPhone}</p>
-              )}
-
-              {/* Row 4: Verification summary */}
-              {verifySummary && (
-                <p className="text-[10px] text-muted-foreground pl-4">{verifySummary}</p>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* ── Add participant button / form ── */}
       {!showAddForm ? (
@@ -869,7 +870,41 @@ const EditorParticipantsPanel = () => {
         </div>
       </div>
 
-      {/* ── Load Workflow Dialog ── */}
+      <Separator />
+
+      {/* ── Demo button ── */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 text-xs gap-1.5 w-full text-muted-foreground hover:text-foreground border border-dashed"
+        onClick={() => {
+          if (participants.length > 0) {
+            setParticipants([]);
+            setSequential(false);
+            setVisibility(() => {
+              const v: DocumentVisibility = {};
+              MOCK_DOCUMENTS.forEach((d) => { v[d.id] = []; });
+              return v;
+            });
+            toast.success("Participants cleared");
+          } else {
+            setParticipants(DEMO_PARTICIPANTS);
+            setSequential(true);
+            setVisibility(() => {
+              const v: DocumentVisibility = {};
+              MOCK_DOCUMENTS.forEach((d) => {
+                v[d.id] = DEMO_PARTICIPANTS.map((p) => p.id);
+              });
+              return v;
+            });
+            toast.success("Demo participants loaded");
+          }
+        }}
+      >
+        <Sparkles size={14} />
+        {participants.length > 0 ? "Clear demo participants" : "Load demo participants"}
+      </Button>
+
       <Dialog open={selectWorkflowOpen} onOpenChange={setSelectWorkflowOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
