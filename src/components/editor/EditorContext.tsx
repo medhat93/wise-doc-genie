@@ -129,6 +129,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [pendingCommentRef, setPendingCommentRef] = useState<string | null>(null);
   const [commentsPanelOpen, setCommentsPanelOpen] = useState(false);
   const [variableValues, setVariableValues] = useState<Record<string, string>>(INITIAL_VARIABLE_VALUES);
+  const [documentAcknowledgments, setDocumentAcknowledgments] = useState<Record<string, Record<string, AcknowledgmentLevel>>>({});
 
   return (
     <EditorContext.Provider value={{
@@ -141,6 +142,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       commentsPanelOpen, setCommentsPanelOpen,
       variableValues, setVariableValues,
       usedVariables: USED_VARIABLES,
+      documentAcknowledgments, setDocumentAcknowledgments,
     }}>
       {children}
     </EditorContext.Provider>
