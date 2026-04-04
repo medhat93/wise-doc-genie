@@ -665,8 +665,8 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
                       DOC_BORDER[doc.docType]
                     )}
                   >
+                    <div ref={doc.id === "doc-1" ? doc1Ref : undefined}>
                     {doc.id === "doc-1" ? (
-                      <Doc1Content comments={comments} onClickHighlight={handleClickHighlight} />
                     ) : doc.id === "doc-2" ? (
                       <Doc2Content />
                     ) : (
