@@ -6,7 +6,7 @@ import EditorTopBar from "@/components/editor/EditorTopBar";
 import EditorCanvas from "@/components/editor/EditorCanvas";
 import EditorPanelToolbar, { type PanelId } from "@/components/editor/EditorPanelToolbar";
 import EditorPanel from "@/components/editor/EditorPanel";
-import { EditorProvider, useEditorContext } from "@/components/editor/EditorContext";
+import { useEditorContext } from "@/components/editor/EditorContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
@@ -185,10 +185,6 @@ const EditorPageInner = () => {
   );
 };
 
-const EditorPage = () => (
-  <EditorProvider>
-    <EditorPageInner />
-  </EditorProvider>
-);
+const EditorPage = () => <EditorPageInner />;
 
 export default EditorPage;
