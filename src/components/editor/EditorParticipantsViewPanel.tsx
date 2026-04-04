@@ -14,6 +14,7 @@ import {
 import {
   MoreHorizontal,
   Plus,
+  Minus,
   Mail,
   Phone,
   MessageSquare,
@@ -22,6 +23,7 @@ import {
   User,
   Users,
   Shield,
+  GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Participant, ParticipantRole, SendingMethod } from "./EditorParticipantsPanel";
