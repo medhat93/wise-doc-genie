@@ -500,7 +500,11 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments }: Edi
       setSelectedFieldId(null);
       onFieldSelect?.(null);
     }
-    setSelectionToolbar(null);
+    // Don't clear selection toolbar if there's an active text selection
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) {
+      setSelectionToolbar(null);
+    }
   }, [selectedFieldId, setSelectedFieldId, onFieldSelect]);
 
   // Text selection handler
