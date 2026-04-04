@@ -42,7 +42,6 @@ const PANELS: PanelItem[] = [
   { id: "properties", label: "Properties", shortcut: "⌘4", icon: PropertyEditIcon, clmOnly: true },
   { id: "fields", label: "Variables", shortcut: "⌘5", icon: TextField, clmOnly: true },
   { id: "workflow", label: "Workflow", shortcut: "⌘6", icon: WorkflowSquare10Icon, clmOnly: true },
-  { id: "participants", label: "Participants", shortcut: "⌘7", icon: UserMultiple02Icon },
 ];
 
 interface EditorPanelToolbarProps {
