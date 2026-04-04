@@ -7,6 +7,7 @@ import EditorParticipantsPanel from "./EditorParticipantsPanel";
 import EditorFieldSettings from "./EditorFieldSettings";
 import EditorSmartFieldsPanel from "./EditorSmartFieldsPanel";
 import EditorPropertiesPanel from "./EditorPropertiesPanel";
+import EditorCommentsPanel from "./EditorCommentsPanel";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   participants: "Participants",
