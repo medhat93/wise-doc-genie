@@ -617,9 +617,14 @@ const CreateDocument = () => {
               <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">1</div>
               <span className="text-xs font-medium text-foreground">Add Documents</span>
             </div>
-            <div className="w-8 h-px bg-border" />
+            <div className="w-6 h-px bg-border" />
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-xs font-semibold">2</div>
+              <span className="text-xs text-muted-foreground/50">Add Participants</span>
+            </div>
+            <div className="w-6 h-px bg-border" />
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-xs font-semibold">3</div>
               <span className="text-xs text-muted-foreground/50">Prepare & Send</span>
             </div>
           </div>
