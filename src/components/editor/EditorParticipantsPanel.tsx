@@ -46,12 +46,14 @@ import {
   Mail,
   Eye,
   User,
+  Users,
   Bookmark,
   MousePointer,
   List,
   Info,
   MessageSquare,
   X,
+  Sparkles,
 } from "lucide-react";
 import {
   DndContext,
