@@ -245,11 +245,13 @@ function SortableDocCard({
   onRemove,
   onPreview,
   onChangeType,
+  onRotate,
 }: {
   doc: UploadedDocument;
   onRemove: (id: string) => void;
   onPreview: (doc: UploadedDocument) => void;
   onChangeType: (id: string, type: DocumentType) => void;
+  onRotate: (doc: UploadedDocument) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: doc.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
