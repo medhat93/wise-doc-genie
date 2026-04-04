@@ -227,8 +227,8 @@ const showNafathBanner = (method?: VerificationMethodType) => {
 
 /* ══════════ MAIN PANEL ══════════ */
 const EditorParticipantsPanel = () => {
-  const [participants, setParticipants] = useState<Participant[]>(INITIAL_PARTICIPANTS);
-  const [sequential, setSequential] = useState(true);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [sequential, setSequential] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<AddFormState>(INITIAL_FORM);
   const [selectWorkflowOpen, setSelectWorkflowOpen] = useState(false);
