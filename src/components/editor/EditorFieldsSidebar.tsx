@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -66,18 +66,16 @@ const FIELD_CATEGORIES: { label: string; fields: SidebarFieldType[] }[] = [
 ];
 
 const EditorFieldsSidebar = () => {
-  const { participants, isDraggingField, setIsDraggingField } = useEditorContext();
+  const { participants } = useEditorContext();
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
 
   const hasParticipants = participants.length > 0;
   const activeParticipant = participants.find((p) => p.id === selectedParticipantId) || participants[0];
 
   // Auto-select first participant when participants change
-  useEffect(() => {
-    if (hasParticipants && !participants.find((p) => p.id === selectedParticipantId)) {
-      setSelectedParticipantId(participants[0].id);
-    }
-  }, [participants, hasParticipants, selectedParticipantId]);
+  if (hasParticipants && !activeParticipant) {
+    setSelectedParticipantId(participants[0].id);
+  }
 
   const handleDragStart = (e: React.DragEvent, field: SidebarFieldType) => {
     if (!hasParticipants || !activeParticipant) {
@@ -95,11 +93,6 @@ const EditorFieldsSidebar = () => {
       participantColor: activeParticipant.color,
     }));
     e.dataTransfer.effectAllowed = "copy";
-    setIsDraggingField(true);
-  };
-
-  const handleDragEnd = () => {
-    setIsDraggingField(false);
   };
 
   const handleFieldClick = () => {
@@ -108,25 +101,8 @@ const EditorFieldsSidebar = () => {
     }
   };
 
-  // Listen for Escape key during drag to cancel
-  useEffect(() => {
-    if (!isDraggingField) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsDraggingField(false);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isDraggingField, setIsDraggingField]);
-
   return (
-    <div
-      className={cn(
-        "w-[260px] border-r bg-card flex flex-col flex-shrink-0 overflow-hidden transition-opacity duration-200",
-        isDraggingField && "opacity-70"
-      )}
-    >
+    <div className="w-[260px] border-r bg-card flex flex-col flex-shrink-0 overflow-hidden">
       {/* Sticky header */}
       <div className="p-3 border-b flex-shrink-0 space-y-2">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fields</p>
@@ -194,7 +170,6 @@ const EditorFieldsSidebar = () => {
                   key={field.id}
                   draggable={!disabled}
                   onDragStart={(e) => handleDragStart(e, field)}
-                  onDragEnd={handleDragEnd}
                   onClick={disabled ? handleFieldClick : undefined}
                   className={cn(
                     "flex items-center gap-2.5 h-10 px-2 rounded-md transition-colors group",
