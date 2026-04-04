@@ -7,10 +7,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { X } from "lucide-react";
+import { X, Copy, Trash2 } from "lucide-react";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
+import { useEditorContext } from "./EditorContext";
+import { toast } from "sonner";
 
 /* ── Mock documents ── */
 export const MOCK_DOCUMENTS: EditorDocument[] = [
@@ -148,34 +150,20 @@ const Doc3Content = () => (
     <h1 className="text-2xl font-bold text-foreground mb-1">Certificate of Insurance</h1>
     <p className="text-xs text-muted-foreground mb-8">Reference Document — Attachment</p>
     <div className="space-y-3 text-sm text-foreground/80 mb-6">
-      <div className="flex justify-between border-b border-dashed border-border pb-2">
-        <span className="font-medium text-foreground">Company Name</span>
-        <span>Acme Professional Services LLC</span>
-      </div>
-      <div className="flex justify-between border-b border-dashed border-border pb-2">
-        <span className="font-medium text-foreground">Policy Number</span>
-        <span>INS-2026-04871-GL</span>
-      </div>
-      <div className="flex justify-between border-b border-dashed border-border pb-2">
-        <span className="font-medium text-foreground">Coverage Type</span>
-        <span>General Liability</span>
-      </div>
-      <div className="flex justify-between border-b border-dashed border-border pb-2">
-        <span className="font-medium text-foreground">Coverage Amount</span>
-        <span>$2,000,000 per occurrence</span>
-      </div>
-      <div className="flex justify-between border-b border-dashed border-border pb-2">
-        <span className="font-medium text-foreground">Effective Date</span>
-        <span>January 1, 2026</span>
-      </div>
-      <div className="flex justify-between border-b border-dashed border-border pb-2">
-        <span className="font-medium text-foreground">Expiration Date</span>
-        <span>December 31, 2026</span>
-      </div>
-      <div className="flex justify-between pb-2">
-        <span className="font-medium text-foreground">Insurance Provider</span>
-        <span>National Indemnity Company</span>
-      </div>
+      {[
+        ["Company Name", "Acme Professional Services LLC"],
+        ["Policy Number", "INS-2026-04871-GL"],
+        ["Coverage Type", "General Liability"],
+        ["Coverage Amount", "$2,000,000 per occurrence"],
+        ["Effective Date", "January 1, 2026"],
+        ["Expiration Date", "December 31, 2026"],
+        ["Insurance Provider", "National Indemnity Company"],
+      ].map(([label, value], i, arr) => (
+        <div key={label} className={cn("flex justify-between pb-2", i < arr.length - 1 && "border-b border-dashed border-border")}>
+          <span className="font-medium text-foreground">{label}</span>
+          <span>{value}</span>
+        </div>
+      ))}
     </div>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
       This certificate is issued as a matter of information only and confers no rights upon the
@@ -229,79 +217,142 @@ const ScrollIndicator = ({ doc }: { doc: EditorDocument | null }) => (
   </AnimatePresence>
 );
 
-/* ══════════ MAIN ══════════ */
-interface EditorCanvasProps {
-  showToolbar?: boolean;
-}
-
-/* ── Pre-placed mock fields (shown on first doc) ── */
-const MOCK_PLACED_FIELDS: PlacedField[] = [
-  { id: "f1", fieldTypeId: "signature", participantId: "p1", participantName: "Ahmed Al-Rashid", participantColor: "#4F46E5", page: 1, x: 60, y: 680, width: 200, height: 50 },
-  { id: "f2", fieldTypeId: "date", participantId: "p1", participantName: "Ahmed Al-Rashid", participantColor: "#4F46E5", page: 1, x: 300, y: 690, width: 120, height: 36 },
-  { id: "f3", fieldTypeId: "signature", participantId: "p2", participantName: "Sarah Johnson", participantColor: "#DC2626", page: 1, x: 60, y: 760, width: 200, height: 50 },
-];
-
 /* ── Field overlay component ── */
 const FieldOverlay = ({
   field,
+  isSelected,
+  onSelect,
   onRemove,
+  onDuplicate,
 }: {
   field: PlacedField;
-  onRemove: (id: string) => void;
+  isSelected: boolean;
+  onSelect: () => void;
+  onRemove: () => void;
+  onDuplicate: () => void;
 }) => {
   const ft = FIELD_TYPES.find((f) => f.id === field.fieldTypeId);
   const Icon = ft?.icon;
+  const label = ft?.label || field.fieldTypeId;
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <div
-          className="absolute group cursor-move flex items-center gap-1.5 px-2 select-none"
+          onClick={(e) => { e.stopPropagation(); onSelect(); }}
+          className={cn(
+            "absolute select-none transition-all",
+            isSelected ? "cursor-move z-20" : "cursor-move z-10 group"
+          )}
           style={{
             left: field.x,
             top: field.y,
             width: field.width,
             height: field.height,
             backgroundColor: `${field.participantColor}10`,
-            border: `2px dashed ${field.participantColor}`,
+            border: isSelected
+              ? `2px solid ${field.participantColor}`
+              : `1.5px dashed ${field.participantColor}`,
             borderRadius: 4,
           }}
         >
-          {Icon && <Icon size={12} style={{ color: field.participantColor }} className="flex-shrink-0" />}
-          <span className="text-[9px] font-medium truncate" style={{ color: field.participantColor }}>
-            {ft?.label} — {field.participantName.split(" ")[0]}
-          </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onRemove(field.id); }}
-            className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-          >
-            <X size={8} />
-          </button>
-          <div
-            className="absolute bottom-0 right-0 h-2.5 w-2.5 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ backgroundColor: field.participantColor, borderRadius: "0 0 3px 0" }}
-          />
+          {/* Placeholder text */}
+          <div className="flex items-center gap-1 px-2 h-full overflow-hidden">
+            {Icon && <Icon size={11} style={{ color: field.participantColor }} className="flex-shrink-0" />}
+            <span className="text-[10px] truncate" style={{ color: field.participantColor }}>
+              {label}
+            </span>
+          </div>
+
+          {/* Resize handle (selected) */}
+          {isSelected && (
+            <div
+              className="absolute -bottom-0.5 -right-0.5 h-2 w-2 cursor-nwse-resize rounded-sm"
+              style={{ backgroundColor: field.participantColor }}
+            />
+          )}
+
+          {/* Floating toolbar (selected) */}
+          {isSelected && (
+            <div
+              className="absolute -bottom-8 left-0 flex items-center gap-1 bg-card border shadow-sm rounded-md px-1.5 py-0.5 z-30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={onDuplicate}
+                className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent"
+              >
+                <Copy size={10} />
+              </button>
+              <button
+                onClick={onRemove}
+                className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-accent"
+              >
+                <Trash2 size={10} />
+              </button>
+              <div className="h-3 w-px bg-border mx-0.5" />
+              <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: field.participantColor }} />
+              <span className="text-[9px] text-muted-foreground whitespace-nowrap">{field.participantName.split(" ")[0]}</span>
+            </div>
+          )}
+
+          {/* Delete button (hover, unselected) */}
+          {!isSelected && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+            >
+              <X size={8} />
+            </button>
+          )}
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top" className="text-xs">
-        {ft?.label} — {field.participantName}
-      </TooltipContent>
+      {!isSelected && (
+        <TooltipContent side="top" className="text-xs">
+          {label} — {field.participantName}
+        </TooltipContent>
+      )}
     </Tooltip>
   );
 };
 
-const EditorCanvas = ({ showToolbar = true }: EditorCanvasProps) => {
+/* ══════════ MAIN ══════════ */
+interface EditorCanvasProps {
+  showToolbar?: boolean;
+  onFieldSelect?: (fieldId: string | null) => void;
+}
+
+const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
   const [showIndicator, setShowIndicator] = useState(false);
-  const [placedFields, setPlacedFields] = useState<PlacedField[]>(MOCK_PLACED_FIELDS);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId } = useEditorContext();
 
   const removePlacedField = useCallback((id: string) => {
     setPlacedFields((prev) => prev.filter((f) => f.id !== id));
-  }, []);
+    if (selectedFieldId === id) {
+      setSelectedFieldId(null);
+      onFieldSelect?.(null);
+    }
+  }, [selectedFieldId, setPlacedFields, setSelectedFieldId, onFieldSelect]);
 
-  /* Handle drop from panel */
+  const duplicateField = useCallback((field: PlacedField) => {
+    const newField = { ...field, id: `f${Date.now()}`, x: field.x + 20, y: field.y + 20 };
+    setPlacedFields((prev) => [...prev, newField]);
+    setSelectedFieldId(newField.id);
+    onFieldSelect?.(newField.id);
+    toast.success("Field duplicated");
+  }, [setPlacedFields, setSelectedFieldId, onFieldSelect]);
+
+  const handleFieldSelect = useCallback((fieldId: string) => {
+    setSelectedFieldId(fieldId);
+    onFieldSelect?.(fieldId);
+  }, [setSelectedFieldId, onFieldSelect]);
+
+  /* Handle drop from sidebar */
   const handleDrop = useCallback((e: React.DragEvent, docId: string) => {
     e.preventDefault();
     const data = e.dataTransfer.getData("application/field-type");
@@ -324,8 +375,10 @@ const EditorCanvas = ({ showToolbar = true }: EditorCanvasProps) => {
         height: parsed.defaultHeight,
       };
       setPlacedFields((prev) => [...prev, newField]);
+      setSelectedFieldId(newField.id);
+      onFieldSelect?.(newField.id);
     } catch {}
-  }, []);
+  }, [setPlacedFields, setSelectedFieldId, onFieldSelect]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     if (e.dataTransfer.types.includes("application/field-type")) {
@@ -333,6 +386,13 @@ const EditorCanvas = ({ showToolbar = true }: EditorCanvasProps) => {
       e.dataTransfer.dropEffect = "copy";
     }
   }, []);
+
+  const handleCanvasClick = useCallback(() => {
+    if (selectedFieldId) {
+      setSelectedFieldId(null);
+      onFieldSelect?.(null);
+    }
+  }, [selectedFieldId, setSelectedFieldId, onFieldSelect]);
 
   useEffect(() => {
     const root = scrollRef.current;
@@ -379,6 +439,7 @@ const EditorCanvas = ({ showToolbar = true }: EditorCanvasProps) => {
         ref={scrollRef}
         className="flex-1 overflow-y-auto bg-muted/20 relative"
         onScroll={handleScroll}
+        onClick={handleCanvasClick}
       >
         <ScrollIndicator doc={showIndicator ? activeDoc : null} />
 
@@ -402,7 +463,14 @@ const EditorCanvas = ({ showToolbar = true }: EditorCanvasProps) => {
                   {Content && <Content />}
                   {/* Field overlays */}
                   {docFields.map((f) => (
-                    <FieldOverlay key={f.id} field={f} onRemove={removePlacedField} />
+                    <FieldOverlay
+                      key={f.id}
+                      field={f}
+                      isSelected={selectedFieldId === f.id}
+                      onSelect={() => handleFieldSelect(f.id)}
+                      onRemove={() => removePlacedField(f.id)}
+                      onDuplicate={() => duplicateField(f)}
+                    />
                   ))}
                 </div>
               </div>
