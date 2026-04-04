@@ -5,6 +5,8 @@ import type { PanelId } from "./EditorPanelToolbar";
 import EditorAIPanel from "./EditorAIPanel";
 import EditorParticipantsPanel from "./EditorParticipantsPanel";
 import EditorFieldSettings from "./EditorFieldSettings";
+import EditorSmartFieldsPanel from "./EditorSmartFieldsPanel";
+import EditorPropertiesPanel from "./EditorPropertiesPanel";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   participants: "Participants",
