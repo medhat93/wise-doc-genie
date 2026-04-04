@@ -259,42 +259,6 @@ const ReviewSendDialog = ({
               ))}
             </Section>
 
-            {/* ── Fields summary ── */}
-            <Section
-              title="Fields summary"
-              warning={
-                placedFields.length === 0
-                  ? "No fields have been placed on any document."
-                  : undefined
-              }
-            >
-              <p className="text-sm text-muted-foreground">
-                {placedFields.length} field{placedFields.length !== 1 ? "s" : ""} across{" "}
-                {MOCK_DOCUMENTS.length} document{MOCK_DOCUMENTS.length !== 1 ? "s" : ""}
-              </p>
-              <div className="space-y-1">
-                {fieldsByParticipant.map((p) => (
-                  <div key={p.id} className="flex items-center gap-2">
-                    <div
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: p.color }}
-                    />
-                    <span className="text-sm">
-                      {p.name} · {p.fieldCount} field{p.fieldCount !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              {noFieldParticipants.map((p) => (
-                <div
-                  key={p.id}
-                  className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-xs"
-                >
-                  <AlertTriangle size={12} />
-                  {p.name} has no fields assigned — they will only need to view the document
-                </div>
-              ))}
-            </Section>
 
             {/* ── Message to recipients ── */}
             <Section title="Message to recipients">
