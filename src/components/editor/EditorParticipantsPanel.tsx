@@ -988,6 +988,34 @@ const EditorParticipantsPanel = () => {
         </div>
       )}
 
+      {/* ── Add participant button / form ── */}
+      {!showAddForm ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs gap-1.5 w-full"
+          onClick={() => { setShowAddForm(true); setEditingId(null); }}
+        >
+          <Plus size={14} />
+          Add new participant
+        </Button>
+      ) : (
+        <ParticipantFormCard
+          form={form}
+          updateForm={updateFormField}
+          onSubmit={handleAddParticipant}
+          onCancel={() => { setShowAddForm(false); setForm(INITIAL_FORM); }}
+          submitLabel="Add participant"
+          isDisabled={!form.name.trim()}
+        />
+      )}
+
+      {/* Add me */}
+      <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 w-full text-muted-foreground hover:text-foreground" onClick={handleAddMe}>
+        <User size={14} />
+        Add me as a signer
+      </Button>
+
       <Separator />
 
       {/* ── Document visibility ── */}
