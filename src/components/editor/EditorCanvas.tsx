@@ -77,13 +77,38 @@ const CommentHighlight = ({
   );
 };
 
-const Doc1Content = ({ comments, onClickHighlight }: { comments: Comment[]; onClickHighlight: (ref: string) => void }) => (
+/* ── Variable Token inline ── */
+const VariableToken = ({ token, values }: { token: string; values: Record<string, string> }) => {
+  const value = values[token]?.trim();
+  const filled = !!value;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className={cn(
+          "font-mono text-xs rounded-sm px-1 py-0.5 cursor-default inline",
+          filled
+            ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
+            : "bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300"
+        )}>
+          {filled ? value : `[${token}]`}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs">
+        <span className="font-mono">[{token}]</span> — {filled ? `"${value}"` : "Not set"}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
+const Doc1Content = ({ comments, onClickHighlight, variableValues }: { comments: Comment[]; onClickHighlight: (ref: string) => void; variableValues: Record<string, string> }) => (
   <>
     <h1 className="text-2xl font-bold text-foreground mb-1">Master Services Agreement</h1>
-    <p className="text-xs text-muted-foreground mb-8">Effective Date: April 4, 2026</p>
+    <p className="text-xs text-muted-foreground mb-8">Effective Date: <VariableToken token="Effective.Date" values={variableValues} /></p>
     <p className="text-sm leading-relaxed text-foreground/90 mb-6">
-      This Master Services Agreement ("Agreement") is entered into by and between the parties
-      identified below. This Agreement sets forth the terms and conditions under which the
+      This Master Services Agreement ("Agreement") is entered into by and between{" "}
+      <VariableToken token="Client.Name" values={variableValues} /> and{" "}
+      <VariableToken token="Sender.Company" values={variableValues} />.
+      This Agreement sets forth the terms and conditions under which the
       Service Provider shall provide services to the Client.
     </p>
     <h2 className="text-base font-semibold text-foreground mt-8 mb-3">1. Definitions</h2>
@@ -111,9 +136,9 @@ const Doc1Content = ({ comments, onClickHighlight }: { comments: Comment[]; onCl
     </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
       <CommentHighlight sectionRef="Section 3: Payment Terms" comments={comments} onClickHighlight={onClickHighlight}>
-        Client shall pay the Service Provider the fees set forth in each Statement of Work. Unless
-        otherwise specified, invoices shall be issued monthly and are due within thirty (30) days
-        of the invoice date. Late payments shall accrue interest at the rate of 1.5% per month.
+        Client shall pay the Service Provider the fees set forth in each Statement of Work,
+        for a total contract value of <VariableToken token="Document.Value" values={variableValues} /> payable within
+        thirty (30) days of the invoice date. Late payments shall accrue interest at the rate of 1.5% per month.
       </CommentHighlight>
     </p>
     <h2 className="text-base font-semibold text-foreground mt-8 mb-3">4. Confidentiality</h2>
@@ -145,6 +170,24 @@ const Doc1Content = ({ comments, onClickHighlight }: { comments: Comment[]; onCl
       This Agreement shall be governed by and construed in accordance with the laws of the State
       of Delaware, without regard to its conflict of laws provisions.
     </p>
+    {/* Signature area */}
+    <div className="mt-12 pt-6 border-t">
+      <p className="text-sm font-semibold text-foreground mb-4">Authorized Signatures</p>
+      <div className="grid grid-cols-2 gap-8">
+        <div className="space-y-2">
+          <div className="h-12 border-b border-foreground/30" />
+          <p className="text-xs text-foreground/70">
+            <VariableToken token="Signer.Name" values={variableValues} />,{" "}
+            <VariableToken token="Signer.Title" values={variableValues} /> at{" "}
+            <VariableToken token="Signer.Company" values={variableValues} />
+          </p>
+        </div>
+        <div className="space-y-2">
+          <div className="h-12 border-b border-foreground/30" />
+          <p className="text-xs text-foreground/70">Authorized Representative</p>
+        </div>
+      </div>
+    </div>
   </>
 );
 
