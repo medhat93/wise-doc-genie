@@ -82,29 +82,10 @@ const EditorPageInner = () => {
 
   const handlePanelToggle = (id: PanelId) => {
     setActivePanel((prev) => (prev === id ? null : id));
-    if (activePanel === "field-settings" && id !== "field-settings") {
-      setSelectedFieldId(null);
-    }
   };
 
   const handleFieldSelect = (fieldId: string | null) => {
-    if (fieldId) {
-      if (activePanel && activePanel !== "field-settings") {
-        setPreviousPanelId(activePanel);
-      }
-      setSelectedFieldId(fieldId);
-      setActivePanel("field-settings");
-    } else {
-      setSelectedFieldId(null);
-      if (activePanel === "field-settings") {
-        setActivePanel(null);
-      }
-    }
-  };
-
-  const handleFieldSettingsClose = () => {
-    setSelectedFieldId(null);
-    setActivePanel(null);
+    setSelectedFieldId(fieldId);
   };
 
   const handleOpenComments = useCallback(() => {
