@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import EditorTopBar from "@/components/editor/EditorTopBar";
-import EditorDocumentTabs from "@/components/editor/EditorDocumentTabs";
 import EditorCanvas from "@/components/editor/EditorCanvas";
 import EditorPanelToolbar, { type PanelId } from "@/components/editor/EditorPanelToolbar";
 import EditorPanel from "@/components/editor/EditorPanel";
@@ -20,7 +19,6 @@ const EditorPage = () => {
   const mode = searchParams.get("mode") || "full";
   const isMobile = useIsMobile();
 
-  const [activeTab, setActiveTab] = useState("1");
   const [activePanel, setActivePanel] = useState<PanelId | null>(null);
 
   const handlePanelToggle = (id: PanelId) => {
@@ -32,7 +30,6 @@ const EditorPage = () => {
   return (
     <div className="h-screen flex flex-col bg-background">
       <EditorTopBar />
-      <EditorDocumentTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="flex flex-1 overflow-hidden">
         <EditorCanvas showToolbar={showToolbar} />
