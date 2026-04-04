@@ -61,6 +61,7 @@ const CommentHighlight = ({
     <Tooltip>
       <TooltipTrigger asChild>
         <span
+          data-comment-section={sectionRef}
           className={cn("rounded-sm px-0.5 cursor-pointer transition-colors hover:opacity-80", bgClass)}
           onClick={(e) => { e.stopPropagation(); onClickHighlight(sectionRef); }}
         >
