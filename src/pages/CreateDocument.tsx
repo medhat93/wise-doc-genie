@@ -390,8 +390,9 @@ const CreateDocument = () => {
         parentId,
         childOrder: hasParent ? documents.filter((d) => d.role === "child").length + idx : undefined,
         isDriveImport: true,
-      driveProvider: providerName,
-    }));
+        driveProvider: providerName,
+      };
+    });
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
     toast({
