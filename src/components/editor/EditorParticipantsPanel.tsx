@@ -130,6 +130,18 @@ const VERIFICATION_SPECS_LABELS: Record<VerificationSpecs, { label: string; tool
   with_id_biometrics: { label: "With national ID & Biometrics", tooltip: "Highest security — requires national ID plus biometric verification via Nafath" },
 };
 
+/* ── Contacts list (mock) ── */
+const CONTACTS = [
+  { name: "Ahmed Al-Rashid", email: "ahmed@signit.sa", phone: "+966 50 111 2222" },
+  { name: "Sarah Johnson", email: "sarah@acme.com", phone: "+1 555 123 4567" },
+  { name: "Adel Al-Dossary", email: "adel@enterprise.sa", phone: "+966 55 333 4444" },
+  { name: "Mohammed Al-Faisal", email: "mohammed@legal.sa", phone: "+966 50 123 4567" },
+  { name: "Fatima Al-Zahra", email: "fatima@company.com", phone: "+966 54 555 6666" },
+  { name: "Ali Hassan", email: "ali@corp.sa", phone: "+966 56 777 8888" },
+  { name: "Amal Khouri", email: "amal@design.sa", phone: "+966 50 999 0000" },
+  { name: "David Chen", email: "david@company.com", phone: "+1 555 987 6543" },
+];
+
 /* ── Demo data ── */
 const DEMO_PARTICIPANTS: Participant[] = [
   { id: "p1", name: "Ahmed Al-Rashid", email: "ahmed@signit.sa", role: "signer", color: COLORS[0], order: 1, language: "en", sendingMethod: "email", needsVerification: false },
