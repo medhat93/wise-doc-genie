@@ -257,16 +257,27 @@ const CreateDocument = () => {
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const newDocs: UploadedDocument[] = fileArray.map((file) => ({
-      id: crypto.randomUUID(),
-      file,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      progress: 0,
-      status: "uploading" as const,
-      pageCount: Math.floor(Math.random() * 20) + 1,
-    }));
+    const existingParentId = documents.find((d) => d.role === "parent")?.id;
+    let firstNewParentId: string | undefined;
+    const newDocs: UploadedDocument[] = fileArray.map((file, idx) => {
+      const isParent = !existingParentId && idx === 0;
+      const docId = crypto.randomUUID();
+      if (isParent) firstNewParentId = docId;
+      const parentId = isParent ? undefined : (existingParentId ?? firstNewParentId);
+      return {
+        id: docId,
+        file,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        progress: 0,
+        status: "uploading" as const,
+        pageCount: Math.floor(Math.random() * 20) + 1,
+        role: isParent ? "parent" as const : "child" as const,
+        parentId,
+        childOrder: isParent ? undefined : documents.filter((d) => d.role === "child").length + idx,
+      };
+    });
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
 
@@ -364,17 +375,26 @@ const CreateDocument = () => {
   }, []);
 
   const handleDriveImport = useCallback((files: DriveFile[], providerName: string) => {
-    const newDocs: UploadedDocument[] = files.map((file) => ({
-      id: crypto.randomUUID(),
-      name: file.name,
-      size: file.size,
-      type: file.mimeType || "application/octet-stream",
-      progress: 0,
-      status: "uploading" as const,
-      pageCount: Math.floor(Math.random() * 15) + 1,
-      isDriveImport: true,
-      driveProvider: providerName,
-    }));
+    const newDocs: UploadedDocument[] = files.map((file, idx) => {
+      const hasParent = documents.length > 0 || idx > 0;
+      const parentId = hasParent
+        ? documents.find((d) => d.role === "parent")?.id
+        : undefined;
+      return {
+        id: crypto.randomUUID(),
+        name: file.name,
+        size: file.size,
+        type: file.mimeType || "application/octet-stream",
+        progress: 0,
+        status: "uploading" as const,
+        pageCount: Math.floor(Math.random() * 15) + 1,
+        role: hasParent ? "child" as const : "parent" as const,
+        parentId,
+        childOrder: hasParent ? documents.filter((d) => d.role === "child").length + idx : undefined,
+        isDriveImport: true,
+        driveProvider: providerName,
+      };
+    });
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
     toast({
@@ -433,6 +453,10 @@ const CreateDocument = () => {
   // ─── Templates ────────────────────────────────────────────────────────────
 
   const handleUseTemplate = useCallback((template: Template) => {
+    const hasParent = documents.length > 0;
+    const parentId = hasParent
+      ? documents.find((d) => d.role === "parent")?.id
+      : undefined;
     const queued: UploadedDocument = {
       id: crypto.randomUUID(),
       name: template.name,
@@ -443,6 +467,9 @@ const CreateDocument = () => {
       isUserTemplate: template.source === "user",
       gradient: template.gradient,
       pageCount: template.pageCount,
+      role: hasParent ? "child" : "parent",
+      parentId,
+      childOrder: hasParent ? documents.filter((d) => d.role === "child").length : undefined,
     };
     setDocuments((prev) => [...prev, queued]);
     setQueueManuallyOpened(true);
