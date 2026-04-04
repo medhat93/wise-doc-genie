@@ -44,7 +44,7 @@ import {
   Image,
   Link,
   MinusSquare,
-  FileBreak,
+  SeparatorHorizontal,
   Search,
   SpellCheck,
   Printer,
