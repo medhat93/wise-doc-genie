@@ -601,84 +601,66 @@ const CreateDocument = () => {
       onDrop={handleDrop}
     >
       {/* ─── Header ──────────────────────────────────────────────────────── */}
-      <header className="h-auto min-h-[3.5rem] md:h-16 border-b bg-background flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 flex-shrink-0 gap-2 sm:gap-0">
-        <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
-          <button
-            onClick={() => navigate(-1)}
-            className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <nav className="flex items-center gap-1.5 text-sm">
-            <span className="font-medium text-sm">New document</span>
-          </nav>
+      <header className="border-b bg-background flex-shrink-0">
+        <div className="h-auto min-h-[3.5rem] md:h-16 flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 gap-2 sm:gap-0">
+          <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
+            <button
+              onClick={() => navigate(-1)}
+              className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <nav className="flex items-center gap-1.5 text-sm">
+              <span className="font-medium text-sm">New document</span>
+            </nav>
+          </div>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-2 ml-auto sm:ml-4 border rounded-full px-3 py-1 bg-muted/50">
-                <Label htmlFor="mode-toggle" className="text-[10px] text-muted-foreground font-mono cursor-pointer">
-                  eSign
-                </Label>
-                <Switch
-                  id="mode-toggle"
-                  checked={isEsign}
-                  onCheckedChange={(checked) => setMode(checked ? "esign" : "full")}
-                  className="scale-75"
-                />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>Toggle between full creation and eSign-only mode</TooltipContent>
-          </Tooltip>
-        </div>
+          {/* Step indicator */}
+          <div className="hidden sm:flex items-center gap-3 absolute left-1/2 -translate-x-1/2">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">1</div>
+              <span className="text-xs font-medium text-foreground">Add Documents</span>
+            </div>
+            <div className="w-8 h-px bg-border" />
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-xs font-semibold">2</div>
+              <span className="text-xs text-muted-foreground/50">Prepare & Send</span>
+            </div>
+          </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          {hasDocuments && isMobile && (
-            <Button variant="outline" size="sm" onClick={() => setMobileQueueOpen(true)} className="mr-auto sm:mr-0">
-              <HugeiconsIcon icon={Files01Icon} size={16} className="mr-1.5" />
-              Queue ({count})
-            </Button>
-          )}
-          {isEsign ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="default"
-                  size="sm"
-                  disabled={isEmpty || !allComplete || !hasPrimary}
-                  className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
-                >
-                  <HugeiconsIcon icon={SentIcon} size={16} className="mr-1.5" />
-                  <span className="hidden sm:inline">Get signatures</span>
-                  <span className="sm:hidden">Sign</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Send documents for eSignature</TooltipContent>
-            </Tooltip>
-          ) : (
-            <>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={isEmpty || !hasPrimary} className={isEmpty || !hasPrimary ? "opacity-50" : ""}>
-                    <HugeiconsIcon icon={FileValidationIcon} size={16} className="sm:mr-1.5" />
-                    <span className="hidden sm:inline">Get signature</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Request signatures on your documents</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="default" size="sm" disabled={count === 0} onClick={count === 0 ? handleStartBlank : undefined}>
-                    <HugeiconsIcon icon={editButtonIcon} size={16} className="sm:mr-1.5" />
-                    <span className="hidden sm:inline">{editButtonLabel}</span>
-                    <span className="sm:hidden">{count === 0 ? "New" : "Edit"}</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {count === 0 ? "Open a blank document editor" : "Open documents in the editor"}
-                </TooltipContent>
-              </Tooltip>
-            </>
-          )}
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            {hasDocuments && isMobile && (
+              <Button variant="outline" size="sm" onClick={() => setMobileQueueOpen(true)} className="mr-auto sm:mr-0">
+                <HugeiconsIcon icon={Files01Icon} size={16} className="mr-1.5" />
+                Queue ({count})
+              </Button>
+            )}
+            {isEsign ? (
+              <Button
+                variant="default"
+                size="sm"
+                disabled={isEmpty || !allComplete || !hasPrimary}
+                className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
+                onClick={() => navigate("/editor", { state: { documents, mode } })}
+              >
+                <span className="hidden sm:inline">Next: Add Fields</span>
+                <span className="sm:hidden">Next</span>
+                <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
+              </Button>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                disabled={isEmpty || !allComplete || !hasPrimary}
+                className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
+                onClick={() => navigate("/editor", { state: { documents, mode } })}
+              >
+                <span className="hidden sm:inline">Next: Prepare Document</span>
+                <span className="sm:hidden">Next</span>
+                <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
