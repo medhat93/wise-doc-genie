@@ -378,8 +378,10 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect }: EditorCanvasProps) 
       setPlacedFields((prev) => [...prev, newField]);
       setSelectedFieldId(newField.id);
       onFieldSelect?.(newField.id);
+      // Dispatch event for placement mode tracking
+      window.dispatchEvent(new Event("field-placed"));
     } catch {}
-  }, [setPlacedFields, setSelectedFieldId, onFieldSelect]);
+    setIsDragOverCanvas(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     if (e.dataTransfer.types.includes("application/field-type")) {
