@@ -407,7 +407,7 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
         <TBtn icon={Image} label="Insert image" onClick={() => toast("Select an image to insert")} />
         <LinkInsertBtn />
         <TBtn icon={MinusSquare} label="Horizontal rule" onClick={() => toast("Horizontal rule inserted")} />
-        <TBtn icon={FileBreak} label="Page break" onClick={() => toast("Page break inserted")} />
+        <TBtn icon={SeparatorHorizontal} label="Page break" onClick={() => toast("Page break inserted")} />
         <Sep />
 
         {/* G9: Advanced */}
