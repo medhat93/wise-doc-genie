@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { PanelId } from "./EditorPanelToolbar";
 import EditorAIPanel from "./EditorAIPanel";
 import EditorParticipantsPanel from "./EditorParticipantsPanel";
+import EditorFieldsPanel from "./EditorFieldsPanel";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   participants: "Participants",
@@ -12,7 +13,7 @@ const PANEL_TITLES: Record<PanelId, string> = {
   properties: "Properties",
   fields: "Smart Fields",
   workflow: "Workflow",
-  annotations: "Annotations",
+  annotations: "Fields",
 };
 
 interface EditorPanelProps {
@@ -32,7 +33,12 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
     >
       {/* Header */}
       <div className="h-12 px-4 flex items-center justify-between border-b flex-shrink-0">
-        <span className="font-semibold text-sm">{PANEL_TITLES[panelId]}</span>
+        <div>
+          <span className="font-semibold text-sm">{PANEL_TITLES[panelId]}</span>
+          {panelId === "annotations" && (
+            <p className="text-[10px] text-muted-foreground -mt-0.5">Drag fields onto the document</p>
+          )}
+        </div>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
           <X size={14} />
         </Button>
@@ -44,6 +50,8 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
           <EditorAIPanel docType={docType} />
         ) : panelId === "participants" ? (
           <EditorParticipantsPanel />
+        ) : panelId === "annotations" ? (
+          <EditorFieldsPanel />
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center">
             <p className="text-sm font-medium text-foreground mb-1">{PANEL_TITLES[panelId]}</p>
