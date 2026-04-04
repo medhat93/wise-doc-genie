@@ -10,6 +10,7 @@ import EditorCommentsPanel from "./EditorCommentsPanel";
 import EditorWorkflowPanel from "./EditorWorkflowPanel";
 import EditorFieldsSidebar from "./EditorFieldsSidebar";
 import EditorParticipantsViewPanel from "./EditorParticipantsViewPanel";
+import EditorTasksPanel from "./EditorTasksPanel";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   annotations: "Fields",
@@ -19,6 +20,7 @@ const PANEL_TITLES: Record<PanelId, string> = {
   properties: "Properties",
   fields: "Variables",
   workflow: "Workflow",
+  tasks: "Tasks",
   "field-settings": "Field Settings",
 };
 
@@ -74,6 +76,8 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
           <EditorCommentsPanel />
         ) : panelId === "workflow" ? (
           <EditorWorkflowPanel />
+        ) : panelId === "tasks" ? (
+          <EditorTasksPanel />
         ) : panelId === "participants" ? (
           <EditorParticipantsViewPanel />
         ) : (
