@@ -104,6 +104,18 @@ const MOCK_PLACED_FIELDS: PlacedField[] = [
   { id: "f3", fieldTypeId: "signature", participantId: "p2", participantName: "Sarah Johnson", participantColor: "#DC2626", page: 1, x: 60, y: 760, width: 200, height: 50 },
 ];
 
+const USED_VARIABLES = ["Client.Name", "Sender.Company", "Document.Value", "Effective.Date", "Signer.Name", "Signer.Title", "Signer.Company"];
+
+const INITIAL_VARIABLE_VALUES: Record<string, string> = {
+  "Client.Name": "Acme Corporation",
+  "Sender.Company": "",
+  "Document.Value": "150,000 SAR",
+  "Effective.Date": "May 1, 2026",
+  "Signer.Name": "",
+  "Signer.Title": "",
+  "Signer.Company": "",
+};
+
 export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [placedFields, setPlacedFields] = useState<PlacedField[]>(MOCK_PLACED_FIELDS);
@@ -112,6 +124,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [comments, setComments] = useState<Comment[]>(MOCK_COMMENTS);
   const [pendingCommentRef, setPendingCommentRef] = useState<string | null>(null);
   const [commentsPanelOpen, setCommentsPanelOpen] = useState(false);
+  const [variableValues, setVariableValues] = useState<Record<string, string>>(INITIAL_VARIABLE_VALUES);
 
   return (
     <EditorContext.Provider value={{
@@ -122,6 +135,8 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       comments, setComments,
       pendingCommentRef, setPendingCommentRef,
       commentsPanelOpen, setCommentsPanelOpen,
+      variableValues, setVariableValues,
+      usedVariables: USED_VARIABLES,
     }}>
       {children}
     </EditorContext.Provider>

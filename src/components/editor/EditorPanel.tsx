@@ -14,7 +14,7 @@ const PANEL_TITLES: Record<PanelId, string> = {
   ai: "AI Assistant",
   comments: "Comments",
   properties: "Properties",
-  fields: "Smart Fields",
+  fields: "Variables",
   workflow: "Workflow",
   "field-settings": "Field Settings",
 };
