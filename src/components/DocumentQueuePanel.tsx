@@ -265,7 +265,7 @@ function SortableDocCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`group relative overflow-hidden cursor-grab active:cursor-grabbing border-l-[3px] transition-colors ${typeConfig.borderClass}`}
+      className={`group relative overflow-hidden cursor-grab active:cursor-grabbing border-l-[3px] transition-all duration-300 ${typeConfig.borderClass}`}
     >
       {/* Drag handle indicator */}
       <div className="absolute top-1.5 left-1.5 z-10 bg-background/80 backdrop-blur-sm rounded p-0.5 pointer-events-none">
@@ -493,12 +493,14 @@ const DocumentQueuePanel = ({
     <div className={isMobile ? "flex flex-col" : "w-[260px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
       <div ref={scrollRef} className={`flex-1 overflow-y-auto p-3 scrollbar-thin ${isMobile ? "max-h-[50vh]" : ""}`}>
         {isEmpty ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-4 flex flex-col items-center w-full">
-              <HugeiconsIcon icon={CloudUploadIcon} size={32} className="text-muted-foreground/30" />
-              <p className="text-xs font-medium text-muted-foreground mt-2">No documents added yet</p>
-              <p className="text-[10px] text-muted-foreground mt-1 text-center">
-                Upload files or choose a template to get started
+          <div className="flex flex-col items-center justify-center h-full text-center px-2">
+            <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-6 flex flex-col items-center w-full">
+              <div className="rounded-full p-3 bg-muted mb-2">
+                <HugeiconsIcon icon={CloudUploadIcon} size={28} className="text-muted-foreground/40" />
+              </div>
+              <p className="text-xs font-medium text-muted-foreground mt-1">Add your first document to get started</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-1">
+                Upload files, use a template, or create with AI
               </p>
             </div>
           </div>
@@ -506,16 +508,26 @@ const DocumentQueuePanel = ({
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={documents.map((d) => d.id)} strategy={verticalListSortingStrategy}>
               <div className="grid grid-cols-1 gap-2">
-                {documents.map((doc) => (
-                  <SortableDocCard
-                    key={doc.id}
-                    doc={doc}
-                    onRemove={handleRemove}
-                    onPreview={setPreviewDoc}
-                    onChangeType={handleChangeType}
-                    onRotate={setRotateDoc}
-                  />
-                ))}
+                <AnimatePresence initial={false}>
+                  {documents.map((doc) => (
+                    <motion.div
+                      key={doc.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <SortableDocCard
+                        doc={doc}
+                        onRemove={handleRemove}
+                        onPreview={setPreviewDoc}
+                        onChangeType={handleChangeType}
+                        onRotate={setRotateDoc}
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             </SortableContext>
           </DndContext>
