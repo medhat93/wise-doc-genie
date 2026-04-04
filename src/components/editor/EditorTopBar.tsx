@@ -288,37 +288,7 @@ const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (
   );
 };
 
-/* ── Send Confirmation Dialog ── */
-const SendDialog = ({ open, onOpenChange, onConfirm }: { open: boolean; onOpenChange: (o: boolean) => void; onConfirm: () => void }) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="sm:max-w-[400px]">
-      <DialogHeader>
-        <DialogTitle>Ready to send?</DialogTitle>
-        <DialogDescription>This document will be sent to 3 participants for signing.</DialogDescription>
-      </DialogHeader>
-      <div className="space-y-2 py-2">
-        {[
-          "2 documents attached",
-          "3 participants added",
-          "5 fields placed",
-        ].map((item) => (
-          <div key={item} className="flex items-center gap-2">
-            <div className="h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <Check size={12} className="text-emerald-600" />
-            </div>
-            <span className="text-sm text-foreground">{item}</span>
-          </div>
-        ))}
-      </div>
-      <DialogFooter>
-        <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
-        <Button size="sm" className="gap-1.5" onClick={onConfirm}>
-          <Send size={12} /> Send now
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-);
+/* ── Send Dialog is now in ReviewSendDialog.tsx ── */
 
 /* ══════════ TOP BAR ══════════ */
 const EditorTopBar = () => {
