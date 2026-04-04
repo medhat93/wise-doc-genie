@@ -870,7 +870,41 @@ const EditorParticipantsPanel = () => {
         </div>
       </div>
 
-      {/* ── Load Workflow Dialog ── */}
+      <Separator />
+
+      {/* ── Demo button ── */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 text-xs gap-1.5 w-full text-muted-foreground hover:text-foreground border border-dashed"
+        onClick={() => {
+          if (participants.length > 0) {
+            setParticipants([]);
+            setSequential(false);
+            setVisibility(() => {
+              const v: DocumentVisibility = {};
+              MOCK_DOCUMENTS.forEach((d) => { v[d.id] = []; });
+              return v;
+            });
+            toast.success("Participants cleared");
+          } else {
+            setParticipants(DEMO_PARTICIPANTS);
+            setSequential(true);
+            setVisibility(() => {
+              const v: DocumentVisibility = {};
+              MOCK_DOCUMENTS.forEach((d) => {
+                v[d.id] = DEMO_PARTICIPANTS.map((p) => p.id);
+              });
+              return v;
+            });
+            toast.success("Demo participants loaded");
+          }
+        }}
+      >
+        <Sparkles size={14} />
+        {participants.length > 0 ? "Clear demo participants" : "Load demo participants"}
+      </Button>
+
       <Dialog open={selectWorkflowOpen} onOpenChange={setSelectWorkflowOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
