@@ -26,13 +26,6 @@ const EditorSkeleton = () => (
       <Skeleton className="h-8 w-16 rounded" />
     </div>
     <div className="flex flex-1 overflow-hidden">
-      <div className="w-[260px] border-r p-4 space-y-3 hidden md:block">
-        <Skeleton className="h-9 w-full rounded" />
-        <Skeleton className="h-4 w-3/4 rounded" />
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded" />
-        ))}
-      </div>
       <div className="flex-1 p-10">
         <div className="max-w-[816px] mx-auto space-y-4">
           <Skeleton className="h-8 w-2/3 rounded" />
@@ -42,8 +35,15 @@ const EditorSkeleton = () => (
           <Skeleton className="h-16 w-full rounded" />
         </div>
       </div>
-      <div className="w-12 border-l hidden md:flex flex-col items-center py-3 gap-2">
+      <div className="w-[380px] border-l hidden md:block p-4 space-y-3">
+        <Skeleton className="h-9 w-full rounded" />
+        <Skeleton className="h-4 w-3/4 rounded" />
         {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full rounded" />
+        ))}
+      </div>
+      <div className="w-12 border-l hidden md:flex flex-col items-center py-3 gap-2">
+        {Array.from({ length: 7 }).map((_, i) => (
           <Skeleton key={i} className="h-9 w-9 rounded-lg" />
         ))}
       </div>
