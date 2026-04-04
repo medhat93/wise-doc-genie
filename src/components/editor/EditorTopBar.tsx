@@ -294,15 +294,30 @@ const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (
 /* ── Send Dialog is now in ReviewSendDialog.tsx ── */
 
 /* ══════════ TOP BAR ══════════ */
-const EditorTopBar = () => {
+const EditorTopBar = ({ onOpenFieldsPanel }: { onOpenFieldsPanel?: (participantId?: string) => void }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { participants, placedFields } = useEditorContext();
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const [title, setTitle] = useState("Untitled Document");
   const [assignOpen, setAssignOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  const [warningOpen, setWarningOpen] = useState(false);
+
+  // Check for signers with no fields
+  const signersWithNoFields = participants
+    .filter((p) => p.role === "signer")
+    .filter((p) => placedFields.filter((f) => f.participantId === p.id).length === 0);
+
+  const handleSendClick = () => {
+    if (signersWithNoFields.length > 0) {
+      setWarningOpen(true);
+    } else {
+      setSendOpen(true);
+    }
+  };
 
 
   return (
