@@ -14,6 +14,7 @@ import {
 import {
   MoreHorizontal,
   Plus,
+  Minus,
   Mail,
   Phone,
   MessageSquare,
@@ -22,6 +23,7 @@ import {
   User,
   Users,
   Shield,
+  GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Participant, ParticipantRole, SendingMethod } from "./EditorParticipantsPanel";
@@ -82,6 +84,15 @@ const EditorParticipantsViewPanel = () => {
     toast.success("Participant removed");
   };
 
+  const handleOrderChange = (id: string, delta: number) => {
+    setParticipants(prev =>
+      prev.map(p => {
+        if (p.id !== id) return p;
+        return { ...p, order: Math.max(1, p.order + delta) };
+      })
+    );
+  };
+
   const renderCard = (p: Participant) => {
     const roleStyle = ROLE_STYLES[p.role];
     const verifySummary = getVerificationSummary(p);
@@ -98,29 +109,60 @@ const EditorParticipantsViewPanel = () => {
       );
     }
 
+    const isSigner = p.role === "signer";
+    const isApprover = p.role === "approver";
+
     return (
       <div key={p.id} className="border rounded-lg p-2.5 space-y-1.5 hover:bg-muted/30 transition-colors">
-        {/* Row 1: Name + actions */}
+        {/* Row 1: Name + order controls + actions */}
         <div className="flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {sequential && isSigner && (
+              <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0">
+                {p.order}
+              </span>
+            )}
+            {sequential && isApprover && (
+              <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0 opacity-50">
+                0
+              </span>
+            )}
             <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
             <span className="text-sm font-medium truncate">{p.name}</span>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
-                <MoreHorizontal size={14} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem className="gap-2 text-xs" onClick={() => setEditingParticipant(p)}>
-                <Pencil size={12} /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={() => setConfirmRemoveId(p.id)}>
-                <Trash2 size={12} /> Remove
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            {sequential && isSigner && (
+              <div className="flex items-center gap-0.5 mr-1">
+                <button
+                  onClick={() => handleOrderChange(p.id, -1)}
+                  className="h-5 w-5 flex items-center justify-center rounded border text-muted-foreground hover:text-foreground hover:bg-accent"
+                >
+                  <Minus size={10} />
+                </button>
+                <button
+                  onClick={() => handleOrderChange(p.id, 1)}
+                  className="h-5 w-5 flex items-center justify-center rounded border text-muted-foreground hover:text-foreground hover:bg-accent"
+                >
+                  <Plus size={10} />
+                </button>
+              </div>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
+                  <MoreHorizontal size={14} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem className="gap-2 text-xs" onClick={() => setEditingParticipant(p)}>
+                  <Pencil size={12} /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={() => setConfirmRemoveId(p.id)}>
+                  <Trash2 size={12} /> Remove
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Row 2: Contact + badges */}
