@@ -65,7 +65,7 @@ const FIELD_CATEGORIES: { label: string; fields: SidebarFieldType[] }[] = [
   },
 ];
 
-const EditorFieldsSidebar = () => {
+const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
   const { participants } = useEditorContext();
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
 
@@ -100,6 +100,94 @@ const EditorFieldsSidebar = () => {
       toast.error("Add at least one participant before placing fields");
     }
   };
+
+  if (asPanel) {
+    return (
+      <div className="flex flex-col gap-3">
+        {/* Participant selector */}
+        {hasParticipants ? (
+          <Select
+            value={activeParticipant?.id || ""}
+            onValueChange={setSelectedParticipantId}
+          >
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue>
+                {activeParticipant && (
+                  <span className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-sm flex-shrink-0" style={{ backgroundColor: activeParticipant.color }} />
+                    <span className="truncate">{activeParticipant.name}</span>
+                  </span>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {participants.map((p) => (
+                <SelectItem key={p.id} value={p.id} className="text-xs">
+                  <span className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-sm flex-shrink-0" style={{ backgroundColor: p.color }} />
+                    {p.name}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <div className="h-9 rounded-md border border-dashed flex items-center px-3">
+            <span className="text-xs text-muted-foreground">No participants added</span>
+          </div>
+        )}
+
+        {hasParticipants && activeParticipant ? (
+          <div
+            className="text-xs pl-2.5"
+            style={{ borderLeft: `3px solid ${activeParticipant.color}`, color: "hsl(var(--brand-indigo))" }}
+          >
+            Drag & drop fields to place them in the document
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Add participants first to start placing fields
+          </p>
+        )}
+
+        {FIELD_CATEGORIES.map((cat) => (
+          <div key={cat.label}>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              {cat.label}
+            </p>
+            {cat.fields.map((field) => {
+              const Icon = field.icon;
+              const disabled = !hasParticipants;
+              return (
+                <div
+                  key={field.id}
+                  draggable={!disabled}
+                  onDragStart={(e) => handleDragStart(e, field)}
+                  onClick={disabled ? handleFieldClick : undefined}
+                  className={cn(
+                    "flex items-center gap-2.5 h-10 px-2 rounded-md transition-colors group",
+                    disabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-grab active:cursor-grabbing hover:bg-muted"
+                  )}
+                >
+                  <GripVertical
+                    size={12}
+                    className={cn(
+                      "text-muted-foreground/40 flex-shrink-0 transition-opacity",
+                      disabled ? "opacity-30" : "opacity-0 group-hover:opacity-100"
+                    )}
+                  />
+                  <Icon size={16} className="text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm">{field.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="w-[260px] border-r bg-card flex flex-col flex-shrink-0 overflow-hidden">
