@@ -294,7 +294,7 @@ const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (
 /* ── Send Dialog is now in ReviewSendDialog.tsx ── */
 
 /* ══════════ TOP BAR ══════════ */
-const EditorTopBar = ({ onOpenFieldsPanel }: { onOpenFieldsPanel?: (participantId?: string) => void }) => {
+const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFieldsPanel?: (participantId?: string) => void; isEsign?: boolean; onToggleEsign?: () => void }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { participants, placedFields } = useEditorContext();
