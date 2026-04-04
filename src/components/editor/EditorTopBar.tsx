@@ -360,9 +360,15 @@ const EditorTopBar = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setShareOpen(true)}>Share</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.success("Document duplicated")}>Duplicate</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.success("PDF exported")}>Export PDF</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShareOpen(true)}>
+                <Share2 size={14} className="mr-2" /> Share
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.success("Document duplicated")}>
+                <Copy size={14} className="mr-2" /> Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.success("PDF exported")}>
+                <FileDown size={14} className="mr-2" /> Export PDF
+              </DropdownMenuItem>
               {isMobile && (
                 <DropdownMenuItem onClick={() => setAssignOpen(true)}>Assign</DropdownMenuItem>
               )}
