@@ -70,6 +70,8 @@ export const COMMENT_SECTIONS: Record<string, { docIndex: number; selector: stri
   "Section 5: Termination": { docIndex: 0, selector: "5. Term and Termination" },
 };
 
+export type AcknowledgmentLevel = 'none' | 'must_view' | 'must_view_accept';
+
 interface EditorContextType {
   participants: Participant[];
   setParticipants: React.Dispatch<React.SetStateAction<Participant[]>>;
@@ -88,6 +90,8 @@ interface EditorContextType {
   variableValues: Record<string, string>;
   setVariableValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   usedVariables: string[];
+  documentAcknowledgments: Record<string, Record<string, AcknowledgmentLevel>>;
+  setDocumentAcknowledgments: React.Dispatch<React.SetStateAction<Record<string, Record<string, AcknowledgmentLevel>>>>;
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
@@ -125,6 +129,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [pendingCommentRef, setPendingCommentRef] = useState<string | null>(null);
   const [commentsPanelOpen, setCommentsPanelOpen] = useState(false);
   const [variableValues, setVariableValues] = useState<Record<string, string>>(INITIAL_VARIABLE_VALUES);
+  const [documentAcknowledgments, setDocumentAcknowledgments] = useState<Record<string, Record<string, AcknowledgmentLevel>>>({});
 
   return (
     <EditorContext.Provider value={{
@@ -137,6 +142,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       commentsPanelOpen, setCommentsPanelOpen,
       variableValues, setVariableValues,
       usedVariables: USED_VARIABLES,
+      documentAcknowledgments, setDocumentAcknowledgments,
     }}>
       {children}
     </EditorContext.Provider>

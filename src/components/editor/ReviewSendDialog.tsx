@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEditorContext } from "./EditorContext";
+import { useEditorContext, type AcknowledgmentLevel } from "./EditorContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,7 +128,7 @@ const ReviewSendDialog = ({
   onOpenChange: (o: boolean) => void;
 }) => {
   const navigate = useNavigate();
-  const { participants, placedFields } = useEditorContext();
+  const { participants, placedFields, documentAcknowledgments } = useEditorContext();
   const [sending, setSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [ccEmails, setCcEmails] = useState("");
@@ -243,18 +243,42 @@ const ReviewSendDialog = ({
             {/* ── Documents ── */}
             <Section title="Documents">
               {MOCK_DOCUMENTS.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between py-1">
-                  <div className="flex items-center gap-2">
-                    <FileText size={14} className="text-muted-foreground" />
-                    <span className="text-sm">{doc.name}</span>
-                    <Badge
-                      variant="outline"
-                      className={cn("text-[10px] px-1.5 h-5", TYPE_BADGE[doc.type])}
-                    >
-                      {doc.type}
-                    </Badge>
+                <div key={doc.id} className="space-y-1 py-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText size={14} className="text-muted-foreground" />
+                      <span className="text-sm">{doc.name}</span>
+                      <Badge
+                        variant="outline"
+                        className={cn("text-[10px] px-1.5 h-5", TYPE_BADGE[doc.type])}
+                      >
+                        {doc.type}
+                      </Badge>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{doc.pages} pages</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">{doc.pages} pages</span>
+                  {/* Show acknowledgment requirements for supplement/attachment */}
+                  {(doc.type === "Supplement" || doc.type === "Attachment") && (() => {
+                    const docAcks = documentAcknowledgments[doc.id];
+                    if (!docAcks) return null;
+                    const entries = Object.entries(docAcks).filter(([_, level]) => level !== "none");
+                    if (entries.length === 0) return null;
+                    const ACK_LABELS: Record<AcknowledgmentLevel, string> = {
+                      none: "No action required",
+                      must_view: "must view before signing",
+                      must_view_accept: "must view and accept",
+                    };
+                    return entries.map(([pId, level]) => {
+                      const p = participants.find((pp) => pp.id === pId);
+                      if (!p) return null;
+                      return (
+                        <div key={pId} className="flex items-center gap-1.5 ml-6 text-xs text-muted-foreground">
+                          <Eye size={10} />
+                          <span>{p.name} {ACK_LABELS[level]}</span>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               ))}
             </Section>
