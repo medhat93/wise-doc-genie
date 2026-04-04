@@ -122,6 +122,24 @@ const EditorPageInner = () => {
       <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} />
 
       <div className="flex flex-1 overflow-hidden">
+        {/* Left — Field settings panel (desktop only) */}
+        {!isMobile && (
+          <AnimatePresence>
+            {selectedFieldId && (
+              <motion.div
+                key="field-settings-left"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 320, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="border-r bg-card flex flex-col overflow-hidden flex-shrink-0"
+              >
+                <EditorFieldSettings onClose={() => setSelectedFieldId(null)} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+
         {/* Center — Document canvas (full width now) */}
         <EditorCanvas
           showToolbar={!isEsign}
@@ -133,11 +151,11 @@ const EditorPageInner = () => {
         {/* Desktop panel */}
         {!isMobile && (
           <AnimatePresence>
-            {activePanel && (
+            {activePanel && activePanel !== "field-settings" && (
               <EditorPanel
                 key={activePanel}
                 panelId={activePanel}
-                onClose={activePanel === "field-settings" ? handleFieldSettingsClose : () => setActivePanel(null)}
+                onClose={() => setActivePanel(null)}
                 docType={docType}
               />
             )}
