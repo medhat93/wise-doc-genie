@@ -588,10 +588,6 @@ const CreateDocument = () => {
     }, 1500);
   };
 
-  const editButtonLabel =
-    count === 0 ? "Edit" : count === 1 ? "Edit document" : `Edit ${count} documents`;
-  const editButtonIcon = Edit02Icon;
-
   return (
     <div
       className="h-screen flex flex-col"
