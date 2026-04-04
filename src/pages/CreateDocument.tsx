@@ -450,6 +450,10 @@ const CreateDocument = () => {
   // ─── Templates ────────────────────────────────────────────────────────────
 
   const handleUseTemplate = useCallback((template: Template) => {
+    const hasParent = documents.length > 0;
+    const parentId = hasParent
+      ? documents.find((d) => d.role === "parent")?.id
+      : undefined;
     const queued: UploadedDocument = {
       id: crypto.randomUUID(),
       name: template.name,
@@ -460,6 +464,9 @@ const CreateDocument = () => {
       isUserTemplate: template.source === "user",
       gradient: template.gradient,
       pageCount: template.pageCount,
+      role: hasParent ? "child" : "parent",
+      parentId,
+      childOrder: hasParent ? documents.filter((d) => d.role === "child").length : undefined,
     };
     setDocuments((prev) => [...prev, queued]);
     setQueueManuallyOpened(true);
