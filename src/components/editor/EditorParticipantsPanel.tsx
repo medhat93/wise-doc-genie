@@ -399,67 +399,68 @@ const EditorParticipantsPanel = () => {
         Add people who need to sign, review, or receive this document
       </p>
 
-      {/* ── Participant list ── */}
-      <div className="space-y-2">
-        {participants.map((p) => {
-          const roleStyle = ROLE_STYLES[p.role];
-          const verifySummary = getVerificationSummary(p);
-          return (
-            <div key={p.id} className="border rounded-lg p-3 space-y-1.5">
-              {/* Row 1: Name + email/phone + menu */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                  <span className="text-sm font-medium truncate">{p.name}</span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {p.sendingMethod === "email" ? p.email : p.sendingPhone || ""}
-                  </span>
+      {/* ── Participant list or empty state ── */}
+      {participants.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 gap-2">
+          <Users size={48} className="text-muted-foreground opacity-40" />
+          <p className="text-sm font-medium text-center">No participants added yet</p>
+          <p className="text-xs text-muted-foreground text-center">Add signers, approvers, or viewers to this document</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {participants.map((p) => {
+            const roleStyle = ROLE_STYLES[p.role];
+            const verifySummary = getVerificationSummary(p);
+            return (
+              <div key={p.id} className="border rounded-lg p-3 space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                    <span className="text-sm font-medium truncate">{p.name}</span>
+                    <span className="text-xs text-muted-foreground truncate">
+                      {p.sendingMethod === "email" ? p.email : p.sendingPhone || ""}
+                    </span>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
+                        <MoreHorizontal size={14} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem>Change role</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => removeParticipant(p.id)}>
+                        Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
-                      <MoreHorizontal size={14} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                    <DropdownMenuItem>Change role</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={() => removeParticipant(p.id)}>
-                      Remove
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Row 2: Badges */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-medium border", roleStyle.className)}>
-                  {roleStyle.label}
-                </Badge>
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border gap-1 flex items-center">
-                  {getSendingIcon(p.sendingMethod)}
-                  {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
-                </Badge>
-                {p.language === "ar" && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border text-muted-foreground">
-                    AR
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-medium border", roleStyle.className)}>
+                    {roleStyle.label}
                   </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border gap-1 flex items-center">
+                    {getSendingIcon(p.sendingMethod)}
+                    {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
+                  </Badge>
+                  {p.language === "ar" && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border text-muted-foreground">
+                      AR
+                    </Badge>
+                  )}
+                </div>
+                {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && p.sendingPhone && (
+                  <p className="text-xs text-muted-foreground pl-4">{p.sendingPhone}</p>
+                )}
+                {verifySummary && (
+                  <p className="text-[10px] text-muted-foreground pl-4">{verifySummary}</p>
                 )}
               </div>
-
-              {/* Row 3: Phone (if SMS/WhatsApp sending) */}
-              {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && p.sendingPhone && (
-                <p className="text-xs text-muted-foreground pl-4">{p.sendingPhone}</p>
-              )}
-
-              {/* Row 4: Verification summary */}
-              {verifySummary && (
-                <p className="text-[10px] text-muted-foreground pl-4">{verifySummary}</p>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* ── Add participant button / form ── */}
       {!showAddForm ? (
