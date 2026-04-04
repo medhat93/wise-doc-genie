@@ -513,6 +513,7 @@ const DocumentQueuePanel = ({
                     onRemove={handleRemove}
                     onPreview={setPreviewDoc}
                     onChangeType={handleChangeType}
+                    onRotate={setRotateDoc}
                   />
                 ))}
               </div>
