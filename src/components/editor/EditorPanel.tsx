@@ -7,6 +7,7 @@ import EditorParticipantsPanel from "./EditorParticipantsPanel";
 import EditorFieldSettings from "./EditorFieldSettings";
 import EditorSmartFieldsPanel from "./EditorSmartFieldsPanel";
 import EditorPropertiesPanel from "./EditorPropertiesPanel";
+import EditorCommentsPanel from "./EditorCommentsPanel";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   participants: "Participants",
@@ -66,6 +67,8 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
           <EditorSmartFieldsPanel />
         ) : panelId === "properties" ? (
           <EditorPropertiesPanel />
+        ) : panelId === "comments" ? (
+          <EditorCommentsPanel />
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center">
             <p className="text-sm font-medium text-foreground mb-1">{PANEL_TITLES[panelId]}</p>
