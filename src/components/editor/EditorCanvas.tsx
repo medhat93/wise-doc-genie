@@ -672,9 +672,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
                   {doc.id === "doc-1" && !commentsPanelOpen && (
                     <div className="absolute top-0 right-0 translate-x-[calc(100%+12px)] hidden xl:block" style={{ width: 200 }}>
                       <AnimatePresence>
-                        {inlineComments
-                          .filter((c) => SECTION_Y_MAP[c.sectionRef] !== undefined)
-                          .map((c) => (
+                        {inlineComments.map((c) => (
                             <div key={c.id} style={{ position: "absolute", top: SECTION_Y_MAP[c.sectionRef] || 0 }} className="mb-2">
                               <MarginComment
                                 comment={c}
