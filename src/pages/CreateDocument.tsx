@@ -247,6 +247,7 @@ const CreateDocument = () => {
   const isEmpty = documents.length === 0;
   const allComplete = documents.length > 0 && documents.every((d) => d.status === "complete");
   const count = documents.length;
+  const hasPrimary = documents.some((d) => d.documentType === "primary");
 
   const connectedDriveIds = Object.entries(connectedProviders)
     .filter(([, v]) => v)
