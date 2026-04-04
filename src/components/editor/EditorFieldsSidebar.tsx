@@ -79,10 +79,20 @@ const FIELD_CATEGORIES: { label: string; fields: SidebarFieldType[] }[] = [
     ],
   },
 ];
+const COLORS = [
+  "#4F46E5", "#DC2626", "#059669", "#D97706",
+  "#7C3AED", "#0891B2", "#BE185D", "#65A30D",
+];
+
+const ADD_PARTICIPANT_VALUE = "__add_new__";
 
 const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
-  const { participants } = useEditorContext();
+  const { participants, setParticipants } = useEditorContext();
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newRole, setNewRole] = useState<ParticipantRole>("signer");
 
   const hasParticipants = participants.length > 0;
   const activeParticipant = participants.find((p) => p.id === selectedParticipantId) || participants[0];
@@ -91,6 +101,37 @@ const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
   if (hasParticipants && !activeParticipant) {
     setSelectedParticipantId(participants[0].id);
   }
+
+  const handleSelectChange = (value: string) => {
+    if (value === ADD_PARTICIPANT_VALUE) {
+      setAddDialogOpen(true);
+    } else {
+      setSelectedParticipantId(value);
+    }
+  };
+
+  const handleAddParticipant = () => {
+    if (!newName.trim()) return;
+    const maxOrder = Math.max(0, ...participants.filter(p => p.role === "signer").map(p => p.order));
+    const newP: Participant = {
+      id: `p${Date.now()}`,
+      name: newName.trim(),
+      email: newEmail.trim(),
+      role: newRole,
+      color: COLORS[participants.length % COLORS.length],
+      order: newRole === "signer" ? maxOrder + 1 : 0,
+      language: "en",
+      sendingMethod: "email",
+      needsVerification: false,
+    };
+    setParticipants(prev => [...prev, newP]);
+    setSelectedParticipantId(newP.id);
+    setNewName("");
+    setNewEmail("");
+    setNewRole("signer");
+    setAddDialogOpen(false);
+    toast.success(`${newP.name} added`);
+  };
 
   const handleDragStart = (e: React.DragEvent, field: SidebarFieldType) => {
     if (!hasParticipants || !activeParticipant) {
@@ -116,90 +157,148 @@ const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
     }
   };
 
+  const addDialog = (
+    <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>Add Participant</DialogTitle>
+          <DialogDescription>Add a new participant to assign fields to.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label className="text-sm">Role</Label>
+            <Select value={newRole} onValueChange={(v) => setNewRole(v as ParticipantRole)}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="signer">Signer</SelectItem>
+                <SelectItem value="approver">Approver</SelectItem>
+                <SelectItem value="viewer">Viewer</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-sm">Name</Label>
+            <Input
+              placeholder="Full name"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="h-9 text-sm"
+              autoFocus
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-sm">Email</Label>
+            <Input
+              placeholder="Email address"
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              className="h-9 text-sm"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
+          <Button size="sm" disabled={!newName.trim()} onClick={handleAddParticipant}>Add participant</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  const participantSelector = (
+    <>
+      <Select
+        value={activeParticipant?.id || ""}
+        onValueChange={handleSelectChange}
+      >
+        <SelectTrigger className="h-9 text-xs">
+          <SelectValue placeholder="Select participant">
+            {activeParticipant && (
+              <span className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-sm flex-shrink-0" style={{ backgroundColor: activeParticipant.color }} />
+                <span className="truncate">{activeParticipant.name}</span>
+              </span>
+            )}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {participants.map((p) => (
+            <SelectItem key={p.id} value={p.id} className="text-xs">
+              <span className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-sm flex-shrink-0" style={{ backgroundColor: p.color }} />
+                {p.name}
+              </span>
+            </SelectItem>
+          ))}
+          <div className="border-t mt-1 pt-1">
+            <SelectItem value={ADD_PARTICIPANT_VALUE} className="text-xs">
+              <span className="flex items-center gap-2 text-primary">
+                <Plus size={12} />
+                Add new participant
+              </span>
+            </SelectItem>
+          </div>
+        </SelectContent>
+      </Select>
+      {addDialog}
+    </>
+  );
+
+  const helperText = hasParticipants && activeParticipant ? (
+    <div
+      className="text-xs pl-2.5"
+      style={{ borderLeft: `3px solid ${activeParticipant.color}`, color: "hsl(var(--brand-indigo))" }}
+    >
+      Drag & drop fields to place them in the document
+    </div>
+  ) : (
+    <p className="text-xs text-muted-foreground">
+      Add a participant to start placing fields
+    </p>
+  );
+
+  const fieldList = FIELD_CATEGORIES.map((cat) => (
+    <div key={cat.label}>
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+        {cat.label}
+      </p>
+      {cat.fields.map((field) => {
+        const Icon = field.icon;
+        const disabled = !hasParticipants;
+        return (
+          <div
+            key={field.id}
+            draggable={!disabled}
+            onDragStart={(e) => handleDragStart(e, field)}
+            onClick={disabled ? handleFieldClick : undefined}
+            className={cn(
+              "flex items-center gap-2.5 h-10 px-2 rounded-md transition-colors group",
+              disabled
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-grab active:cursor-grabbing hover:bg-muted"
+            )}
+          >
+            <GripVertical
+              size={12}
+              className={cn(
+                "text-muted-foreground/40 flex-shrink-0 transition-opacity",
+                disabled ? "opacity-30" : "opacity-0 group-hover:opacity-100"
+              )}
+            />
+            <Icon size={16} className="text-muted-foreground flex-shrink-0" />
+            <span className="text-sm">{field.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  ));
+
   if (asPanel) {
     return (
       <div className="flex flex-col gap-3">
-        {/* Participant selector */}
-        {hasParticipants ? (
-          <Select
-            value={activeParticipant?.id || ""}
-            onValueChange={setSelectedParticipantId}
-          >
-            <SelectTrigger className="h-9 text-xs">
-              <SelectValue>
-                {activeParticipant && (
-                  <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-sm flex-shrink-0" style={{ backgroundColor: activeParticipant.color }} />
-                    <span className="truncate">{activeParticipant.name}</span>
-                  </span>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {participants.map((p) => (
-                <SelectItem key={p.id} value={p.id} className="text-xs">
-                  <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-sm flex-shrink-0" style={{ backgroundColor: p.color }} />
-                    {p.name}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <div className="h-9 rounded-md border border-dashed flex items-center px-3">
-            <span className="text-xs text-muted-foreground">No participants added</span>
-          </div>
-        )}
-
-        {hasParticipants && activeParticipant ? (
-          <div
-            className="text-xs pl-2.5"
-            style={{ borderLeft: `3px solid ${activeParticipant.color}`, color: "hsl(var(--brand-indigo))" }}
-          >
-            Drag & drop fields to place them in the document
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            Add participants first to start placing fields
-          </p>
-        )}
-
-        {FIELD_CATEGORIES.map((cat) => (
-          <div key={cat.label}>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              {cat.label}
-            </p>
-            {cat.fields.map((field) => {
-              const Icon = field.icon;
-              const disabled = !hasParticipants;
-              return (
-                <div
-                  key={field.id}
-                  draggable={!disabled}
-                  onDragStart={(e) => handleDragStart(e, field)}
-                  onClick={disabled ? handleFieldClick : undefined}
-                  className={cn(
-                    "flex items-center gap-2.5 h-10 px-2 rounded-md transition-colors group",
-                    disabled
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-grab active:cursor-grabbing hover:bg-muted"
-                  )}
-                >
-                  <GripVertical
-                    size={12}
-                    className={cn(
-                      "text-muted-foreground/40 flex-shrink-0 transition-opacity",
-                      disabled ? "opacity-30" : "opacity-0 group-hover:opacity-100"
-                    )}
-                  />
-                  <Icon size={16} className="text-muted-foreground flex-shrink-0" />
-                  <span className="text-sm">{field.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+        {participantSelector}
+        {helperText}
+        {fieldList}
       </div>
     );
   }
