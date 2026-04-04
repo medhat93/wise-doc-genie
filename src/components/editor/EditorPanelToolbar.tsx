@@ -5,6 +5,7 @@ import {
   PropertyEditIcon,
   TextField,
   WorkflowSquare10Icon,
+  CursorAddSelection02Icon,
 } from "@hugeicons/core-free-icons";
 import AiIcon from "@/components/AiIcon";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,8 @@ export type PanelId =
   | "properties"
   | "fields"
   | "workflow"
-  | "field-settings";
+  | "field-settings"
+  | "annotations";
 
 interface PanelItem {
   id: PanelId;
@@ -30,15 +32,17 @@ interface PanelItem {
   icon?: any;
   useAiIcon?: boolean;
   clmOnly?: boolean;
+  esignHide?: boolean;
 }
 
 const PANELS: PanelItem[] = [
-  { id: "participants", label: "Participants", shortcut: "⌘1", icon: UserMultiple02Icon },
+  { id: "annotations", label: "Fields", shortcut: "⌘1", icon: CursorAddSelection02Icon },
   { id: "ai", label: "AI Assistant", shortcut: "⌘2", useAiIcon: true, clmOnly: true },
   { id: "comments", label: "Comments", shortcut: "⌘3", icon: Comment01Icon },
   { id: "properties", label: "Properties", shortcut: "⌘4", icon: PropertyEditIcon, clmOnly: true },
   { id: "fields", label: "Variables", shortcut: "⌘5", icon: TextField, clmOnly: true },
   { id: "workflow", label: "Workflow", shortcut: "⌘6", icon: WorkflowSquare10Icon, clmOnly: true },
+  { id: "participants", label: "Participants", shortcut: "⌘7", icon: UserMultiple02Icon },
 ];
 
 interface EditorPanelToolbarProps {
