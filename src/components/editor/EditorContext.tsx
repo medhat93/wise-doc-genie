@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import type { Participant } from "./EditorParticipantsPanel";
 import type { PlacedField } from "./EditorFieldsPanel";
 
@@ -11,6 +11,10 @@ interface EditorContextType {
   setSelectedFieldId: (id: string | null) => void;
   previousPanelId: string | null;
   setPreviousPanelId: (id: string | null) => void;
+  isDraggingField: boolean;
+  setIsDraggingField: (v: boolean) => void;
+  isPlacementMode: boolean;
+  setIsPlacementMode: (v: boolean) => void;
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
@@ -32,6 +36,8 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [placedFields, setPlacedFields] = useState<PlacedField[]>(MOCK_PLACED_FIELDS);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [previousPanelId, setPreviousPanelId] = useState<string | null>(null);
+  const [isDraggingField, setIsDraggingField] = useState(false);
+  const [isPlacementMode, setIsPlacementMode] = useState(false);
 
   return (
     <EditorContext.Provider value={{
@@ -43,6 +49,10 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       setSelectedFieldId,
       previousPanelId,
       setPreviousPanelId,
+      isDraggingField,
+      setIsDraggingField,
+      isPlacementMode,
+      setIsPlacementMode,
     }}>
       {children}
     </EditorContext.Provider>
