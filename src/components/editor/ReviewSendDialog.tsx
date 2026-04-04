@@ -285,26 +285,6 @@ const ReviewSendDialog = ({
               </div>
             </Section>
 
-            {/* ── Settings summary ── */}
-            <Section title="Settings summary" defaultOpen={false}>
-              <div className="space-y-1.5 text-sm text-muted-foreground">
-                <p>Expiration: No expiration</p>
-                <p>Reminders: Every 3 days</p>
-                <p>Language: English</p>
-                <p>Signers can decline</p>
-                <p>All fields required</p>
-              </div>
-              <button
-                className="text-xs text-primary hover:underline mt-1"
-                onClick={() => {
-                  onOpenChange(false);
-                  // Settings dialog will be triggered by the parent
-                  toast("Open Settings from the top bar to edit");
-                }}
-              >
-                Edit settings
-              </button>
-            </Section>
           </div>
 
           {/* ── Footer ── */}
