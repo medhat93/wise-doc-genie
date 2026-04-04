@@ -1,4 +1,4 @@
-export type DocumentRole = 'parent' | 'child' | 'standalone';
+export type DocumentType = 'primary' | 'supplement' | 'attachment';
 
 export interface UploadedDocument {
   id: string;
@@ -9,10 +9,8 @@ export interface UploadedDocument {
   progress: number;
   status: 'uploading' | 'complete' | 'error';
   pageCount?: number;
-  // Hierarchy
-  role: DocumentRole;
-  parentId?: string;
-  childOrder?: number;
+  // Document classification
+  documentType: DocumentType;
   // Template / AI additions
   isTemplate?: boolean;
   isUserTemplate?: boolean;
