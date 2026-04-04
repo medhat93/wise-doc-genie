@@ -257,27 +257,17 @@ const CreateDocument = () => {
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const existingParentId = documents.find((d) => d.role === "parent")?.id;
-    let firstNewParentId: string | undefined;
-    const newDocs: UploadedDocument[] = fileArray.map((file, idx) => {
-      const isParent = !existingParentId && idx === 0;
-      const docId = crypto.randomUUID();
-      if (isParent) firstNewParentId = docId;
-      const parentId = isParent ? undefined : (existingParentId ?? firstNewParentId);
-      return {
-        id: docId,
-        file,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        progress: 0,
-        status: "uploading" as const,
-        pageCount: Math.floor(Math.random() * 20) + 1,
-        role: isParent ? "parent" as const : "child" as const,
-        parentId,
-        childOrder: isParent ? undefined : documents.filter((d) => d.role === "child").length + idx,
-      };
-    });
+    const newDocs: UploadedDocument[] = fileArray.map((file) => ({
+      id: crypto.randomUUID(),
+      file,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      progress: 0,
+      status: "uploading" as const,
+      pageCount: Math.floor(Math.random() * 20) + 1,
+      documentType: "primary" as const,
+    }));
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
 
