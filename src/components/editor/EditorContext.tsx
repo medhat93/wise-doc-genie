@@ -85,6 +85,9 @@ interface EditorContextType {
   setPendingCommentRef: (ref: string | null) => void;
   commentsPanelOpen: boolean;
   setCommentsPanelOpen: (open: boolean) => void;
+  variableValues: Record<string, string>;
+  setVariableValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  usedVariables: string[];
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
