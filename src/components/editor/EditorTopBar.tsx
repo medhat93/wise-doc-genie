@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ReviewSendDialog from "./ReviewSendDialog";
+import MissingFieldsWarningDialog from "./MissingFieldsWarningDialog";
+import { useEditorContext } from "./EditorContext";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
@@ -292,15 +294,30 @@ const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (
 /* ── Send Dialog is now in ReviewSendDialog.tsx ── */
 
 /* ══════════ TOP BAR ══════════ */
-const EditorTopBar = () => {
+const EditorTopBar = ({ onOpenFieldsPanel }: { onOpenFieldsPanel?: (participantId?: string) => void }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { participants, placedFields } = useEditorContext();
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const [title, setTitle] = useState("Untitled Document");
   const [assignOpen, setAssignOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  const [warningOpen, setWarningOpen] = useState(false);
+
+  // Check for signers with no fields
+  const signersWithNoFields = participants
+    .filter((p) => p.role === "signer")
+    .filter((p) => placedFields.filter((f) => f.participantId === p.id).length === 0);
+
+  const handleSendClick = () => {
+    if (signersWithNoFields.length > 0) {
+      setWarningOpen(true);
+    } else {
+      setSendOpen(true);
+    }
+  };
 
 
   return (
@@ -388,7 +405,7 @@ const EditorTopBar = () => {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="sm" className="h-8 text-xs ml-1 gap-1.5" onClick={() => setSendOpen(true)}>
+              <Button size="sm" className="h-8 text-xs ml-1 gap-1.5" onClick={handleSendClick}>
                 <HugeiconsIcon icon={SentIcon} size={14} />
                 Send
               </Button>
@@ -402,6 +419,23 @@ const EditorTopBar = () => {
       <ShareDialog open={shareOpen} onOpenChange={setShareOpen} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <ReviewSendDialog open={sendOpen} onOpenChange={setSendOpen} />
+      <MissingFieldsWarningDialog
+        open={warningOpen}
+        onOpenChange={setWarningOpen}
+        affectedParticipants={signersWithNoFields}
+        allSignersAffected={signersWithNoFields.length === participants.filter(p => p.role === "signer").length}
+        onGoBack={() => {
+          setWarningOpen(false);
+          const first = signersWithNoFields[0];
+          if (first && onOpenFieldsPanel) {
+            onOpenFieldsPanel(first.id);
+          }
+        }}
+        onSendAnyway={() => {
+          setWarningOpen(false);
+          setSendOpen(true);
+        }}
+      />
     </>
   );
 };
