@@ -31,21 +31,6 @@ interface EditorPanelProps {
 }
 
 const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
-  // Field settings has its own header
-  if (panelId === "field-settings") {
-    return (
-      <motion.div
-        initial={{ width: 0, opacity: 0 }}
-        animate={{ width: 380, opacity: 1 }}
-        exit={{ width: 0, opacity: 0 }}
-        transition={{ duration: 0.25, ease: "easeInOut" }}
-        className="border-l bg-card flex flex-col overflow-hidden flex-shrink-0"
-      >
-        <EditorFieldSettings onClose={onClose} />
-      </motion.div>
-    );
-  }
-
   return (
     <motion.div
       initial={{ width: 0, opacity: 0 }}

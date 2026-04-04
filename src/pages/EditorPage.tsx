@@ -7,6 +7,7 @@ import EditorCanvas from "@/components/editor/EditorCanvas";
 import EditorPanelToolbar, { type PanelId } from "@/components/editor/EditorPanelToolbar";
 import EditorPanel from "@/components/editor/EditorPanel";
 import { useEditorContext } from "@/components/editor/EditorContext";
+import EditorFieldSettings from "@/components/editor/EditorFieldSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
@@ -57,7 +58,7 @@ const EditorPageInner = () => {
   const initialMode = searchParams.get("mode") || "full";
   const [isEsign, setIsEsign] = useState(initialMode === "esign");
   const isMobile = useIsMobile();
-  const { selectedFieldId, setSelectedFieldId, setPreviousPanelId, setCommentsPanelOpen } = useEditorContext();
+  const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen } = useEditorContext();
 
   const [loading, setLoading] = useState(true);
   const [activePanel, setActivePanel] = useState<PanelId | null>("annotations");
@@ -81,29 +82,10 @@ const EditorPageInner = () => {
 
   const handlePanelToggle = (id: PanelId) => {
     setActivePanel((prev) => (prev === id ? null : id));
-    if (activePanel === "field-settings" && id !== "field-settings") {
-      setSelectedFieldId(null);
-    }
   };
 
   const handleFieldSelect = (fieldId: string | null) => {
-    if (fieldId) {
-      if (activePanel && activePanel !== "field-settings") {
-        setPreviousPanelId(activePanel);
-      }
-      setSelectedFieldId(fieldId);
-      setActivePanel("field-settings");
-    } else {
-      setSelectedFieldId(null);
-      if (activePanel === "field-settings") {
-        setActivePanel(null);
-      }
-    }
-  };
-
-  const handleFieldSettingsClose = () => {
-    setSelectedFieldId(null);
-    setActivePanel(null);
+    setSelectedFieldId(fieldId);
   };
 
   const handleOpenComments = useCallback(() => {
@@ -122,6 +104,24 @@ const EditorPageInner = () => {
       <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} />
 
       <div className="flex flex-1 overflow-hidden">
+        {/* Left — Field settings panel (desktop only) */}
+        {!isMobile && (
+          <AnimatePresence>
+            {selectedFieldId && (
+              <motion.div
+                key="field-settings-left"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 320, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="border-r bg-card flex flex-col overflow-hidden flex-shrink-0"
+              >
+                <EditorFieldSettings onClose={() => setSelectedFieldId(null)} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+
         {/* Center — Document canvas (full width now) */}
         <EditorCanvas
           showToolbar={!isEsign}
@@ -133,11 +133,11 @@ const EditorPageInner = () => {
         {/* Desktop panel */}
         {!isMobile && (
           <AnimatePresence>
-            {activePanel && (
+            {activePanel && activePanel !== "field-settings" && (
               <EditorPanel
                 key={activePanel}
                 panelId={activePanel}
-                onClose={activePanel === "field-settings" ? handleFieldSettingsClose : () => setActivePanel(null)}
+                onClose={() => setActivePanel(null)}
                 docType={docType}
               />
             )}
@@ -147,7 +147,7 @@ const EditorPageInner = () => {
         {/* Desktop toolbar strip */}
         {!isMobile && (
           <EditorPanelToolbar
-            activePanel={activePanel === "field-settings" ? null : activePanel}
+            activePanel={activePanel}
             onPanelToggle={handlePanelToggle}
             isEsign={isEsign}
           />
