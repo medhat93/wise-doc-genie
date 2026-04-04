@@ -44,9 +44,6 @@ const EditorPageInner = () => {
       setActivePanel("field-settings");
     } else {
       setSelectedFieldId(null);
-      // Return to previous panel
-      const { previousPanelId } = useEditorContext as any;
-      // Just close field settings
       if (activePanel === "field-settings") {
         setActivePanel(null);
       }
