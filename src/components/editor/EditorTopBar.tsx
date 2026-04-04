@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ReviewSendDialog from "./ReviewSendDialog";
-import MissingFieldsWarningDialog from "./MissingFieldsWarningDialog";
-import { useEditorContext } from "./EditorContext";
+import MissingFieldsWarningDialog, { type ParticipantIssue, type DocumentIssue } from "./MissingFieldsWarningDialog";
+import { useEditorContext, type AcknowledgmentLevel } from "./EditorContext";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
