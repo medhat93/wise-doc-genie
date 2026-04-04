@@ -84,6 +84,15 @@ const EditorParticipantsViewPanel = () => {
     toast.success("Participant removed");
   };
 
+  const handleOrderChange = (id: string, delta: number) => {
+    setParticipants(prev =>
+      prev.map(p => {
+        if (p.id !== id) return p;
+        return { ...p, order: Math.max(1, p.order + delta) };
+      })
+    );
+  };
+
   const renderCard = (p: Participant) => {
     const roleStyle = ROLE_STYLES[p.role];
     const verifySummary = getVerificationSummary(p);
