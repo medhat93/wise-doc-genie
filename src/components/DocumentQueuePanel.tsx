@@ -336,6 +336,22 @@ function SortableDocCard({
             )}
           </div>
 
+          {/* Rotate button (PDF only) */}
+          {doc.type.includes("pdf") && doc.status === "complete" && (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <button
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent flex-shrink-0"
+                  onClick={(e) => { e.stopPropagation(); onRotate(doc); }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <RotateCw size={14} className="text-muted-foreground" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Rotate pages</TooltipContent>
+            </Tooltip>
+          )}
+
           {/* Remove button */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
