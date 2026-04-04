@@ -60,7 +60,7 @@ const EditorPageInner = () => {
   const { selectedFieldId, setSelectedFieldId, setPreviousPanelId, setCommentsPanelOpen } = useEditorContext();
 
   const [loading, setLoading] = useState(true);
-  const [activePanel, setActivePanel] = useState<PanelId | null>("participants");
+  const [activePanel, setActivePanel] = useState<PanelId | null>("annotations");
 
   // Brief loading skeleton
   useEffect(() => {
