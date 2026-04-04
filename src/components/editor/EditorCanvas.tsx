@@ -426,9 +426,10 @@ interface EditorCanvasProps {
   showToolbar?: boolean;
   onFieldSelect?: (fieldId: string | null) => void;
   onOpenComments?: () => void;
+  isEsign?: boolean;
 }
 
-const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments }: EditorCanvasProps) => {
+const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsign }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
@@ -603,7 +604,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments }: Edi
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto bg-muted/20 relative"
+        className={cn("flex-1 overflow-y-auto relative", isEsign ? "bg-muted/40" : "bg-muted/20")}
         onScroll={handleScroll}
         onClick={handleCanvasClick}
         onMouseUp={handleMouseUp}
