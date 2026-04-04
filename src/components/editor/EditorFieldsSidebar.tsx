@@ -8,18 +8,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import {
   PenTool,
   Type,
   Calendar,
@@ -33,11 +21,11 @@ import {
   User,
   Paperclip,
   Plus,
-  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useEditorContext } from "./EditorContext";
-import type { Participant, ParticipantRole, SendingMethod } from "./EditorParticipantsPanel";
+import type { Participant } from "./EditorParticipantsPanel";
+import AddParticipantDialog from "./AddParticipantDialog";
 
 export interface SidebarFieldType {
   id: string;
@@ -79,20 +67,13 @@ const FIELD_CATEGORIES: { label: string; fields: SidebarFieldType[] }[] = [
     ],
   },
 ];
-const COLORS = [
-  "#4F46E5", "#DC2626", "#059669", "#D97706",
-  "#7C3AED", "#0891B2", "#BE185D", "#65A30D",
-];
 
 const ADD_PARTICIPANT_VALUE = "__add_new__";
 
 const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
-  const { participants, setParticipants } = useEditorContext();
+  const { participants } = useEditorContext();
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [newRole, setNewRole] = useState<ParticipantRole>("signer");
 
   const hasParticipants = participants.length > 0;
   const activeParticipant = participants.find((p) => p.id === selectedParticipantId) || participants[0];
@@ -108,29 +89,6 @@ const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
     } else {
       setSelectedParticipantId(value);
     }
-  };
-
-  const handleAddParticipant = () => {
-    if (!newName.trim()) return;
-    const maxOrder = Math.max(0, ...participants.filter(p => p.role === "signer").map(p => p.order));
-    const newP: Participant = {
-      id: `p${Date.now()}`,
-      name: newName.trim(),
-      email: newEmail.trim(),
-      role: newRole,
-      color: COLORS[participants.length % COLORS.length],
-      order: newRole === "signer" ? maxOrder + 1 : 0,
-      language: "en",
-      sendingMethod: "email",
-      needsVerification: false,
-    };
-    setParticipants(prev => [...prev, newP]);
-    setSelectedParticipantId(newP.id);
-    setNewName("");
-    setNewEmail("");
-    setNewRole("signer");
-    setAddDialogOpen(false);
-    toast.success(`${newP.name} added`);
   };
 
   const handleDragStart = (e: React.DragEvent, field: SidebarFieldType) => {
@@ -156,54 +114,6 @@ const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
       toast.error("Add at least one participant before placing fields");
     }
   };
-
-  const addDialog = (
-    <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-      <DialogContent className="sm:max-w-[400px]">
-        <DialogHeader>
-          <DialogTitle>Add Participant</DialogTitle>
-          <DialogDescription>Add a new participant to assign fields to.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="space-y-1.5">
-            <Label className="text-sm">Role</Label>
-            <Select value={newRole} onValueChange={(v) => setNewRole(v as ParticipantRole)}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="signer">Signer</SelectItem>
-                <SelectItem value="approver">Approver</SelectItem>
-                <SelectItem value="viewer">Viewer</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-sm">Name</Label>
-            <Input
-              placeholder="Full name"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className="h-9 text-sm"
-              autoFocus
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-sm">Email</Label>
-            <Input
-              placeholder="Email address"
-              type="email"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              className="h-9 text-sm"
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" size="sm" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
-          <Button size="sm" disabled={!newName.trim()} onClick={handleAddParticipant}>Add participant</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
 
   const participantSelector = (
     <>
@@ -240,7 +150,11 @@ const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
           </div>
         </SelectContent>
       </Select>
-      {addDialog}
+      <AddParticipantDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onAdded={(p) => setSelectedParticipantId(p.id)}
+      />
     </>
   );
 
@@ -305,59 +219,11 @@ const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
 
   return (
     <div className="w-[260px] border-r bg-card flex flex-col flex-shrink-0 overflow-hidden">
-      {/* Sticky header */}
       <div className="p-3 border-b flex-shrink-0 space-y-2">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fields</p>
-
-        {/* Participant selector */}
-        {hasParticipants ? (
-          <Select
-            value={activeParticipant?.id || ""}
-            onValueChange={setSelectedParticipantId}
-          >
-            <SelectTrigger className="h-9 text-xs">
-              <SelectValue>
-                {activeParticipant && (
-                  <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-sm flex-shrink-0" style={{ backgroundColor: activeParticipant.color }} />
-                    <span className="truncate">{activeParticipant.name}</span>
-                  </span>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {participants.map((p) => (
-                <SelectItem key={p.id} value={p.id} className="text-xs">
-                  <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-sm flex-shrink-0" style={{ backgroundColor: p.color }} />
-                    {p.name}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <div className="h-9 rounded-md border border-dashed flex items-center px-3">
-            <span className="text-xs text-muted-foreground">No participants</span>
-          </div>
-        )}
-
-        {/* Helper text */}
-        {hasParticipants && activeParticipant ? (
-          <div
-            className="text-xs pl-2.5"
-            style={{ borderLeft: `3px solid ${activeParticipant.color}`, color: "hsl(var(--brand-indigo))" }}
-          >
-            Drag & drop fields to place them in the document
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            Add participants first to start placing fields
-          </p>
-        )}
+        {participantSelector}
+        {helperText}
       </div>
-
-      {/* Scrollable field list */}
       <div className="flex-1 overflow-y-auto px-2 pb-4">
         {FIELD_CATEGORIES.map((cat) => (
           <div key={cat.label}>

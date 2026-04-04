@@ -3,13 +3,13 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { PanelId } from "./EditorPanelToolbar";
 import EditorAIPanel from "./EditorAIPanel";
-// Participants panel removed — managed via Step 2 + Fields dropdown
 import EditorFieldSettings from "./EditorFieldSettings";
 import EditorSmartFieldsPanel from "./EditorSmartFieldsPanel";
 import EditorPropertiesPanel from "./EditorPropertiesPanel";
 import EditorCommentsPanel from "./EditorCommentsPanel";
 import EditorWorkflowPanel from "./EditorWorkflowPanel";
 import EditorFieldsSidebar from "./EditorFieldsSidebar";
+import EditorParticipantsViewPanel from "./EditorParticipantsViewPanel";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   annotations: "Fields",
@@ -74,6 +74,8 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
           <EditorCommentsPanel />
         ) : panelId === "workflow" ? (
           <EditorWorkflowPanel />
+        ) : panelId === "participants" ? (
+          <EditorParticipantsViewPanel />
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center">
             <p className="text-sm font-medium text-foreground mb-1">{PANEL_TITLES[panelId]}</p>
