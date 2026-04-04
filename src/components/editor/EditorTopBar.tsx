@@ -297,7 +297,7 @@ const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (
 const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFieldsPanel?: (participantId?: string) => void; isEsign?: boolean; onToggleEsign?: () => void }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { participants, placedFields } = useEditorContext();
+  const { participants, placedFields, setDocumentAcknowledgments } = useEditorContext();
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const [title, setTitle] = useState("Untitled Document");
   const [assignOpen, setAssignOpen] = useState(false);
@@ -305,14 +305,54 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [warningOpen, setWarningOpen] = useState(false);
+  const [participantIssues, setParticipantIssues] = useState<ParticipantIssue[]>([]);
 
-  // Check for signers with no fields
-  const signersWithNoFields = participants
-    .filter((p) => p.role === "signer")
-    .filter((p) => placedFields.filter((f) => f.participantId === p.id).length === 0);
+  // Mock documents for issue checking
+  const MOCK_DOCS = [
+    { id: "d1", name: "Master Services Agreement 2026.pdf", documentType: "primary" as const },
+    { id: "d2", name: "Schedule A — Pricing", documentType: "supplement" as const },
+    { id: "d3", name: "Insurance Certificate", documentType: "attachment" as const },
+  ];
 
   const handleSendClick = () => {
-    if (signersWithNoFields.length > 0) {
+    const signers = participants.filter((p) => p.role === "signer");
+    const issues: ParticipantIssue[] = [];
+
+    for (const signer of signers) {
+      const signerIssues: DocumentIssue[] = [];
+      const signerFields = placedFields.filter((f) => f.participantId === signer.id);
+
+      // Check primary docs
+      const primaryDocs = MOCK_DOCS.filter((d) => d.documentType === "primary");
+      for (const doc of primaryDocs) {
+        if (signerFields.length === 0) {
+          signerIssues.push({
+            documentId: doc.id,
+            documentName: doc.name,
+            documentType: doc.documentType,
+            issueType: "no_fields_primary",
+          });
+        }
+      }
+
+      // Check supplement/attachment docs
+      const suppDocs = MOCK_DOCS.filter((d) => d.documentType !== "primary");
+      for (const doc of suppDocs) {
+        signerIssues.push({
+          documentId: doc.id,
+          documentName: doc.name,
+          documentType: doc.documentType,
+          issueType: "no_fields_supplement",
+        });
+      }
+
+      if (signerIssues.length > 0) {
+        issues.push({ participant: signer, issues: signerIssues });
+      }
+    }
+
+    if (issues.length > 0) {
+      setParticipantIssues(issues);
       setWarningOpen(true);
     } else {
       setSendOpen(true);
