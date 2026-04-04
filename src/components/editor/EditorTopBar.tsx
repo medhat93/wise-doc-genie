@@ -308,7 +308,7 @@ const EditorTopBar = () => {
       <header className="h-14 border-b flex items-center justify-between px-4 flex-shrink-0 bg-card">
         {/* Left */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => navigate("/")}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => navigate("/participants")}>
             <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
           </Button>
           <Input
@@ -329,10 +329,17 @@ const EditorTopBar = () => {
             </div>
             <span className="text-xs text-muted-foreground">Add Documents</span>
           </div>
-          <div className="w-8 h-px bg-border" />
+          <div className="w-6 h-px bg-border" />
           <div className="flex items-center gap-1.5">
             <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-[10px] font-bold text-primary-foreground">2</span>
+              <HugeiconsIcon icon={Tick01Icon} size={12} className="text-primary-foreground" />
+            </div>
+            <span className="text-xs text-muted-foreground">Add Participants</span>
+          </div>
+          <div className="w-6 h-px bg-border" />
+          <div className="flex items-center gap-1.5">
+            <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+              <span className="text-[10px] font-bold text-primary-foreground">3</span>
             </div>
             <span className="text-xs font-medium text-foreground">Prepare & Send</span>
           </div>
