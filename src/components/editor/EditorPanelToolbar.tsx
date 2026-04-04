@@ -38,7 +38,6 @@ const PANELS: PanelItem[] = [
   { id: "properties", label: "Properties", icon: PropertyEditIcon },
   { id: "fields", label: "Smart Fields", icon: TextField },
   { id: "workflow", label: "Workflow", icon: WorkflowSquare10Icon },
-  { id: "annotations", label: "Annotations", icon: CursorAddSelection02Icon },
 ];
 
 interface EditorPanelToolbarProps {
