@@ -46,6 +46,7 @@ import {
   Phone,
   Mail,
   Eye,
+  EyeOff,
   User,
   Users,
   Bookmark,
@@ -893,6 +894,57 @@ const EditorParticipantsPanel = () => {
           )}
         </div>
 
+        {/* Row 3: Document visibility eye button */}
+        {MOCK_DOCUMENTS.length > 0 && (
+          <div className="flex items-center gap-1.5 pl-0">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors focus:outline-none">
+                  {(() => {
+                    const docsVisible = MOCK_DOCUMENTS.filter(d => (visibility[d.id] || []).includes(p.id)).length;
+                    const allVisible = docsVisible === MOCK_DOCUMENTS.length;
+                    return (
+                      <>
+                        {allVisible ? <Eye size={11} /> : <EyeOff size={11} />}
+                        <span>{allVisible ? "All documents" : `${docsVisible}/${MOCK_DOCUMENTS.length} documents`}</span>
+                      </>
+                    );
+                  })()}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-2" align="start">
+                <p className="text-xs font-medium mb-2">Documents visible to {p.name.split(" ")[0]}</p>
+                {MOCK_DOCUMENTS.map((doc) => {
+                  const visibleIds = visibility[doc.id] || [];
+                  return (
+                    <label
+                      key={doc.id}
+                      className="flex items-center gap-2 px-1 py-1 rounded hover:bg-accent cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={visibleIds.includes(p.id)}
+                        onCheckedChange={() => toggleDocVisibility(doc.id, p.id)}
+                      />
+                      <span className="text-xs truncate flex-1">{doc.name}</span>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[8px] px-1 py-0 h-3 font-medium",
+                          doc.docType === "primary" && "text-[hsl(var(--brand-indigo))]",
+                          doc.docType === "supplement" && "text-amber-600",
+                          doc.docType === "attachment" && "text-muted-foreground"
+                        )}
+                      >
+                        {doc.docType.charAt(0).toUpperCase() + doc.docType.slice(1)}
+                      </Badge>
+                    </label>
+                  );
+                })}
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+
         {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && p.sendingPhone && (
           <p className="text-xs text-muted-foreground pl-4">{p.sendingPhone}</p>
         )}
@@ -1069,69 +1121,8 @@ const EditorParticipantsPanel = () => {
         Add me as a signer
       </Button>
 
-      <Separator />
 
-      {/* ── Document visibility ── */}
-      <div ref={visibilityRef} className="space-y-3">
-        <div className="flex items-center gap-1.5">
-          <Eye size={14} className="text-muted-foreground" />
-          <p className="text-sm font-medium">Document visibility</p>
-        </div>
-        <div className="space-y-2">
-          {MOCK_DOCUMENTS.map((doc) => {
-            const visibleIds = visibility[doc.id] || [];
-            const allVisible = participants.length === 0 || visibleIds.length === participants.length;
-            return (
-              <div key={doc.id} className="flex items-center justify-between gap-2 p-2 rounded-md border">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium truncate">{doc.name}</p>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "text-[9px] px-1 py-0 h-3.5 font-medium mt-0.5",
-                      doc.docType === "primary" && "text-[hsl(var(--brand-indigo))]",
-                      doc.docType === "supplement" && "text-amber-600",
-                      doc.docType === "attachment" && "text-muted-foreground"
-                    )}
-                  >
-                    {doc.docType.charAt(0).toUpperCase() + doc.docType.slice(1)}
-                  </Badge>
-                </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-6 px-2 text-[10px] gap-1">
-                      <Eye size={10} />
-                      {allVisible ? "All" : `${visibleIds.length}/${participants.length}`}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-56 p-2" align="end">
-                    <p className="text-xs font-medium mb-2">Who can see this document?</p>
-                    {participants.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No participants added yet</p>
-                    ) : (
-                      participants.map((p) => (
-                        <label
-                          key={p.id}
-                          className="flex items-center gap-2 px-1 py-1 rounded hover:bg-accent cursor-pointer"
-                        >
-                          <Checkbox
-                            checked={visibleIds.includes(p.id)}
-                            onCheckedChange={() => toggleDocVisibility(doc.id, p.id)}
-                          />
-                          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                          <span className="text-xs truncate">{p.name}</span>
-                        </label>
-                      ))
-                    )}
-                  </PopoverContent>
-                </Popover>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
-      <Separator />
 
       {/* ── Demo button ── */}
       <Button
