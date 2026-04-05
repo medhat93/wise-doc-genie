@@ -21,6 +21,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { ArrowLeft } from "lucide-react";
 import {
   PenTool,
   Type,
