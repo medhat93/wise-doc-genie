@@ -301,6 +301,8 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
   const { participants, placedFields, setDocumentAcknowledgments } = useEditorContext();
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const [title, setTitle] = useState("Untitled Document");
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const [assignOpen, setAssignOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
