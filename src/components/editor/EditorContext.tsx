@@ -122,7 +122,7 @@ const INITIAL_VARIABLE_VALUES: Record<string, string> = {
 
 export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [placedFields, setPlacedFields] = useState<PlacedField[]>(MOCK_PLACED_FIELDS);
+  const [placedFields, setPlacedFields] = useState<PlacedField[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [previousPanelId, setPreviousPanelId] = useState<string | null>(null);
   const [comments, setComments] = useState<Comment[]>(MOCK_COMMENTS);
