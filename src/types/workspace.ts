@@ -49,6 +49,7 @@ export interface WorkspaceDocument {
   waitingFor?: { name: string; since: string };
   isFavorite: boolean;
   value?: string;
+  followUpTo?: { id: string; name: string };
 }
 
 export type SidebarView = 'all' | 'in_progress' | 'owned' | 'requires_action' | 'assigned' | 'received' | 'expiring' | 'completed' | 'shared';

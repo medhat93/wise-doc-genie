@@ -243,6 +243,21 @@ export const workspaceDocuments: WorkspaceDocument[] = [
     ],
     createdAt: daysAgo(20), modifiedAt: daysAgo(3), progress: 100, isFavorite: false,
   },
+  // ROW 14b - Follow-up Amendment (In Signing, linked to Annual Review)
+  {
+    id: '14b', name: 'Amendment #1 — Annual Review', stage: 'sent', category: 'Amendment' as any,
+    owner: 'Ahmad Medhat', counterparty: 'Acme Corp',
+    participants: [
+      { id: 'p26b', name: 'John Smith', email: 'john@acme.com', role: 'signer', status: 'pending' },
+      { id: 'p27b', name: 'Ahmad Medhat', email: 'ahmed@company.com', role: 'signer', status: 'signed', signedAt: daysAgo(1) },
+    ],
+    tags: [], activities: [
+      { id: 'a14b', type: 'sent', actor: 'Ahmad Medhat', timestamp: daysAgo(1), description: 'Amendment sent for signing' },
+    ],
+    createdAt: daysAgo(2), modifiedAt: daysAgo(1), progress: 50, isFavorite: false,
+    waitingFor: { name: 'John Smith', since: daysAgo(1) },
+    followUpTo: { id: '14', name: 'Annual Review — Acme Corp' },
+  },
   // ROW 15 - Completed
   {
     id: '15', name: 'Freelancer Agreement — John Doe', stage: 'completed', category: 'Agreement',
