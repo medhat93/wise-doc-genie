@@ -28,7 +28,7 @@ export default function FollowUpDialog({ doc, open, onOpenChange }: Props) {
   const handleContinue = () => {
     onOpenChange(false);
     if (relType === 'child') {
-      navigate(`/editor?mode=followup&parentId=${doc.id}&childType=${childType}`);
+      navigate(`/create?mode=followup&parentId=${doc.id}&childType=${childType}`);
     } else {
       navigate(`/create?relatedTo=${doc.id}`);
     }
