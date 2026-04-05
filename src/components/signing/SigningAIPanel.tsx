@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Sparkles, X, Send } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-
 
 interface ChatMessage {
   id: string;
@@ -11,73 +10,59 @@ interface ChatMessage {
   content: string;
 }
 
-const AUTO_SUMMARY = `Here's a summary of the key points in this Non-Disclosure Agreement:
+const AUTO_SUMMARY = `This signing request contains **4 documents**. Here's a summary of each:
 
-• **Parties involved:** This NDA is between Acme Corporation (Disclosing Party) and Meridian Data Systems GmbH (Receiving Party) [p.1]
+• **Master Services Agreement** — The primary NDA between Acme Corporation and Meridian Data Systems covering confidential information, obligations, and governing law. Contains your signature fields. [MSA p.1]
 
-• **Confidential Information:** Covers all non-public technical, business, and financial information disclosed by either party [p.2]
+• **Schedule A — Pricing & Fee Structure** — Details service fees, payment terms, and annual adjustment caps. Requires your review and acceptance. [Schedule A p.1]
 
-• **Obligations:** The receiving party must protect confidential information with the same care as their own, and may only use it for the stated business purpose [p.2]
+• **Confidential Terms Addendum** — Enhanced confidentiality requirements including encryption standards and data handling procedures. Requires your review and acceptance. [Conf. Terms p.1]
 
-• **Term:** The agreement lasts for 2 years from the effective date, with confidentiality obligations surviving for 3 additional years after termination [p.3]
+• **Insurance Certificate** — Certificate of insurance from Allianz for Meridian Data Systems. Reference only — no action needed.
 
-• **Governing Law:** The agreement is governed by the laws of the State of California [p.3]
-
-⚠️ **Notable clauses:** The non-compete section restricts the receiving party from soliciting employees of the disclosing party for 12 months after termination.`;
+⚠️ **Action required:** You must accept 2 supplement documents and complete 4 signature fields on the MSA before signing.`;
 
 const MOCK_RESPONSES: Record<string, string> = {
   'What if I breach this?': `If you breach this NDA, several consequences may apply:
 
-• **Injunctive Relief:** The disclosing party can seek immediate court orders to prevent further disclosure [p.2]
+• **Injunctive Relief:** The disclosing party can seek immediate court orders to prevent further disclosure [MSA p.2]
 
-• **Monetary Damages:** You may be liable for actual damages suffered by the disclosing party, including lost profits and business opportunities [p.2]
+• **Monetary Damages:** You may be liable for actual damages suffered by the disclosing party [MSA p.2]
 
-• **Legal Costs:** The breaching party typically bears the costs of enforcement, including attorney fees [p.3]
+• **Legal Costs:** The breaching party typically bears the costs of enforcement [MSA p.3]
 
-• **Termination Rights:** The non-breaching party can immediately terminate the agreement [p.3]
-
-The agreement specifies that monetary damages alone may be insufficient, allowing the disclosing party to pursue equitable remedies without posting a bond.`,
+• **Termination Rights:** The non-breaching party can immediately terminate the agreement [MSA p.3]`,
 
   'Can they change the terms?': `Regarding amendments to this agreement:
 
-• **Written Consent Required:** Any modification to this agreement must be in writing and signed by both parties [p.3]
+• **Written Consent Required:** Any modification must be in writing and signed by both parties [MSA p.3]
 
-• **No Oral Amendments:** Verbal agreements or informal emails cannot modify the terms — only formal written amendments are valid [p.3]
+• **No Oral Amendments:** Verbal agreements cannot modify the terms [MSA p.3]
 
-• **Both Parties Must Agree:** Neither party can unilaterally change the terms. Any amendment requires mutual written consent.
+• **Both Parties Must Agree:** Neither party can unilaterally change the terms.`,
 
-This is a standard clause that protects both parties from unauthorized changes.`,
+  'Summarize pricing terms': `Based on **Schedule A — Pricing & Fee Structure**:
 
-  'What are the exclusions?': `The following types of information are explicitly **excluded** from the definition of Confidential Information:
+• **Platform Access:** $45,000/year per seat [Schedule A p.1]
+• **Implementation:** $25,000 one-time [Schedule A p.1]
+• **Custom Integration:** $200/hour [Schedule A p.1]
+• **Premium Support:** $12,000/year [Schedule A p.1]
+• **Annual Increases:** Capped at 5% with 60 days notice [Schedule A p.2]
+• **Volume Discounts:** Available for 10+ seat commitments [Schedule A p.2]`,
 
-• **Publicly Available:** Information that is or becomes publicly known through no fault of the receiving party [p.2]
+  'What are the exclusions?': `The following types of information are excluded from Confidential Information:
 
-• **Prior Knowledge:** Information the receiving party already knew before it was disclosed [p.2]
-
-• **Independent Development:** Information independently developed without using the disclosing party's confidential information [p.2]
-
-• **Third-Party Source:** Information rightfully received from a third party without restriction on disclosure [p.2]
-
-These exclusions are standard and provide reasonable protection for both parties.`,
-
-  'How do I terminate early?': `To terminate this agreement early:
-
-• **30-Day Written Notice:** Either party can terminate by providing 30 days' written notice to the other party [p.3]
-
-• **Surviving Obligations:** Even after termination, confidentiality obligations continue for 3 additional years [p.3]
-
-• **Return of Materials:** Upon termination, you must promptly return or destroy all confidential information and any copies [p.3]
-
-• **Non-Solicitation Survives:** The 12-month non-solicitation period continues to run even after early termination [p.3]
-
-Note that termination does not release you from obligations regarding information already received.`,
+• **Publicly Available:** Information that becomes public through no fault of the receiving party [MSA p.2]
+• **Prior Knowledge:** Information already known before disclosure [MSA p.2]
+• **Independent Development:** Information developed without using confidential info [MSA p.2]
+• **Third-Party Source:** Information received from a third party without restriction [MSA p.2]`,
 };
 
 const CHIPS = [
   'What if I breach this?',
+  'Summarize pricing terms',
   'Can they change the terms?',
   'What are the exclusions?',
-  'How do I terminate early?',
 ];
 
 interface Props {
@@ -92,7 +77,6 @@ export default function SigningAIPanel({ onClose, onCitation }: Props) {
   const [summaryShown, setSummaryShown] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-summary on mount
   useEffect(() => {
     const t = setTimeout(() => {
       setThinking(false);
@@ -113,19 +97,20 @@ export default function SigningAIPanel({ onClose, onCitation }: Props) {
     setThinking(true);
 
     setTimeout(() => {
-      const response = MOCK_RESPONSES[text] || `That's a great question about the NDA. Based on my analysis of the document, the relevant sections address this concern. I'd recommend reviewing sections 1-4 for the complete context [p.2] [p.3].`;
+      const response = MOCK_RESPONSES[text] || `That's a great question. Based on my analysis of all 4 documents in this signing request, the relevant sections address this concern. I'd recommend reviewing the MSA sections 1-4 for the complete context [MSA p.2] [MSA p.3].`;
       setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'ai', content: response }]);
       setThinking(false);
     }, 1200);
   };
 
-  // Render citation badges
   const renderContent = (content: string) => {
-    const parts = content.split(/(\[p\.\d+\])/g);
+    // Match citations like [MSA p.1], [Schedule A p.2], [Conf. Terms p.1], [p.1]
+    const parts = content.split(/(\[(?:MSA|Schedule A|Conf\. Terms)?\s*p\.\d+\])/g);
     return parts.map((part, i) => {
-      const match = part.match(/\[p\.(\d+)\]/);
+      const match = part.match(/\[((?:MSA|Schedule A|Conf\. Terms)?\s*p\.(\d+))\]/);
       if (match) {
-        const page = match[1];
+        const label = match[1];
+        const page = match[2];
         return (
           <button
             key={i}
@@ -133,7 +118,7 @@ export default function SigningAIPanel({ onClose, onCitation }: Props) {
             className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-pointer mx-0.5"
             title="Click to view in document"
           >
-            p.{page}
+            {label}
           </button>
         );
       }
@@ -143,7 +128,6 @@ export default function SigningAIPanel({ onClose, onCitation }: Props) {
 
   return (
     <div className="w-[420px] border-l border-border bg-card flex flex-col shrink-0 animate-slide-in-right">
-      {/* Header */}
       <div className="h-12 flex items-center justify-between px-4 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           <Sparkles size={16} className="text-primary" />
@@ -154,7 +138,6 @@ export default function SigningAIPanel({ onClose, onCitation }: Props) {
         </Button>
       </div>
 
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map(msg => (
           <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start gap-2')}>
@@ -165,9 +148,7 @@ export default function SigningAIPanel({ onClose, onCitation }: Props) {
             )}
             <div className={cn(
               'max-w-[90%] rounded-lg px-3 py-2 text-sm',
-              msg.role === 'user'
-                ? 'bg-primary text-primary-foreground rounded-br-sm'
-                : 'bg-muted/50'
+              msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-muted/50'
             )}>
               {msg.role === 'ai' ? (
                 <div className="space-y-1 leading-relaxed">{renderContent(msg.content)}</div>
@@ -196,7 +177,6 @@ export default function SigningAIPanel({ onClose, onCitation }: Props) {
           </div>
         )}
 
-        {/* Follow-up chips */}
         {summaryShown && !thinking && messages.length <= 1 && (
           <div className="flex flex-wrap gap-2 pt-2">
             {CHIPS.map(chip => (
@@ -212,14 +192,13 @@ export default function SigningAIPanel({ onClose, onCitation }: Props) {
         )}
       </div>
 
-      {/* Input */}
       <div className="p-3 border-t border-border shrink-0 space-y-2">
         <div className="flex gap-2">
           <Textarea
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && input.trim()) { e.preventDefault(); sendMessage(input.trim()); }}}
-            placeholder="Ask about this document..."
+            placeholder="Ask about these documents..."
             className="min-h-[40px] max-h-[80px] resize-none text-sm"
             rows={1}
           />
