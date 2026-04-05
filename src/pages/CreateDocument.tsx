@@ -274,10 +274,11 @@ const CreateDocument = () => {
   }, []);
 
   const isEsign = mode === "esign";
-  const isEmpty = documents.length === 0;
-  const allComplete = documents.length > 0 && documents.every((d) => d.status === "complete");
-  const count = documents.length;
-  const hasPrimary = documents.some((d) => d.documentType === "primary");
+  const allDocs = [...lockedDocs, ...documents];
+  const isEmpty = allDocs.length === 0;
+  const allComplete = allDocs.length > 0 && allDocs.every((d) => d.status === "complete");
+  const count = allDocs.length;
+  const hasPrimary = allDocs.some((d) => d.documentType === "primary");
 
   const connectedDriveIds = Object.entries(connectedProviders)
     .filter(([, v]) => v)
