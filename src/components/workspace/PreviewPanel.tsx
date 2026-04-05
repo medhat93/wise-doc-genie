@@ -440,42 +440,6 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
               </p>
             </TabsContent>
 
-            {/* ═══ TAB 4: DOCUMENTS ═══ */}
-            <TabsContent value="documents" className="p-4 mt-0 space-y-4">
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Document List</p>
-                {subDocs.map(sd => {
-                  const typeColors = { Primary: 'bg-indigo-100 text-indigo-700', Supplement: 'bg-amber-100 text-amber-700', Attachment: 'bg-gray-100 text-gray-700' };
-                  return (
-                    <div key={sd.id} className={cn(
-                      'border rounded-md p-3 mb-2 flex items-start justify-between',
-                      sd.type !== 'Primary' && 'ml-4 border-l-2 border-l-muted-foreground/20'
-                    )}>
-                      <div className="flex items-start gap-2 min-w-0">
-                        <File size={16} className="text-muted-foreground mt-0.5 shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{sd.name}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-medium', typeColors[sd.type])}>{sd.type}</span>
-                            <span className="text-xs text-muted-foreground">{sd.pages} pages</span>
-                          </div>
-                        </div>
-                      </div>
-                      {sd.totalSigners > 0 && (
-                        <span className="text-xs text-muted-foreground shrink-0">{sd.signedCount}/{sd.totalSigners} signed</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <Separator />
-
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Document Visibility</p>
-                <p className="text-xs text-muted-foreground">All documents visible to all participants</p>
-              </div>
-            </TabsContent>
 
             {/* ═══ TAB 5: WORKFLOW ═══ */}
             {hasWorkflow && (
