@@ -21,6 +21,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { ArrowLeft } from "lucide-react";
 import {
   PenTool,
   Type,
@@ -93,9 +94,10 @@ const PRESET_COLORS = [
 
 interface EditorFieldSettingsProps {
   onClose: () => void;
+  showBackButton?: boolean;
 }
 
-const EditorFieldSettings = ({ onClose }: EditorFieldSettingsProps) => {
+const EditorFieldSettings = ({ onClose, showBackButton }: EditorFieldSettingsProps) => {
   const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, participants } = useEditorContext();
   const field = placedFields.find((f) => f.id === selectedFieldId);
 
@@ -163,12 +165,19 @@ const EditorFieldSettings = ({ onClose }: EditorFieldSettingsProps) => {
       {/* Header */}
       <div className="h-12 px-4 flex items-center justify-between border-b flex-shrink-0">
         <div className="flex items-center gap-2">
+          {showBackButton && (
+            <Button variant="ghost" size="icon" className="h-7 w-7 -ml-1" onClick={onClose}>
+              <ArrowLeft size={14} />
+            </Button>
+          )}
           <Icon size={14} className="text-muted-foreground" />
           <span className="font-semibold text-sm tracking-wide">{label}</span>
         </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
-          <X size={14} />
-        </Button>
+        {!showBackButton && (
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+            <X size={14} />
+          </Button>
+        )}
       </div>
 
       {/* Body */}

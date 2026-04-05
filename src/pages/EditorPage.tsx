@@ -7,7 +7,7 @@ import EditorCanvas from "@/components/editor/EditorCanvas";
 import EditorPanelToolbar, { type PanelId } from "@/components/editor/EditorPanelToolbar";
 import EditorPanel from "@/components/editor/EditorPanel";
 import { useEditorContext } from "@/components/editor/EditorContext";
-import EditorFieldSettings from "@/components/editor/EditorFieldSettings";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
@@ -86,6 +86,9 @@ const EditorPageInner = () => {
 
   const handleFieldSelect = (fieldId: string | null) => {
     setSelectedFieldId(fieldId);
+    if (fieldId) {
+      setActivePanel("annotations");
+    }
   };
 
   const handleOpenComments = useCallback(() => {
@@ -103,24 +106,7 @@ const EditorPageInner = () => {
     >
       <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} />
 
-      <div className="flex flex-1 overflow-hidden relative">
-        {/* Left — Field settings panel (desktop only, overlays canvas) */}
-        {!isMobile && (
-          <AnimatePresence>
-            {selectedFieldId && (
-              <motion.div
-                key="field-settings-left"
-                initial={{ x: -320, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -320, opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
-                className="absolute left-0 top-0 bottom-0 w-[320px] z-30 border-r bg-card flex flex-col shadow-lg"
-              >
-                <EditorFieldSettings onClose={() => setSelectedFieldId(null)} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
+      <div className="flex flex-1 overflow-hidden">
 
         {/* Center — Document canvas (full width now) */}
         <EditorCanvas
