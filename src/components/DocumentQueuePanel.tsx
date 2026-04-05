@@ -517,9 +517,50 @@ const DocumentQueuePanel = ({
             </div>
           </div>
         ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={documents.map((d) => d.id)} strategy={verticalListSortingStrategy}>
-              <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-1 gap-2">
+            {/* Locked documents (not sortable) */}
+            {hasLocked && (
+              <>
+                {lockedDocuments.map((doc) => {
+                  const typeConfig = DOC_TYPE_CONFIG[doc.documentType];
+                  return (
+                    <div key={doc.id} className="relative">
+                      <Card className={`overflow-hidden border-l-[3px] opacity-70 ${typeConfig.borderClass}`}>
+                        <div className="absolute top-1.5 right-1.5 z-10">
+                          <Lock size={12} className="text-muted-foreground" />
+                        </div>
+                        <VerticalThumbnail doc={doc} />
+                        <div className="p-2.5 flex flex-col gap-1.5">
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[200px] break-words text-xs">{doc.name}</TooltipContent>
+                          </Tooltip>
+                          <p className="text-[11px] text-muted-foreground">{doc.pageCount ?? 0} pages</p>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${typeConfig.badgeBg} ${typeConfig.badgeText}`}>
+                              <Lock size={8} />
+                              {typeConfig.label} · Locked
+                            </span>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+                  );
+                })}
+                {/* Separator */}
+                <div className="flex items-center gap-2 py-1">
+                  <div className="flex-1 border-t border-dashed border-muted-foreground/30" />
+                  <span className="text-[10px] text-muted-foreground/60 font-medium">New documents</span>
+                  <div className="flex-1 border-t border-dashed border-muted-foreground/30" />
+                </div>
+              </>
+            )}
+
+            {/* Sortable new documents */}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={documents.map((d) => d.id)} strategy={verticalListSortingStrategy}>
                 <AnimatePresence initial={false}>
                   {documents.map((doc) => (
                     <motion.div
@@ -540,9 +581,9 @@ const DocumentQueuePanel = ({
                     </motion.div>
                   ))}
                 </AnimatePresence>
-              </div>
-            </SortableContext>
-          </DndContext>
+              </SortableContext>
+            </DndContext>
+          </div>
         )}
       </div>
 
