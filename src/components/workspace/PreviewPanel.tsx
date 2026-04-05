@@ -210,6 +210,19 @@ interface Props {
 }
 
 export default function PreviewPanel({ document: doc, onClose }: Props) {
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
+  const [activeTab, setActiveTab] = useState('overview');
+  const renameRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isRenaming && renameRef.current) {
+      renameRef.current.focus();
+      renameRef.current.select();
+    }
+  }, [isRenaming]);
+
   if (!doc) return null;
   const stage = stageConfig[doc.stage] ?? stageConfig.draft;
   const StageIcon = stage.icon;
@@ -221,6 +234,114 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   const approvers = doc.participants.filter(p => p.role === 'approver');
   const viewers = doc.participants.filter(p => p.role === 'viewer');
 
+  const isYourAction = doc.stage === 'requires_action' || (doc.waitingFor?.name === 'Ahmad Medhat');
+  const isApproval = ['approving', 'approved'].includes(doc.stage);
+  const isSigning = ['sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'].includes(doc.stage);
+
+  const handleRename = () => {
+    setIsRenaming(true);
+    setRenameValue(doc.name);
+  };
+
+  const commitRename = () => {
+    setIsRenaming(false);
+    if (renameValue.trim() && renameValue !== doc.name) {
+      toast.success('Document renamed');
+    }
+  };
+
+  /* contextual visible buttons */
+  function renderActionButtons() {
+    const moreMenu = (
+      <DocumentActionsMenu
+        doc={doc}
+        onRename={handleRename}
+        onParticipants={() => setActiveTab('participants')}
+        trigger={<Button variant="ghost" className="h-7 w-7 p-0"><MoreHorizontal size={14} /></Button>}
+      />
+    );
+
+    if (doc.stage === 'draft') {
+      return (
+        <>
+          <Button className="h-7 text-xs gap-1" onClick={() => navigate('/editor')}><Pencil size={12} /> Edit</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => toast.info('Opening send flow...')}><Send size={12} /> Send</Button>
+          {moreMenu}
+        </>
+      );
+    }
+    if (isApproval && isYourAction) {
+      return (
+        <>
+          <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document approved')}><Check size={12} /> Approve</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/5" onClick={() => toast.error('Document rejected')}><XCircle size={12} /> Reject</Button>
+          {moreMenu}
+        </>
+      );
+    }
+    if (isApproval) {
+      return (
+        <>
+          <Button className="h-7 text-xs gap-1" onClick={() => toast.success(`Reminder sent to ${doc.participants.filter(p => p.status === 'pending').length} pending participants`)}><Bell size={12} /> Remind</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+          {moreMenu}
+        </>
+      );
+    }
+    if (isSigning && isYourAction) {
+      return (
+        <>
+          <Button className="h-7 text-xs gap-1" onClick={() => navigate(`/signing/${doc.id}`)}><PenTool size={12} /> Sign</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+          {moreMenu}
+        </>
+      );
+    }
+    if (isSigning) {
+      return (
+        <>
+          <Button className="h-7 text-xs gap-1" onClick={() => toast.success(`Reminder sent to ${doc.participants.filter(p => p.status === 'pending').length} pending participants`)}><Bell size={12} /> Remind</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+          {moreMenu}
+        </>
+      );
+    }
+    if (doc.stage === 'completed') {
+      return (
+        <>
+          <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => toast.success('Moved to vault')}><Lock size={12} /> Move to vault</Button>
+          {moreMenu}
+        </>
+      );
+    }
+    if (doc.stage === 'declined' || doc.stage === 'voided') {
+      return (
+        <>
+          <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document duplicated')}><Copy size={12} /> Duplicate</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+          {moreMenu}
+        </>
+      );
+    }
+    if (doc.stage === 'expired') {
+      return (
+        <>
+          <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document resent with new expiration')}><Send size={12} /> Resend</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+          {moreMenu}
+        </>
+      );
+    }
+    // fallback
+    return (
+      <>
+        <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+        {moreMenu}
+      </>
+    );
+  }
+
   return (
     <Sheet open={!!doc} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent side="right" className="w-[400px] p-0 flex flex-col [&>button]:hidden">
@@ -228,7 +349,18 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         <div className="p-4 border-b border-border space-y-2 shrink-0">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold leading-tight line-clamp-2">{doc.name}</h3>
+              {isRenaming ? (
+                <Input
+                  ref={renameRef}
+                  value={renameValue}
+                  onChange={e => setRenameValue(e.target.value)}
+                  onBlur={commitRename}
+                  onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setIsRenaming(false); }}
+                  className="text-lg font-semibold h-auto p-0 border-0 border-b-2 border-primary rounded-none focus-visible:ring-0 shadow-none"
+                />
+              ) : (
+                <h3 className="text-lg font-semibold leading-tight line-clamp-2">{doc.name}</h3>
+              )}
               {doc.counterparty && <p className="text-sm text-muted-foreground mt-0.5">{doc.counterparty}</p>}
             </div>
             <Button variant="ghost" size="icon" className="shrink-0 -mr-2 -mt-1 h-7 w-7" onClick={onClose}>
@@ -240,17 +372,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
             {stage.label}
           </Badge>
           <div className="flex items-center gap-1 mt-3">
-            <Button variant="outline" className="h-7 text-xs gap-1"><Send size={12} /> Send</Button>
-            <Button variant="outline" className="h-7 text-xs gap-1"><Download size={12} /> Download</Button>
-            <Button variant="outline" className="h-7 text-xs gap-1"><Pencil size={12} /> Edit</Button>
-            <DocumentActionsMenu
-              doc={doc}
-              trigger={
-                <Button variant="ghost" className="h-7 w-7 p-0">
-                  <MoreHorizontal size={14} />
-                </Button>
-              }
-            />
+            {renderActionButtons()}
           </div>
         </div>
 
