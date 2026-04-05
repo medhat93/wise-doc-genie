@@ -400,6 +400,17 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
           <div className="flex-1 overflow-y-auto">
             {/* ═══ TAB 1: OVERVIEW ═══ */}
             <TabsContent value="overview" className="p-4 space-y-4 mt-0">
+              {/* Follow-up parent link */}
+              {doc.followUpTo && (
+                <div className="bg-muted/30 rounded-lg p-3 flex items-center gap-2 text-sm">
+                  <span>🔗</span>
+                  <span className="text-muted-foreground">Parent document:</span>
+                  <button className="text-primary hover:underline font-medium" onClick={() => toast.info(`Open ${doc.followUpTo!.name}`)}>
+                    {doc.followUpTo.name}
+                  </button>
+                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5">Completed</Badge>
+                </div>
+              )}
               {/* Documents section */}
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Documents</p>
