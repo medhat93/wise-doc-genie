@@ -377,7 +377,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <div className="px-4 pt-2 border-b border-border shrink-0">
             <TabsList className="w-full justify-start h-9 bg-transparent p-0 gap-4">
               <TabsTrigger value="overview" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
