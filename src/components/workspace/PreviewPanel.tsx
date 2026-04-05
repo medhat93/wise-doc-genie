@@ -471,13 +471,13 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
             {/* ═══ TAB 3: PARTICIPANTS ═══ */}
             <TabsContent value="participants" className="p-4 mt-0 space-y-4">
               {signers.length > 0 && (
-                <ParticipantGroup label="Signers" participants={signers} stage={doc.stage} />
+                <ParticipantGroup label="Signers" participants={signers} stage={doc.stage} hasVisibilityDifferences />
               )}
               {approvers.length > 0 && (
-                <ParticipantGroup label="Approvers" participants={approvers} stage={doc.stage} />
+                <ParticipantGroup label="Approvers" participants={approvers} stage={doc.stage} hasVisibilityDifferences />
               )}
               {viewers.length > 0 && (
-                <ParticipantGroup label="Viewers" participants={viewers} stage={doc.stage} />
+                <ParticipantGroup label="Viewers" participants={viewers} stage={doc.stage} hasVisibilityDifferences />
               )}
               <p className="text-xs text-muted-foreground pt-2 border-t border-border">
                 {doc.participants.length} participants: {signers.length > 0 ? `${signers.length} signer${signers.length > 1 ? 's' : ''}` : ''}
