@@ -41,6 +41,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -501,8 +511,8 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
       <header className="h-14 border-b flex items-center justify-between px-4 flex-shrink-0 bg-card">
         {/* Left */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => navigate("/participants")}>
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
+          <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setShowCloseDialog(true)}>
+            <X className="h-4 w-4" />
           </Button>
           {isEditingTitle ? (
             <Input
