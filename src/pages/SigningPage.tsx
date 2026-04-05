@@ -258,16 +258,6 @@ export default function SigningPage() {
           </div>
         </div>
 
-        {/* Document Navigator (desktop) */}
-        {!isMobile && (
-          <DocumentNavigator
-            documents={SIGNING_DOCUMENTS}
-            activeDocId={activeDocId}
-            onSelectDoc={handleSelectDoc}
-            acceptedDocs={acceptedDocs}
-            signedFieldCount={signedFieldCount}
-          />
-        )}
 
         {/* Vertical Toolbar */}
         <div className="w-12 border-l border-border bg-card flex flex-col items-center py-3 gap-2 shrink-0">
