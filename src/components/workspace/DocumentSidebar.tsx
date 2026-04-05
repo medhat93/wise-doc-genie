@@ -23,14 +23,14 @@ const QUICK_LINKS: { id: QuickLink; label: string; icon: React.ElementType }[] =
   { id: 'trash', label: 'Trash', icon: Trash2 },
 ];
 
-const VIEWS: { id: SidebarView; label: string; dot?: string; pulse?: boolean; icon?: React.ElementType }[] = [
-  { id: 'in_progress', label: 'In progress', dot: 'bg-blue-500' },
+const VIEWS: { id: SidebarView; label: string }[] = [
+  { id: 'in_progress', label: 'In progress' },
   { id: 'owned', label: 'Owned by me' },
-  { id: 'requires_action', label: 'Requires your action', dot: 'bg-amber-500', pulse: true },
+  { id: 'requires_action', label: 'Requires your action' },
   { id: 'assigned', label: 'Assigned to me' },
-  { id: 'received', label: 'Received', icon: Clock },
-  { id: 'expiring', label: 'Expiring soon', dot: 'bg-red-500' },
-  { id: 'completed', label: 'Completed', dot: 'bg-green-500' },
+  { id: 'received', label: 'Received' },
+  { id: 'expiring', label: 'Expiring soon' },
+  { id: 'completed', label: 'Completed' },
 ];
 
 const TAGS = ['arbitration', 'assignment', 'urgent', 'NDA', 'renewal', 'VIP client'];
