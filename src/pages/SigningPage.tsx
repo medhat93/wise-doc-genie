@@ -177,6 +177,17 @@ export default function SigningPage() {
 
       {/* Main area */}
       <div className="flex-1 flex min-h-0 relative">
+        {/* Document Navigator (desktop, left side) */}
+        {!isMobile && (
+          <DocumentNavigator
+            documents={SIGNING_DOCUMENTS}
+            activeDocId={activeDocId}
+            onSelectDoc={handleSelectDoc}
+            acceptedDocs={acceptedDocs}
+            signedFieldCount={signedFieldCount}
+          />
+        )}
+
         {/* Document Viewer */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile doc chips */}
