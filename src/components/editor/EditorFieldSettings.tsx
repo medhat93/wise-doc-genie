@@ -93,6 +93,7 @@ const PRESET_COLORS = [
 
 interface EditorFieldSettingsProps {
   onClose: () => void;
+  showBackButton?: boolean;
 }
 
 const EditorFieldSettings = ({ onClose }: EditorFieldSettingsProps) => {
