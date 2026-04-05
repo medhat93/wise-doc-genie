@@ -385,24 +385,75 @@ const FieldOverlay = ({
   onSelect,
   onRemove,
   onDuplicate,
+  onUpdateField,
 }: {
   field: PlacedField;
   isSelected: boolean;
   onSelect: () => void;
   onRemove: () => void;
   onDuplicate: () => void;
+  onUpdateField: (id: string, updates: Partial<PlacedField>) => void;
 }) => {
   const ft = FIELD_TYPES.find((f) => f.id === field.fieldTypeId);
   const Icon = ft?.icon;
   const label = ft?.label || field.fieldTypeId;
+
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const resizeRef = useRef<{ startX: number; startY: number; origW: number; origH: number } | null>(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (dragRef.current) {
+        e.preventDefault();
+        const dx = e.clientX - dragRef.current.startX;
+        const dy = e.clientY - dragRef.current.startY;
+        onUpdateField(field.id, {
+          x: Math.max(0, dragRef.current.origX + dx),
+          y: Math.max(0, dragRef.current.origY + dy),
+        });
+      }
+      if (resizeRef.current) {
+        e.preventDefault();
+        const dx = e.clientX - resizeRef.current.startX;
+        const dy = e.clientY - resizeRef.current.startY;
+        onUpdateField(field.id, {
+          width: Math.max(40, resizeRef.current.origW + dx),
+          height: Math.max(20, resizeRef.current.origH + dy),
+        });
+      }
+    };
+    const handleMouseUp = () => {
+      dragRef.current = null;
+      resizeRef.current = null;
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [field.id, onUpdateField]);
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: field.x, origY: field.y };
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    resizeRef.current = { startX: e.clientX, startY: e.clientY, origW: field.width, origH: field.height };
+  };
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <div
           onClick={(e) => { e.stopPropagation(); onSelect(); }}
+          onMouseDown={handleDragStart}
           className={cn(
-            "absolute select-none transition-all",
+            "absolute select-none transition-[border-color,box-shadow]",
             isSelected ? "cursor-move z-20" : "cursor-move z-10 group"
           )}
           style={{
@@ -417,7 +468,7 @@ const FieldOverlay = ({
             borderRadius: 4,
           }}
         >
-          <div className="flex items-center gap-1 px-2 h-full overflow-hidden">
+          <div className="flex items-center gap-1 px-2 h-full overflow-hidden pointer-events-none">
             {Icon && <Icon size={11} style={{ color: field.participantColor }} className="flex-shrink-0" />}
             <span className="text-[10px] truncate" style={{ color: field.participantColor }}>
               {label}
@@ -426,7 +477,8 @@ const FieldOverlay = ({
 
           {isSelected && (
             <div
-              className="absolute -bottom-0.5 -right-0.5 h-2 w-2 cursor-nwse-resize rounded-sm"
+              onMouseDown={handleResizeStart}
+              className="absolute -bottom-0.5 -right-0.5 h-3 w-3 cursor-nwse-resize rounded-sm"
               style={{ backgroundColor: field.participantColor }}
             />
           )}
@@ -435,6 +487,7 @@ const FieldOverlay = ({
             <div
               className="absolute -bottom-8 left-0 flex items-center gap-1 bg-card border shadow-sm rounded-md px-1.5 py-0.5 z-30"
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
             >
               <button onClick={onDuplicate} className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent">
                 <Copy size={10} />
@@ -451,6 +504,7 @@ const FieldOverlay = ({
           {!isSelected && (
             <button
               onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              onMouseDown={(e) => e.stopPropagation()}
               className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
             >
               <X size={8} />
