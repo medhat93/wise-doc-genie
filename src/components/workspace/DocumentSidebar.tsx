@@ -85,18 +85,15 @@ export default function DocumentSidebar({
             </button>
           </div>
           <div className="space-y-0.5">
-            {VIEWS.map(({ id, label, dot, pulse, icon }) => (
+            {VIEWS.map(({ id, label }) => (
               <Item
                 key={id}
-                icon={icon}
                 label={label}
                 active={activeView === id}
                 onClick={() => {
                   onViewChange(activeView === id ? 'all' : id);
                   onQuickLinkChange(null);
                 }}
-                dot={dot}
-                pulse={pulse}
               />
             ))}
           </div>
