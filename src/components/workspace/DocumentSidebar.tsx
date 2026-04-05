@@ -23,14 +23,14 @@ const QUICK_LINKS: { id: QuickLink; label: string; icon: React.ElementType }[] =
   { id: 'trash', label: 'Trash', icon: Trash2 },
 ];
 
-const VIEWS: { id: SidebarView; label: string; dot?: string; pulse?: boolean; icon?: React.ElementType }[] = [
-  { id: 'in_progress', label: 'In progress', dot: 'bg-blue-500' },
+const VIEWS: { id: SidebarView; label: string }[] = [
+  { id: 'in_progress', label: 'In progress' },
   { id: 'owned', label: 'Owned by me' },
-  { id: 'requires_action', label: 'Requires your action', dot: 'bg-amber-500', pulse: true },
+  { id: 'requires_action', label: 'Requires your action' },
   { id: 'assigned', label: 'Assigned to me' },
-  { id: 'received', label: 'Received', icon: Clock },
-  { id: 'expiring', label: 'Expiring soon', dot: 'bg-red-500' },
-  { id: 'completed', label: 'Completed', dot: 'bg-green-500' },
+  { id: 'received', label: 'Received' },
+  { id: 'expiring', label: 'Expiring soon' },
+  { id: 'completed', label: 'Completed' },
 ];
 
 const TAGS = ['arbitration', 'assignment', 'urgent', 'NDA', 'renewal', 'VIP client'];
@@ -41,9 +41,8 @@ export default function DocumentSidebar({
 }: Props) {
   const [tagsOpen, setTagsOpen] = useState(false);
 
-  const Item = ({ icon: Icon, label, active, onClick, dot, pulse }: {
+  const Item = ({ icon: Icon, label, active, onClick }: {
     icon?: React.ElementType; label: string; active: boolean; onClick: () => void;
-    dot?: string; pulse?: boolean;
   }) => (
     <button
       onClick={onClick}
@@ -53,14 +52,7 @@ export default function DocumentSidebar({
       )}
     >
       {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-primary rounded-r-full" />}
-      {dot && (
-        <span className="relative flex h-1.5 w-1.5 shrink-0">
-          {pulse && <span className={cn('absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping', dot)} />}
-          <span className={cn('relative inline-flex rounded-full h-1.5 w-1.5', dot)} />
-        </span>
-      )}
-      {!dot && Icon && <Icon size={16} className="shrink-0" />}
-      {!dot && !Icon && <span className="w-4" />}
+      {Icon && <Icon size={16} className="shrink-0" />}
       <span className="flex-1 text-left truncate">{label}</span>
     </button>
   );
@@ -93,18 +85,15 @@ export default function DocumentSidebar({
             </button>
           </div>
           <div className="space-y-0.5">
-            {VIEWS.map(({ id, label, dot, pulse, icon }) => (
+            {VIEWS.map(({ id, label }) => (
               <Item
                 key={id}
-                icon={icon}
                 label={label}
                 active={activeView === id}
                 onClick={() => {
                   onViewChange(activeView === id ? 'all' : id);
                   onQuickLinkChange(null);
                 }}
-                dot={dot}
-                pulse={pulse}
               />
             ))}
           </div>
