@@ -105,9 +105,9 @@ const ParticipantsPageInner = () => {
             variant="ghost"
             size="icon"
             className="h-8 w-8 flex-shrink-0"
-            onClick={() => navigate(buildBackUrl())}
+            onClick={() => setShowCloseDialog(true)}
           >
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
+            <X className="h-4 w-4" />
           </Button>
           <span className="text-sm font-semibold truncate max-w-[200px]">{title}</span>
           <Badge
@@ -123,6 +123,15 @@ const ParticipantsPageInner = () => {
 
         {/* Right */}
         <div className="flex items-center gap-2 flex-1 justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1.5"
+            onClick={() => navigate(buildBackUrl())}
+          >
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
+            <span className="hidden sm:inline">Back</span>
+          </Button>
           <Button
             size="sm"
             className="h-8 text-xs gap-1.5"
