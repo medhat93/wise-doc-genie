@@ -467,8 +467,12 @@ export default function WorkspacePage() {
                               <Button
                                 variant={action.variant}
                                 className={cn('h-7 text-xs gap-1.5 w-[100px] font-medium', action.className)}
+                                onClick={() => {
+                                  if (action.label === 'Sign') navigate(`/signing/${doc.id}`);
+                                }}
                               >
                                 <action.icon size={14} /> {action.label}
+                              </Button>
                               </Button>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
