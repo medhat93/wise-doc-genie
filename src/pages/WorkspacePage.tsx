@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import PrimarySidebar from '@/components/workspace/PrimarySidebar';
 import DocumentSidebar from '@/components/workspace/DocumentSidebar';
 import PreviewPanel from '@/components/workspace/PreviewPanel';
