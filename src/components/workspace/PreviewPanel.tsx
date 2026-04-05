@@ -677,6 +677,8 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         </Tabs>
       </SheetContent>
     </Sheet>
+    <FollowUpDialog doc={doc} open={followUpOpen} onOpenChange={setFollowUpOpen} />
+    </>
   );
 }
 
