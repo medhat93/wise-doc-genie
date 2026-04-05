@@ -2,9 +2,19 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
-import { AlertTriangle, Link as LinkIcon } from "lucide-react";
+import { AlertTriangle, Link as LinkIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import StepIndicator, { type FlowMode } from "@/components/StepIndicator";
 import EditorParticipantsPanel from "@/components/editor/EditorParticipantsPanel";
 import { useEditorContext } from "@/components/editor/EditorContext";
@@ -15,6 +25,7 @@ const ParticipantsPageInner = () => {
   const [searchParams] = useSearchParams();
   const { participants } = useEditorContext();
   const [title] = useState("Untitled Document");
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
 
   const flowMode = searchParams.get("mode") as "correction" | "followup" | null;
   const correctionDocId = searchParams.get("id");
