@@ -21,6 +21,7 @@ const App = () => (
           <Route path="/participants" element={<ParticipantsPage />} />
           <Route path="/editor" element={<EditorPage />} />
           <Route path="/workspace" element={<WorkspacePage />} />
+          <Route path="/signing/:id" element={<SigningPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </EditorProvider>

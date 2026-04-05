@@ -137,7 +137,7 @@ export default function SigningAIPanel({ onClose, onCitation }: Props) {
           </button>
         );
       }
-      return <ReactMarkdown key={i} className="inline prose prose-sm max-w-none [&>p]:inline [&>ul]:mt-2 [&>ul]:mb-2 [&_li]:text-sm [&_strong]:text-foreground">{part}</ReactMarkdown>;
+      return <span key={i} dangerouslySetInnerHTML={{ __html: part.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>') }} />;
     });
   };
 
