@@ -500,6 +500,7 @@ const DocumentQueuePanel = ({
   if (primaryCount > 0) footerParts.push(`${primaryCount} primary`);
   if (supplementCount > 0) footerParts.push(`${supplementCount} supplement`);
   if (attachmentCount > 0) footerParts.push(`${attachmentCount} attachment`);
+  if (amendmentCount > 0) footerParts.push(`${amendmentCount} amendment`);
 
   return (
     <div className={isMobile ? "flex flex-col" : "w-[260px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>

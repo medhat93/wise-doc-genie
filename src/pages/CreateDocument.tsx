@@ -986,6 +986,7 @@ const CreateDocument = () => {
                   onAddFiles={() => fileInputRef.current?.click()}
                   mode={mode}
                   onEditDocuments={count > 0 ? () => navigate("/editor") : undefined}
+                  lockedDocuments={lockedDocs}
                 />
               </motion.div>
             )}
