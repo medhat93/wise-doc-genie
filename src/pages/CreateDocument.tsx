@@ -189,12 +189,41 @@ function TemplateCardSkeleton() {
 
 const CreateDocument = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const [mode, setMode] = useState<CreateDocumentMode>("full");
+
+  // Flow mode from URL params
+  const flowMode = searchParams.get("mode") as "correction" | "followup" | null;
+  const correctionDocId = searchParams.get("id");
+  const followUpParentId = searchParams.get("parentId");
+  const followUpChildType = searchParams.get("childType") || "amendment";
+  const relatedTo = searchParams.get("relatedTo");
+  const isCorrection = flowMode === "correction";
+  const isFollowUp = flowMode === "followup";
+  const isRelated = !!relatedTo && !flowMode;
+
+  // Mock data for correction/followup locked documents
+  const lockedDocs: UploadedDocument[] = useMemo(() => {
+    if (isCorrection) {
+      return [
+        { id: "locked-merged", name: "Original Documents (Merged)", type: "application/pdf", progress: 100, status: "complete", pageCount: 8, documentType: "primary", isLocked: true },
+        { id: "locked-schedule", name: "Schedule A — Pricing", type: "application/pdf", progress: 100, status: "complete", pageCount: 2, documentType: "supplement", isLocked: true },
+        { id: "locked-insurance", name: "Insurance Certificate", type: "application/pdf", progress: 100, status: "complete", pageCount: 1, documentType: "attachment", isLocked: true },
+      ];
+    }
+    if (isFollowUp) {
+      return [
+        { id: "locked-parent", name: "Annual Review — Acme Corp", type: "application/pdf", progress: 100, status: "complete", pageCount: 5, documentType: "primary", isLocked: true },
+      ];
+    }
+    return [];
+  }, [isCorrection, isFollowUp]);
+
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
   const [queueManuallyOpened, setQueueManuallyOpened] = useState(false);
-  const hasDocuments = documents.length > 0;
+  const hasDocuments = documents.length > 0 || lockedDocs.length > 0;
   const showQueue = hasDocuments || queueManuallyOpened;
   const [isDragActive, setIsDragActive] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
