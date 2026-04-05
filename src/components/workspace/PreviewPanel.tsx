@@ -86,13 +86,40 @@ function getMockActivities(doc: WorkspaceDocument) {
 }
 
 /* ── MOCK DOCUMENTS TAB DATA ──────────────────────────────────── */
-function getMockSubDocuments(doc: WorkspaceDocument) {
+interface SubDocument {
+  id: string;
+  name: string;
+  type: 'Primary' | 'Supplement' | 'Attachment';
+  pages: number;
+  signedCount: number;
+  totalSigners: number;
+  visibleTo?: string[] | 'all';
+  acknowledgment?: { participant: string; requirement: string };
+}
+
+function getMockSubDocuments(doc: WorkspaceDocument): SubDocument[] {
+  const signerCount = doc.participants.filter(p => p.role === 'signer').length;
+  const signedCount = doc.participants.filter(p => p.status === 'signed').length;
   return [
-    { id: 'd1', name: doc.name, type: 'Primary' as const, pages: 8, signedCount: doc.participants.filter(p => p.status === 'signed').length, totalSigners: doc.participants.filter(p => p.role === 'signer').length },
-    { id: 'd2', name: 'Schedule A — Pricing Terms', type: 'Supplement' as const, pages: 3, signedCount: 0, totalSigners: 0 },
-    { id: 'd3', name: 'Insurance Certificate', type: 'Attachment' as const, pages: 1, signedCount: 0, totalSigners: 0 },
+    { id: 'd1', name: 'Master Services Agreement', type: 'Primary', pages: 8, signedCount: Math.min(signedCount, signerCount) || (signerCount > 2 ? 1 : 0), totalSigners: signerCount || 3, visibleTo: 'all' },
+    { id: 'd2', name: 'Schedule A — Pricing & Fee Structure', type: 'Supplement', pages: 3, signedCount: 0, totalSigners: 2, visibleTo: ['Ahmad Medhat', 'Sarah Johnson'], acknowledgment: { participant: 'Sarah Johnson', requirement: 'Must view and accept before signing' } },
+    { id: 'd3', name: 'Confidential Financial Terms', type: 'Supplement', pages: 2, signedCount: 0, totalSigners: 1, visibleTo: ['Ahmad Medhat'], acknowledgment: { participant: 'Ahmad Medhat', requirement: 'Must view before signing' } },
+    { id: 'd4', name: 'Insurance Certificate', type: 'Attachment', pages: 1, signedCount: 0, totalSigners: 0, visibleTo: 'all' },
   ];
 }
+
+/* ── MOCK PARTICIPANT VISIBILITY ──────────────────────────────── */
+const participantVisibility: Record<string, string[] | 'all'> = {
+  'Ahmad Medhat': 'all',
+  'Sarah Johnson': ['Master Services Agreement', 'Schedule A — Pricing & Fee Structure', 'Insurance Certificate'],
+  'Mike Torres': ['Master Services Agreement', 'Insurance Certificate'],
+};
+
+const participantColors: Record<string, string> = {
+  'Ahmad Medhat': 'bg-blue-500',
+  'Sarah Johnson': 'bg-rose-500',
+  'Mike Torres': 'bg-amber-500',
+};
 
 /* ── PROPERTIES SECTION ───────────────────────────────────────── */
 function PropertiesSection() {
@@ -255,33 +282,52 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
                 {subDocs.map(sd => {
                   const typeColors = { Primary: 'bg-indigo-100 text-indigo-700', Supplement: 'bg-amber-100 text-amber-700', Attachment: 'bg-gray-100 text-gray-700' };
                   const isSub = sd.type !== 'Primary';
+                  const hasRestriction = sd.visibleTo !== 'all' && Array.isArray(sd.visibleTo);
                   return (
                     <div
                       key={sd.id}
                       onClick={() => toast.info(`Open ${sd.name}`)}
                       className={cn(
-                        'flex items-center py-2.5 border-b border-border/30 gap-3 cursor-pointer hover:bg-muted/30 transition-colors rounded-sm',
+                        'py-2.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 transition-colors rounded-sm',
                         isSub && 'pl-3 border-l-2',
                         sd.type === 'Supplement' && 'border-l-amber-400',
                         sd.type === 'Attachment' && 'border-l-gray-400',
                       )}
                     >
-                      <File size={16} className={cn('shrink-0', sd.type === 'Primary' ? 'text-red-500' : sd.type === 'Supplement' ? 'text-blue-500' : 'text-green-500')} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{sd.name}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={cn('text-[10px] px-1.5 rounded font-medium', typeColors[sd.type])}>{sd.type}</span>
-                          <span className="text-[10px] text-muted-foreground">·</span>
-                          <span className="text-[10px] text-muted-foreground">{sd.pages} pages</span>
+                      <div className="flex items-center gap-3">
+                        <File size={16} className={cn('shrink-0', sd.type === 'Primary' ? 'text-red-500' : sd.type === 'Supplement' ? 'text-blue-500' : 'text-green-500')} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{sd.name}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={cn('text-[10px] px-1.5 rounded font-medium', typeColors[sd.type])}>{sd.type}</span>
+                            <span className="text-[10px] text-muted-foreground">·</span>
+                            <span className="text-[10px] text-muted-foreground">{sd.pages} {sd.pages === 1 ? 'page' : 'pages'}</span>
+                          </div>
                         </div>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {sd.totalSigners > 0 ? `${sd.signedCount}/${sd.totalSigners} signed` : sd.type === 'Attachment' ? '' : doc.stage === 'draft' ? 'Not started' : '—'}
+                        </span>
                       </div>
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        {sd.totalSigners > 0 ? `${sd.signedCount}/${sd.totalSigners} signed` : doc.stage === 'draft' ? 'Not started' : '—'}
-                      </span>
+                      {hasRestriction && (
+                        <div className="ml-7 mt-1 space-y-0.5">
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <Eye size={10} className="shrink-0" />
+                            {(sd.visibleTo as string[]).map((name, i) => (
+                              <React.Fragment key={name}>
+                                {i > 0 && <span>,</span>}
+                                <span className={cn('inline-block h-1.5 w-1.5 rounded-full shrink-0', participantColors[name] || 'bg-muted-foreground')} />
+                                <span>{name}{(sd.visibleTo as string[]).length === 1 ? ' only' : ''}</span>
+                              </React.Fragment>
+                            ))}
+                          </div>
+                          {sd.acknowledgment && (
+                            <p className="text-[10px] text-amber-600 ml-[14px]">· {sd.acknowledgment.participant === (sd.visibleTo as string[]).find(n => n === sd.acknowledgment!.participant) ? sd.acknowledgment.participant.split(' ')[0] : sd.acknowledgment.participant} {sd.acknowledgment.requirement.toLowerCase().replace('must ', 'must ')}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
-                <p className="text-xs text-muted-foreground mt-1.5">All documents visible to all participants</p>
               </div>
 
               <Separator />
@@ -515,19 +561,22 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
 }
 
 /* ── PARTICIPANT GROUP SUB-COMPONENT ──────────────────────────── */
-function ParticipantGroup({ label, participants, stage }: {
+function ParticipantGroup({ label, participants, stage, hasVisibilityDifferences }: {
   label: string;
   participants: WorkspaceDocument['participants'];
   stage: string;
+  hasVisibilityDifferences?: boolean;
 }) {
   return (
     <div>
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{label}</p>
       {participants.map(p => {
         const sc = participantStatusConfig[p.status] || participantStatusConfig.pending;
+        const visibility = participantVisibility[p.name];
+        const showVisibility = hasVisibilityDifferences && visibility;
         return (
-          <div key={p.id} className="group flex items-center gap-3 py-3 border-b border-border/30">
-            <Avatar className="h-8 w-8">
+          <div key={p.id} className="group flex items-start gap-3 py-3 border-b border-border/30">
+            <Avatar className="h-8 w-8 mt-0.5">
               <AvatarFallback className="text-xs bg-primary/10">{initials(p.name)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
@@ -536,8 +585,13 @@ function ParticipantGroup({ label, participants, stage }: {
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0 rounded capitalize">{p.role}</span>
               </div>
+              {showVisibility && (
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Can see: {visibility === 'all' ? 'All documents' : (visibility as string[]).join(', ')}
+                </p>
+              )}
             </div>
-            <div className="text-right">
+            <div className="text-right shrink-0">
               <span className={cn('text-[10px] px-2 h-5 inline-flex items-center rounded-full font-medium', sc.className)}>{sc.label}</span>
               {p.status === 'signed' && p.signedAt && (
                 <p className="text-[10px] text-muted-foreground mt-0.5">{formatRelative(p.signedAt)}</p>
