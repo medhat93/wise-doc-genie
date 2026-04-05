@@ -508,6 +508,10 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
     onFieldSelect?.(fieldId);
   }, [setSelectedFieldId, onFieldSelect]);
 
+  const updateField = useCallback((id: string, updates: Partial<PlacedField>) => {
+    setPlacedFields((prev) => prev.map((f) => f.id === id ? { ...f, ...updates } : f));
+  }, [setPlacedFields]);
+
   const handleDrop = useCallback((e: React.DragEvent, docId: string) => {
     e.preventDefault();
     const data = e.dataTransfer.getData("application/field-type");
