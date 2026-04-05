@@ -93,20 +93,16 @@ interface SubDocument {
   name: string;
   type: 'Primary' | 'Supplement' | 'Attachment';
   pages: number;
-  signedCount: number;
-  totalSigners: number;
   visibleTo?: string[] | 'all';
   acknowledgment?: { participant: string; requirement: string };
 }
 
-function getMockSubDocuments(doc: WorkspaceDocument): SubDocument[] {
-  const signerCount = doc.participants.filter(p => p.role === 'signer').length;
-  const signedCount = doc.participants.filter(p => p.status === 'signed').length;
+function getMockSubDocuments(_doc: WorkspaceDocument): SubDocument[] {
   return [
-    { id: 'd1', name: 'Master Services Agreement', type: 'Primary', pages: 8, signedCount: Math.min(signedCount, signerCount) || (signerCount > 2 ? 1 : 0), totalSigners: signerCount || 3, visibleTo: 'all' },
-    { id: 'd2', name: 'Schedule A — Pricing & Fee Structure', type: 'Supplement', pages: 3, signedCount: 0, totalSigners: 2, visibleTo: ['Ahmad Medhat', 'Sarah Johnson'], acknowledgment: { participant: 'Sarah Johnson', requirement: 'Must view and accept before signing' } },
-    { id: 'd3', name: 'Confidential Financial Terms', type: 'Supplement', pages: 2, signedCount: 0, totalSigners: 1, visibleTo: ['Ahmad Medhat'], acknowledgment: { participant: 'Ahmad Medhat', requirement: 'Must view before signing' } },
-    { id: 'd4', name: 'Insurance Certificate', type: 'Attachment', pages: 1, signedCount: 0, totalSigners: 0, visibleTo: 'all' },
+    { id: 'd1', name: 'Master Services Agreement', type: 'Primary', pages: 8, visibleTo: 'all' },
+    { id: 'd2', name: 'Schedule A — Pricing & Fee Structure', type: 'Supplement', pages: 3, visibleTo: ['Ahmad Medhat', 'Sarah Johnson'], acknowledgment: { participant: 'Sarah Johnson', requirement: 'Must view and accept before signing' } },
+    { id: 'd3', name: 'Confidential Financial Terms', type: 'Supplement', pages: 2, visibleTo: ['Ahmad Medhat'], acknowledgment: { participant: 'Ahmad Medhat', requirement: 'Must view before signing' } },
+    { id: 'd4', name: 'Insurance Certificate', type: 'Attachment', pages: 1, visibleTo: 'all' },
   ];
 }
 
@@ -428,9 +424,9 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
                             <span className="text-[10px] text-muted-foreground">{sd.pages} {sd.pages === 1 ? 'page' : 'pages'}</span>
                           </div>
                         </div>
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          {sd.totalSigners > 0 ? `${sd.signedCount}/${sd.totalSigners} signed` : sd.type === 'Attachment' ? '' : doc.stage === 'draft' ? 'Not started' : '—'}
-                        </span>
+                        {sd.type !== 'Attachment' && (
+                          <span className="text-xs text-muted-foreground shrink-0">{sd.pages} pg</span>
+                        )}
                       </div>
                       {hasRestriction && (
                         <div className="ml-7 mt-1 space-y-0.5">
