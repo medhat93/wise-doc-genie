@@ -12,339 +12,369 @@ const hoursAgo = (hours: number) => {
   return d.toISOString();
 };
 
+const minutesAgo = (mins: number) => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - mins);
+  return d.toISOString();
+};
+
 export const workspaceDocuments: WorkspaceDocument[] = [
-  // DRAFT (5)
+  // ROW 1
   {
-    id: '1', name: 'Acme Corp Master Services Agreement', stage: 'draft', category: 'Contract',
-    owner: 'Ahmed Medhat', counterparty: 'Acme Corp',
+    id: '1', name: 'Consulting Agreement — Strategy Partners', stage: 'draft', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'Strategy Partners',
     participants: [
-      { id: 'p1', name: 'John Smith', email: 'john@acme.com', role: 'signer', status: 'not_sent' },
-      { id: 'p2', name: 'Jane Doe', email: 'jane@acme.com', role: 'signer', status: 'not_sent' },
-    ],
-    tags: ['VIP client'], folder: undefined, activities: [
-      { id: 'a1', type: 'created', actor: 'Ahmed Medhat', timestamp: daysAgo(2), description: 'Document created' },
-    ],
-    createdAt: daysAgo(2), modifiedAt: hoursAgo(3), progress: 0, isFavorite: true,
-  },
-  {
-    id: '2', name: 'CloudVault NDA', stage: 'draft', category: 'NDA',
-    owner: 'Ahmed Medhat', counterparty: 'CloudVault Inc',
-    participants: [
-      { id: 'p3', name: 'Mike Chen', email: 'mike@cloudvault.io', role: 'signer', status: 'not_sent' },
-    ],
-    tags: ['NDA'], activities: [
-      { id: 'a2', type: 'created', actor: 'Ahmed Medhat', timestamp: daysAgo(1), description: 'Document created' },
-    ],
-    createdAt: daysAgo(1), modifiedAt: hoursAgo(6), progress: 0, isFavorite: false,
-  },
-  {
-    id: '3', name: 'TechFlow Consulting Agreement', stage: 'draft', category: 'Agreement',
-    owner: 'Ahmed Medhat', counterparty: 'TechFlow',
-    participants: [
-      { id: 'p4', name: 'Lisa Wang', email: 'lisa@techflow.dev', role: 'signer', status: 'not_sent' },
-      { id: 'p5', name: 'Tom Harris', email: 'tom@techflow.dev', role: 'viewer', status: 'not_sent' },
+      { id: 'p1', name: 'Sarah Johnson', email: 'sarah@strategy.com', role: 'signer', status: 'not_sent' },
+      { id: 'p2', name: 'Mike Torres', email: 'mike@strategy.com', role: 'signer', status: 'not_sent' },
     ],
     tags: [], activities: [
-      { id: 'a3', type: 'created', actor: 'Ahmed Medhat', timestamp: daysAgo(5), description: 'Document created' },
+      { id: 'a1', type: 'created', actor: 'Ahmad Medhat', timestamp: minutesAgo(45), description: 'Document created' },
     ],
-    createdAt: daysAgo(5), modifiedAt: daysAgo(1), progress: 0, isFavorite: false,
+    createdAt: daysAgo(1), modifiedAt: minutesAgo(45), progress: 0, isFavorite: false,
+    waitingFor: { name: 'Ahmad Medhat', since: minutesAgo(45) },
   },
+  // ROW 2
   {
-    id: '4', name: 'HR Onboarding Package Q2', stage: 'draft', category: 'HR',
-    owner: 'Ahmed Medhat', folder: 'HR Onboarding',
+    id: '2', name: 'Master Services Agreement — Acme Corp', stage: 'approving', category: 'Contract',
+    owner: 'Ahmad Medhat', counterparty: 'Acme Corp',
+    workflow: 'Standard Approval', workflowStep: 'Finance Approval',
     participants: [
-      { id: 'p6', name: 'Emily Davis', email: 'emily@company.com', role: 'signer', status: 'not_sent' },
-      { id: 'p7', name: 'Robert Kim', email: 'robert@company.com', role: 'approver', status: 'not_sent' },
-    ],
-    tags: [], activities: [
-      { id: 'a4', type: 'created', actor: 'Ahmed Medhat', timestamp: daysAgo(3), description: 'Document created' },
-    ],
-    createdAt: daysAgo(3), modifiedAt: daysAgo(2), progress: 0, isFavorite: false,
-  },
-  {
-    id: '5', name: 'Procurement Framework 2026', stage: 'draft', category: 'Contract',
-    owner: 'Ahmed Medhat', folder: 'Procurement',
-    participants: [
-      { id: 'p8', name: 'Diana Ross', email: 'diana@vendor.com', role: 'signer', status: 'not_sent' },
-      { id: 'p9', name: 'Sam Wilson', email: 'sam@company.com', role: 'approver', status: 'not_sent' },
-      { id: 'p10', name: 'Alex Turner', email: 'alex@company.com', role: 'viewer', status: 'not_sent' },
-    ],
-    tags: [], activities: [
-      { id: 'a5', type: 'created', actor: 'Ahmed Medhat', timestamp: daysAgo(7), description: 'Document created' },
-    ],
-    createdAt: daysAgo(7), modifiedAt: daysAgo(4), progress: 0, isFavorite: true,
-  },
-  // APPROVAL CYCLE (4)
-  {
-    id: '6', name: 'Enterprise License Agreement', stage: 'approving', category: 'Contract',
-    owner: 'Ahmed Medhat', counterparty: 'Enterprise Corp',
-    workflow: 'Standard NDA Approval', workflowStep: 'Legal Review',
-    participants: [
-      { id: 'p11', name: 'Legal Team', email: 'legal@company.com', role: 'approver', status: 'pending' },
-      { id: 'p12', name: 'CFO Office', email: 'cfo@company.com', role: 'approver', status: 'not_sent' },
+      { id: 'p3', name: 'Sarah Johnson', email: 'sarah@acme.com', role: 'signer', status: 'pending' },
+      { id: 'p4', name: 'Mike Torres', email: 'mike@acme.com', role: 'signer', status: 'not_sent' },
+      { id: 'p5', name: 'Lisa Chen', email: 'lisa@acme.com', role: 'viewer', status: 'not_sent' },
     ],
     approvalSteps: [
-      { name: 'Manager Approval', status: 'completed', assignee: 'Sarah Johnson' },
-      { name: 'Legal Review', status: 'in_progress', assignee: 'Legal Team' },
-      { name: 'CFO Sign-off', status: 'pending', assignee: 'CFO Office' },
+      { name: 'Manager Approval', status: 'completed', assignee: 'Ahmad Medhat' },
+      { name: 'Finance Approval', status: 'in_progress', assignee: 'Sarah Johnson' },
+      { name: 'Legal Review', status: 'pending', assignee: 'Legal Team' },
     ],
-    tags: [], activities: [
-      { id: 'a6', type: 'created', actor: 'Ahmed Medhat', timestamp: daysAgo(10), description: 'Document created' },
-      { id: 'a7', type: 'approved', actor: 'Sarah Johnson', timestamp: daysAgo(5), description: 'Manager approval completed' },
+    tags: ['VIP Client'], activities: [
+      { id: 'a2', type: 'created', actor: 'Ahmad Medhat', timestamp: daysAgo(5), description: 'Document created' },
     ],
-    createdAt: daysAgo(10), modifiedAt: daysAgo(2), progress: 33,
-    waitingFor: { name: 'Legal Team', since: hoursAgo(48) }, isFavorite: false,
+    createdAt: daysAgo(5), modifiedAt: daysAgo(3), progress: 33,
+    waitingFor: { name: 'Sarah Johnson', since: daysAgo(3) }, isFavorite: false,
   },
+  // ROW 3
   {
-    id: '7', name: 'Vendor Onboarding Contract', stage: 'approving', category: 'Contract',
-    owner: 'Ahmed Medhat', counterparty: 'Vendor Co',
-    workflow: 'Procurement Approval', workflowStep: 'Procurement Review',
+    id: '3', name: 'Service Level Agreement — CloudBase', stage: 'approving', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'CloudBase',
+    workflow: 'Standard Approval', workflowStep: 'Legal Review',
     participants: [
-      { id: 'p13', name: 'Procurement Lead', email: 'proc@company.com', role: 'approver', status: 'pending' },
+      { id: 'p6', name: 'Mike Torres', email: 'mike@cloudbase.com', role: 'signer', status: 'pending' },
+      { id: 'p7', name: 'Finance Director', email: 'finance@company.com', role: 'approver', status: 'not_sent' },
     ],
     approvalSteps: [
-      { name: 'Procurement Review', status: 'in_progress', assignee: 'Procurement Lead' },
-      { name: 'Finance Check', status: 'pending', assignee: 'Finance Team' },
+      { name: 'Manager Approval', status: 'completed', assignee: 'Ahmad Medhat' },
+      { name: 'Legal Review', status: 'in_progress', assignee: 'Mike Torres' },
+      { name: 'Finance Sign-off', status: 'pending', assignee: 'Finance Director' },
     ],
-    tags: [], folder: 'Procurement', activities: [
-      { id: 'a8', type: 'created', actor: 'Ahmed Medhat', timestamp: daysAgo(6), description: 'Document created' },
+    tags: ['Confidential'], activities: [
+      { id: 'a3', type: 'created', actor: 'Ahmad Medhat', timestamp: daysAgo(8), description: 'Document created' },
     ],
-    createdAt: daysAgo(6), modifiedAt: daysAgo(1), progress: 25,
-    waitingFor: { name: 'Procurement Lead', since: hoursAgo(24) }, isFavorite: false,
+    createdAt: daysAgo(8), modifiedAt: daysAgo(4), progress: 33,
+    waitingFor: { name: 'Mike Torres', since: daysAgo(4) }, isFavorite: false,
   },
+  // ROW 4
   {
-    id: '8', name: 'Partnership MOU', stage: 'approved', category: 'Agreement',
-    owner: 'Ahmed Medhat', counterparty: 'Partner Inc',
-    workflow: 'Enterprise Contract Review',
+    id: '4', name: 'Maintenance Contract — Building Co', stage: 'approving', category: 'Contract',
+    owner: 'Ahmad Medhat', counterparty: 'Building Co',
+    workflow: 'Procurement Flow', workflowStep: 'Procurement Review',
     participants: [
-      { id: 'p14', name: 'VP Sales', email: 'vp@company.com', role: 'approver', status: 'signed' },
-      { id: 'p15', name: 'Partner Rep', email: 'rep@partner.com', role: 'signer', status: 'not_sent' },
+      { id: 'p8', name: 'Procurement Team', email: 'procurement@company.com', role: 'approver', status: 'pending' },
     ],
     approvalSteps: [
-      { name: 'Sales Review', status: 'completed', assignee: 'VP Sales' },
-      { name: 'Legal Review', status: 'completed', assignee: 'Legal Team' },
+      { name: 'Manager Approval', status: 'completed', assignee: 'Ahmad Medhat' },
+      { name: 'Procurement Review', status: 'in_progress', assignee: 'Procurement Team' },
+      { name: 'CFO Sign-off', status: 'pending', assignee: 'CFO' },
     ],
     tags: [], activities: [
-      { id: 'a9', type: 'approved', actor: 'Legal Team', timestamp: daysAgo(1), description: 'All approvals completed' },
+      { id: 'a4', type: 'created', actor: 'Ahmad Medhat', timestamp: daysAgo(10), description: 'Document created' },
     ],
-    createdAt: daysAgo(14), modifiedAt: daysAgo(1), progress: 100, isFavorite: false,
+    createdAt: daysAgo(10), modifiedAt: daysAgo(5), progress: 33,
+    waitingFor: { name: 'Procurement Team', since: daysAgo(5) }, isFavorite: false,
   },
+  // ROW 5
   {
-    id: '9', name: 'Data Processing Agreement', stage: 'approving', category: 'NDA',
-    owner: 'Ahmed Medhat', counterparty: 'DataCorp',
-    workflow: 'Standard NDA Approval', workflowStep: 'Compliance Review',
+    id: '5', name: 'Vendor Agreement — Globex Inc', stage: 'approving', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'Globex Inc',
+    workflow: 'Cross-functional Review', workflowStep: 'Cross-functional Review',
     participants: [
-      { id: 'p16', name: 'Compliance Officer', email: 'compliance@company.com', role: 'approver', status: 'pending' },
+      { id: 'p9', name: 'Sarah Johnson', email: 'sarah@globex.com', role: 'approver', status: 'pending' },
+      { id: 'p10', name: 'Mike Torres', email: 'mike@globex.com', role: 'approver', status: 'pending' },
+      { id: 'p11', name: 'David Park', email: 'david@globex.com', role: 'viewer', status: 'not_sent' },
     ],
     approvalSteps: [
       { name: 'Legal Review', status: 'completed', assignee: 'Legal Team' },
-      { name: 'Compliance Review', status: 'in_progress', assignee: 'Compliance Officer' },
+      { name: 'Cross-functional Review', status: 'in_progress', assignee: 'Mike Torres' },
+      { name: 'Final Approval', status: 'pending', assignee: 'VP Operations' },
     ],
-    tags: ['NDA'], activities: [
-      { id: 'a10', type: 'created', actor: 'Ahmed Medhat', timestamp: daysAgo(8), description: 'Document created' },
+    tags: ['Legal Review'], activities: [
+      { id: 'a5', type: 'created', actor: 'Ahmad Medhat', timestamp: daysAgo(7), description: 'Document created' },
     ],
-    createdAt: daysAgo(8), modifiedAt: daysAgo(2), progress: 50,
-    waitingFor: { name: 'Compliance Officer', since: hoursAgo(36) }, isFavorite: false,
+    createdAt: daysAgo(7), modifiedAt: daysAgo(4), progress: 33,
+    waitingFor: { name: 'Mike Torres', since: daysAgo(4) }, isFavorite: false,
   },
-  // IN SIGNING (6)
+  // ROW 6
   {
-    id: '10', name: 'Office Lease Renewal', stage: 'sent', category: 'Contract',
-    owner: 'Ahmed Medhat', counterparty: 'BuildingCo LLC',
+    id: '6', name: 'Software License — CloudBase', stage: 'approving', category: 'Contract',
+    owner: 'Ahmad Medhat', counterparty: 'CloudBase',
+    workflow: 'Standard Approval', workflowStep: 'Legal Review',
     participants: [
-      { id: 'p17', name: 'Landlord Rep', email: 'rep@buildingco.com', role: 'signer', status: 'pending' },
-      { id: 'p18', name: 'Property Manager', email: 'pm@buildingco.com', role: 'signer', status: 'pending' },
+      { id: 'p12', name: 'Legal', email: 'legal@company.com', role: 'approver', status: 'pending' },
     ],
-    tags: ['renewal'], activities: [
-      { id: 'a11', type: 'sent', actor: 'Ahmed Medhat', timestamp: daysAgo(3), description: 'Document sent for signing' },
+    approvalSteps: [
+      { name: 'Manager Approval', status: 'completed', assignee: 'Ahmad Medhat' },
+      { name: 'Legal Review', status: 'in_progress', assignee: 'Ahmad Medhat' },
+      { name: 'Procurement', status: 'pending', assignee: 'Procurement Team' },
     ],
-    createdAt: daysAgo(7), modifiedAt: daysAgo(3), progress: 0,
-    waitingFor: { name: 'Landlord Rep', since: hoursAgo(72) }, isFavorite: false,
+    tags: ['Auto-Renewal'], activities: [
+      { id: 'a6', type: 'created', actor: 'Ahmad Medhat', timestamp: hoursAgo(5), description: 'Document created' },
+    ],
+    createdAt: daysAgo(3), modifiedAt: hoursAgo(3), progress: 33,
+    waitingFor: { name: 'Ahmad Medhat', since: hoursAgo(3) }, isFavorite: false,
   },
+  // ROW 7
   {
-    id: '11', name: 'Employee Offer Letter — Sarah', stage: 'partially_signed', category: 'HR',
-    owner: 'Ahmed Medhat', counterparty: 'Sarah Martinez',
+    id: '7', name: 'Procurement Contract — Umbrella Corp', stage: 'draft', category: 'Contract',
+    owner: 'Ahmad Medhat', counterparty: 'Umbrella Corp',
     participants: [
-      { id: 'p19', name: 'Ahmed Medhat', email: 'ahmed@company.com', role: 'signer', status: 'signed', signedAt: daysAgo(2) },
-      { id: 'p20', name: 'Sarah Martinez', email: 'sarah.m@email.com', role: 'signer', status: 'pending' },
+      { id: 'p13', name: 'Sarah Johnson', email: 'sarah@umbrella.com', role: 'signer', status: 'not_sent' },
+      { id: 'p14', name: 'Finance Director', email: 'finance@company.com', role: 'approver', status: 'not_sent' },
+      { id: 'p15', name: 'Tom Bradley', email: 'tom@umbrella.com', role: 'viewer', status: 'not_sent' },
     ],
-    tags: [], folder: 'HR Onboarding', activities: [
-      { id: 'a12', type: 'signed', actor: 'Ahmed Medhat', timestamp: daysAgo(2), description: 'Ahmed Medhat signed' },
-      { id: 'a13', type: 'sent', actor: 'System', timestamp: daysAgo(2), description: 'Sent to Sarah Martinez' },
+    tags: ['Legal Review'], activities: [
+      { id: 'a7', type: 'created', actor: 'Ahmad Medhat', timestamp: hoursAgo(8), description: 'Document created' },
     ],
-    createdAt: daysAgo(5), modifiedAt: daysAgo(2), progress: 50,
-    waitingFor: { name: 'Sarah Martinez', since: hoursAgo(48) }, isFavorite: true,
+    createdAt: daysAgo(2), modifiedAt: hoursAgo(8), progress: 0, isFavorite: false,
+    waitingFor: { name: 'Ahmad Medhat', since: hoursAgo(8) },
   },
+  // ROW 8
   {
-    id: '12', name: 'Mutual NDA — Meridian', stage: 'waiting', category: 'NDA',
-    owner: 'Ahmed Medhat', counterparty: 'Meridian Group',
+    id: '8', name: 'Non-Compete — Sarah Johnson', stage: 'draft', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'Sarah Johnson',
     participants: [
-      { id: 'p21', name: 'Mark Stevens', email: 'mark@meridian.com', role: 'signer', status: 'viewed', viewedAt: hoursAgo(4) },
-      { id: 'p22', name: 'Laura Chen', email: 'laura@meridian.com', role: 'signer', status: 'pending' },
-    ],
-    tags: ['NDA'], activities: [
-      { id: 'a14', type: 'viewed', actor: 'Mark Stevens', timestamp: hoursAgo(4), description: 'Mark Stevens viewed the document' },
-    ],
-    createdAt: daysAgo(4), modifiedAt: hoursAgo(4), progress: 0,
-    waitingFor: { name: 'Mark Stevens', since: hoursAgo(4) }, isFavorite: false,
-  },
-  {
-    id: '13', name: 'Service Level Agreement', stage: 'requires_action', category: 'Agreement',
-    owner: 'Sarah Johnson', counterparty: 'Company',
-    participants: [
-      { id: 'p23', name: 'Sarah Johnson', email: 'sarah@vendor.com', role: 'signer', status: 'signed', signedAt: daysAgo(1) },
-      { id: 'p24', name: 'Ahmed Medhat', email: 'ahmed@company.com', role: 'signer', status: 'pending' },
-    ],
-    tags: ['urgent'], activities: [
-      { id: 'a15', type: 'signed', actor: 'Sarah Johnson', timestamp: daysAgo(1), description: 'Sarah Johnson signed' },
-      { id: 'a16', type: 'reminder', actor: 'System', timestamp: hoursAgo(6), description: 'Reminder sent to Ahmed Medhat' },
-    ],
-    createdAt: daysAgo(6), modifiedAt: daysAgo(1), progress: 50,
-    waitingFor: { name: 'You', since: hoursAgo(24) }, isFavorite: false,
-  },
-  {
-    id: '14', name: 'Consulting SOW Q2', stage: 'expiring', category: 'SOW',
-    owner: 'Ahmed Medhat', counterparty: 'ConsultCo',
-    participants: [
-      { id: 'p25', name: 'Dan Brown', email: 'dan@consultco.com', role: 'signer', status: 'pending' },
-      { id: 'p26', name: 'Eve White', email: 'eve@consultco.com', role: 'viewer', status: 'viewed' },
+      { id: 'p16', name: 'Sarah Johnson', email: 'sarah@company.com', role: 'signer', status: 'not_sent' },
+      { id: 'p17', name: 'Finance Director', email: 'finance@company.com', role: 'approver', status: 'not_sent' },
     ],
     tags: [], activities: [
-      { id: 'a17', type: 'sent', actor: 'Ahmed Medhat', timestamp: daysAgo(12), description: 'Document sent' },
-      { id: 'a18', type: 'reminder', actor: 'System', timestamp: daysAgo(1), description: 'Expiry reminder sent' },
+      { id: 'a8', type: 'created', actor: 'Ahmad Medhat', timestamp: hoursAgo(12), description: 'Document created' },
     ],
-    createdAt: daysAgo(14), modifiedAt: daysAgo(1), expiresAt: daysAgo(-3), progress: 0,
-    waitingFor: { name: 'Dan Brown', since: hoursAgo(288) }, isFavorite: false,
+    createdAt: daysAgo(1), modifiedAt: hoursAgo(12), progress: 0, isFavorite: false,
+    waitingFor: { name: 'Ahmad Medhat', since: hoursAgo(12) },
   },
+  // ROW 9
   {
-    id: '15', name: 'Amendment #3 — CloudVault', stage: 'waiting', category: 'Amendment',
-    owner: 'Ahmed Medhat', counterparty: 'CloudVault Inc',
+    id: '9', name: 'Service Agreement — Wayne Enterprises', stage: 'sent', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'Wayne Enterprises',
     participants: [
-      { id: 'p27', name: 'Mike Chen', email: 'mike@cloudvault.io', role: 'signer', status: 'pending' },
-      { id: 'p28', name: 'Amy Liu', email: 'amy@cloudvault.io', role: 'signer', status: 'pending' },
-      { id: 'p29', name: 'James Park', email: 'james@company.com', role: 'viewer', status: 'viewed' },
+      { id: 'p18', name: 'Bruce Wayne', email: 'bruce@wayne.com', role: 'signer', status: 'pending' },
+    ],
+    tags: ['VIP Client'], activities: [
+      { id: 'a9', type: 'sent', actor: 'Ahmad Medhat', timestamp: daysAgo(2), description: 'Document sent for signing' },
+    ],
+    createdAt: daysAgo(5), modifiedAt: daysAgo(2), progress: 0,
+    waitingFor: { name: 'Bruce Wayne', since: daysAgo(2) }, isFavorite: false,
+  },
+  // ROW 10
+  {
+    id: '10', name: 'IP Assignment — Contractor', stage: 'sent', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'Contractor',
+    participants: [
+      { id: 'p19', name: 'Mark Davis', email: 'mark@contractor.com', role: 'signer', status: 'pending' },
     ],
     tags: [], activities: [
-      { id: 'a19', type: 'sent', actor: 'Ahmed Medhat', timestamp: daysAgo(2), description: 'Document sent for signing' },
+      { id: 'a10', type: 'sent', actor: 'Ahmad Medhat', timestamp: daysAgo(3), description: 'Document sent' },
     ],
-    createdAt: daysAgo(3), modifiedAt: daysAgo(2), progress: 0,
-    waitingFor: { name: 'Mike Chen', since: hoursAgo(48) }, isFavorite: false,
+    createdAt: daysAgo(6), modifiedAt: daysAgo(3), progress: 0,
+    waitingFor: { name: 'Mark Davis', since: daysAgo(3) }, isFavorite: false,
   },
-  // COMPLETED (5)
+  // ROW 11
   {
-    id: '16', name: 'Annual Review — Acme Corp', stage: 'completed', category: 'Contract',
-    owner: 'Ahmed Medhat', counterparty: 'Acme Corp',
+    id: '11', name: 'NDA — Stark Industries', stage: 'requires_action', category: 'NDA',
+    owner: 'Pepper Potts', counterparty: 'Stark Industries',
     participants: [
-      { id: 'p30', name: 'John Smith', email: 'john@acme.com', role: 'signer', status: 'signed', signedAt: daysAgo(3) },
-      { id: 'p31', name: 'Ahmed Medhat', email: 'ahmed@company.com', role: 'signer', status: 'signed', signedAt: daysAgo(4) },
+      { id: 'p20', name: 'Pepper Potts', email: 'pepper@stark.com', role: 'signer', status: 'signed', signedAt: daysAgo(2) },
+      { id: 'p21', name: 'Ahmad Medhat', email: 'ahmed@company.com', role: 'signer', status: 'pending' },
     ],
-    tags: ['VIP client'], activities: [
-      { id: 'a20', type: 'signed', actor: 'John Smith', timestamp: daysAgo(3), description: 'All parties signed' },
+    tags: ['Urgent'], activities: [
+      { id: 'a11', type: 'signed', actor: 'Pepper Potts', timestamp: daysAgo(2), description: 'Pepper Potts signed' },
     ],
-    createdAt: daysAgo(20), modifiedAt: daysAgo(3), progress: 100, isFavorite: true,
+    createdAt: daysAgo(5), modifiedAt: daysAgo(1), progress: 50,
+    waitingFor: { name: 'Ahmad Medhat', since: daysAgo(1) }, isFavorite: false,
   },
+  // ROW 12
   {
-    id: '17', name: 'Freelancer Agreement — John', stage: 'completed', category: 'Agreement',
-    owner: 'Ahmed Medhat', counterparty: 'John Doe',
+    id: '12', name: 'Consulting Agreement — Deloitte', stage: 'requires_action', category: 'Agreement',
+    owner: 'Lisa Chen', counterparty: 'Deloitte',
     participants: [
-      { id: 'p32', name: 'John Doe', email: 'john.doe@email.com', role: 'signer', status: 'signed', signedAt: daysAgo(5) },
+      { id: 'p22', name: 'Lisa Chen', email: 'lisa@deloitte.com', role: 'signer', status: 'signed', signedAt: daysAgo(2) },
+      { id: 'p23', name: 'David Park', email: 'david@deloitte.com', role: 'signer', status: 'signed', signedAt: daysAgo(1) },
+      { id: 'p24', name: 'Ahmad Medhat', email: 'ahmed@company.com', role: 'signer', status: 'pending' },
+    ],
+    tags: ['VIP Client'], activities: [
+      { id: 'a12', type: 'signed', actor: 'David Park', timestamp: daysAgo(1), description: 'David Park signed' },
+    ],
+    createdAt: daysAgo(7), modifiedAt: daysAgo(1), progress: 66,
+    waitingFor: { name: 'Ahmad Medhat', since: daysAgo(1) }, isFavorite: false,
+  },
+  // ROW 13
+  {
+    id: '13', name: 'Non-Compete — Tom Bradley', stage: 'sent', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'Tom Bradley',
+    participants: [
+      { id: 'p25', name: 'Tom Bradley', email: 'tom@email.com', role: 'signer', status: 'pending' },
     ],
     tags: [], activities: [
-      { id: 'a21', type: 'signed', actor: 'John Doe', timestamp: daysAgo(5), description: 'Document signed' },
+      { id: 'a13', type: 'sent', actor: 'Ahmad Medhat', timestamp: daysAgo(1), description: 'Document sent' },
+    ],
+    createdAt: daysAgo(4), modifiedAt: daysAgo(1), progress: 0,
+    waitingFor: { name: 'Tom Bradley', since: daysAgo(1) }, isFavorite: false,
+  },
+  // ROW 14 - Completed
+  {
+    id: '14', name: 'Annual Review — Acme Corp', stage: 'completed', category: 'Contract',
+    owner: 'Ahmad Medhat', counterparty: 'Acme Corp',
+    participants: [
+      { id: 'p26', name: 'John Smith', email: 'john@acme.com', role: 'signer', status: 'signed', signedAt: daysAgo(3) },
+      { id: 'p27', name: 'Ahmad Medhat', email: 'ahmed@company.com', role: 'signer', status: 'signed', signedAt: daysAgo(4) },
+    ],
+    tags: ['VIP Client'], activities: [
+      { id: 'a14', type: 'signed', actor: 'John Smith', timestamp: daysAgo(3), description: 'All parties signed' },
+    ],
+    createdAt: daysAgo(20), modifiedAt: daysAgo(3), progress: 100, isFavorite: false,
+  },
+  // ROW 15 - Completed
+  {
+    id: '15', name: 'Freelancer Agreement — John Doe', stage: 'completed', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'John Doe',
+    participants: [
+      { id: 'p28', name: 'John Doe', email: 'john.doe@email.com', role: 'signer', status: 'signed', signedAt: daysAgo(5) },
+    ],
+    tags: [], activities: [
+      { id: 'a15', type: 'signed', actor: 'John Doe', timestamp: daysAgo(5), description: 'Document signed' },
     ],
     createdAt: daysAgo(15), modifiedAt: daysAgo(5), progress: 100, isFavorite: false,
   },
+  // ROW 16 - Completed
   {
-    id: '18', name: 'Board Resolution 2026', stage: 'completed', category: 'Resolution',
-    owner: 'Ahmed Medhat',
+    id: '16', name: 'Board Resolution 2026', stage: 'completed', category: 'Resolution',
+    owner: 'Ahmad Medhat',
     participants: [
-      { id: 'p33', name: 'Board Member A', email: 'a@board.com', role: 'signer', status: 'signed', signedAt: daysAgo(7) },
-      { id: 'p34', name: 'Board Member B', email: 'b@board.com', role: 'signer', status: 'signed', signedAt: daysAgo(8) },
-      { id: 'p35', name: 'Board Member C', email: 'c@board.com', role: 'signer', status: 'signed', signedAt: daysAgo(9) },
+      { id: 'p29', name: 'Board Member A', email: 'a@board.com', role: 'signer', status: 'signed', signedAt: daysAgo(7) },
+      { id: 'p30', name: 'Board Member B', email: 'b@board.com', role: 'signer', status: 'signed', signedAt: daysAgo(8) },
     ],
     tags: [], activities: [
-      { id: 'a22', type: 'signed', actor: 'Board Member A', timestamp: daysAgo(7), description: 'Final signature completed' },
+      { id: 'a16', type: 'signed', actor: 'Board Member A', timestamp: daysAgo(7), description: 'All signatures completed' },
     ],
     createdAt: daysAgo(30), modifiedAt: daysAgo(7), progress: 100, isFavorite: false,
   },
+  // ROW 17 - Completed
   {
-    id: '19', name: 'IP Assignment — TechFlow', stage: 'completed', category: 'Agreement',
-    owner: 'Ahmed Medhat', counterparty: 'TechFlow',
+    id: '17', name: 'IP Assignment — TechFlow', stage: 'completed', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'TechFlow',
     participants: [
-      { id: 'p36', name: 'Lisa Wang', email: 'lisa@techflow.dev', role: 'signer', status: 'signed', signedAt: daysAgo(10) },
+      { id: 'p31', name: 'Lisa Wang', email: 'lisa@techflow.dev', role: 'signer', status: 'signed', signedAt: daysAgo(10) },
     ],
-    tags: ['assignment'], activities: [
-      { id: 'a23', type: 'signed', actor: 'Lisa Wang', timestamp: daysAgo(10), description: 'Document signed' },
+    tags: [], activities: [
+      { id: 'a17', type: 'signed', actor: 'Lisa Wang', timestamp: daysAgo(10), description: 'Document signed' },
     ],
     createdAt: daysAgo(20), modifiedAt: daysAgo(10), progress: 100, isFavorite: false,
   },
+  // ROW 18 - Completed
   {
-    id: '20', name: 'Arbitration Agreement', stage: 'completed', category: 'Agreement',
-    owner: 'Ahmed Medhat',
+    id: '18', name: 'Partnership Agreement — Meridian', stage: 'completed', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'Meridian Group',
     participants: [
-      { id: 'p37', name: 'Client Rep', email: 'client@email.com', role: 'signer', status: 'signed', signedAt: daysAgo(12) },
-      { id: 'p38', name: 'Ahmed Medhat', email: 'ahmed@company.com', role: 'signer', status: 'signed', signedAt: daysAgo(13) },
-    ],
-    tags: ['arbitration'], activities: [
-      { id: 'a24', type: 'signed', actor: 'Client Rep', timestamp: daysAgo(12), description: 'All parties signed' },
-    ],
-    createdAt: daysAgo(25), modifiedAt: daysAgo(12), progress: 100, isFavorite: false,
-  },
-  // FAILED (5)
-  {
-    id: '21', name: 'Vendor Terms — Declined', stage: 'declined', category: 'Contract',
-    owner: 'Ahmed Medhat', counterparty: 'VendorX',
-    participants: [
-      { id: 'p39', name: 'Vendor Contact', email: 'contact@vendorx.com', role: 'signer', status: 'declined' },
+      { id: 'p32', name: 'Mark Stevens', email: 'mark@meridian.com', role: 'signer', status: 'signed', signedAt: daysAgo(6) },
+      { id: 'p33', name: 'Ahmad Medhat', email: 'ahmed@company.com', role: 'signer', status: 'signed', signedAt: daysAgo(7) },
     ],
     tags: [], activities: [
-      { id: 'a25', type: 'declined', actor: 'Vendor Contact', timestamp: daysAgo(4), description: 'Signer declined to sign' },
+      { id: 'a18', type: 'signed', actor: 'Mark Stevens', timestamp: daysAgo(6), description: 'All parties signed' },
+    ],
+    createdAt: daysAgo(18), modifiedAt: daysAgo(6), progress: 100, isFavorite: false,
+  },
+  // ROW 19 - Declined
+  {
+    id: '19', name: 'Vendor Terms — VendorX', stage: 'declined', category: 'Contract',
+    owner: 'Ahmad Medhat', counterparty: 'VendorX',
+    participants: [
+      { id: 'p34', name: 'Vendor Contact', email: 'contact@vendorx.com', role: 'signer', status: 'declined' },
+    ],
+    tags: [], activities: [
+      { id: 'a19', type: 'declined', actor: 'Vendor Contact', timestamp: daysAgo(4), description: 'Signer declined' },
     ],
     createdAt: daysAgo(15), modifiedAt: daysAgo(4), progress: 0, isFavorite: false,
   },
+  // ROW 20 - Declined
   {
-    id: '22', name: 'Old NDA — Voided', stage: 'voided', category: 'NDA',
-    owner: 'Ahmed Medhat', counterparty: 'OldPartner LLC',
+    id: '20', name: 'Rejected Procurement — SupplierZ', stage: 'declined', category: 'Contract',
+    owner: 'Ahmad Medhat', counterparty: 'SupplierZ',
     participants: [
-      { id: 'p40', name: 'Old Partner', email: 'partner@old.com', role: 'signer', status: 'not_sent' },
+      { id: 'p35', name: 'Supplier Contact', email: 'contact@supplierz.com', role: 'signer', status: 'declined' },
     ],
-    tags: ['NDA'], activities: [
-      { id: 'a26', type: 'voided', actor: 'Ahmed Medhat', timestamp: daysAgo(6), description: 'Document voided by sender' },
+    tags: [], activities: [
+      { id: 'a20', type: 'declined', actor: 'Supplier Contact', timestamp: daysAgo(3), description: 'Supplier declined terms' },
+    ],
+    createdAt: daysAgo(18), modifiedAt: daysAgo(3), progress: 0, isFavorite: false,
+  },
+  // ROW 21 - Voided
+  {
+    id: '21', name: 'Old NDA — OldPartner LLC', stage: 'voided', category: 'NDA',
+    owner: 'Ahmad Medhat', counterparty: 'OldPartner LLC',
+    participants: [
+      { id: 'p36', name: 'Old Partner', email: 'partner@old.com', role: 'signer', status: 'not_sent' },
+    ],
+    tags: [], activities: [
+      { id: 'a21', type: 'voided', actor: 'Ahmad Medhat', timestamp: daysAgo(6), description: 'Document voided' },
     ],
     createdAt: daysAgo(30), modifiedAt: daysAgo(6), progress: 0, isFavorite: false,
   },
+  // ROW 22 - Voided
   {
-    id: '23', name: 'Expired Lease Option', stage: 'expired', category: 'Contract',
-    owner: 'Ahmed Medhat', counterparty: 'PropertyCo',
+    id: '22', name: 'Cancelled Agreement — TempCo', stage: 'voided', category: 'Agreement',
+    owner: 'Ahmad Medhat', counterparty: 'TempCo',
     participants: [
-      { id: 'p41', name: 'Property Owner', email: 'owner@propertyco.com', role: 'signer', status: 'pending' },
+      { id: 'p37', name: 'Temp Contact', email: 'temp@tempco.com', role: 'signer', status: 'not_sent' },
     ],
     tags: [], activities: [
-      { id: 'a27', type: 'expired', actor: 'System', timestamp: daysAgo(2), description: 'Document expired' },
+      { id: 'a22', type: 'voided', actor: 'Ahmad Medhat', timestamp: daysAgo(8), description: 'Document voided' },
+    ],
+    createdAt: daysAgo(25), modifiedAt: daysAgo(8), progress: 0, isFavorite: false,
+  },
+  // ROW 23 - Expired
+  {
+    id: '23', name: 'Expired Lease Option — PropertyCo', stage: 'expired', category: 'Contract',
+    owner: 'Ahmad Medhat', counterparty: 'PropertyCo',
+    participants: [
+      { id: 'p38', name: 'Property Owner', email: 'owner@propertyco.com', role: 'signer', status: 'pending' },
+    ],
+    tags: [], activities: [
+      { id: 'a23', type: 'expired', actor: 'System', timestamp: daysAgo(2), description: 'Document expired' },
     ],
     createdAt: daysAgo(28), modifiedAt: daysAgo(2), expiresAt: daysAgo(2), progress: 0, isFavorite: false,
   },
+  // ROW 24 - Expired
   {
-    id: '24', name: 'Rejected Procurement', stage: 'declined', category: 'Contract',
-    owner: 'Ahmed Medhat', counterparty: 'SupplierZ',
+    id: '24', name: 'Lapsed Insurance Cert — InsureCo', stage: 'expired', category: 'Certificate',
+    owner: 'Ahmad Medhat', counterparty: 'InsureCo',
     participants: [
-      { id: 'p42', name: 'Supplier Contact', email: 'contact@supplierz.com', role: 'signer', status: 'declined' },
-      { id: 'p43', name: 'Ahmed Medhat', email: 'ahmed@company.com', role: 'signer', status: 'signed', signedAt: daysAgo(10) },
-    ],
-    tags: [], folder: 'Procurement', activities: [
-      { id: 'a28', type: 'declined', actor: 'Supplier Contact', timestamp: daysAgo(3), description: 'Supplier declined terms' },
-    ],
-    createdAt: daysAgo(18), modifiedAt: daysAgo(3), progress: 50, isFavorite: false,
-  },
-  {
-    id: '25', name: 'Lapsed Insurance Cert', stage: 'expired', category: 'Certificate',
-    owner: 'Ahmed Medhat', counterparty: 'InsureCo',
-    participants: [
-      { id: 'p44', name: 'Insurance Agent', email: 'agent@insureco.com', role: 'signer', status: 'pending' },
-      { id: 'p45', name: 'Risk Manager', email: 'risk@company.com', role: 'viewer', status: 'viewed' },
+      { id: 'p39', name: 'Insurance Agent', email: 'agent@insureco.com', role: 'signer', status: 'pending' },
     ],
     tags: [], activities: [
-      { id: 'a29', type: 'expired', actor: 'System', timestamp: daysAgo(1), description: 'Certificate expired' },
+      { id: 'a24', type: 'expired', actor: 'System', timestamp: daysAgo(1), description: 'Certificate expired' },
     ],
     createdAt: daysAgo(25), modifiedAt: daysAgo(1), expiresAt: daysAgo(1), progress: 0, isFavorite: false,
+  },
+  // ROW 25 - Expired
+  {
+    id: '25', name: 'Expired NDA — DataCorp', stage: 'expired', category: 'NDA',
+    owner: 'Ahmad Medhat', counterparty: 'DataCorp',
+    participants: [
+      { id: 'p40', name: 'Data Officer', email: 'data@datacorp.com', role: 'signer', status: 'pending' },
+    ],
+    tags: [], activities: [
+      { id: 'a25', type: 'expired', actor: 'System', timestamp: daysAgo(5), description: 'Document expired' },
+    ],
+    createdAt: daysAgo(35), modifiedAt: daysAgo(5), expiresAt: daysAgo(5), progress: 0, isFavorite: false,
   },
 ];
