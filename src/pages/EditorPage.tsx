@@ -101,6 +101,10 @@ const EditorPageInner = () => {
     setActivePanel("comments");
   }, []);
 
+  const handleOpenAi = useCallback(() => {
+    setActivePanel("ai");
+  }, []);
+
   if (loading) return <EditorSkeleton />;
 
   return (
@@ -127,6 +131,7 @@ const EditorPageInner = () => {
           showToolbar={!isEsign}
           onFieldSelect={handleFieldSelect}
           onOpenComments={handleOpenComments}
+          onOpenAi={handleOpenAi}
           isEsign={isEsign}
         />
 
