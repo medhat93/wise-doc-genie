@@ -249,11 +249,42 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
           <div className="flex-1 overflow-y-auto">
             {/* ═══ TAB 1: OVERVIEW ═══ */}
             <TabsContent value="overview" className="p-4 space-y-4 mt-0">
-              {/* Preview placeholder */}
-              <div className="h-36 rounded-lg bg-muted/30 border border-border flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-muted/50 transition-colors">
-                <FileText size={36} className="text-muted-foreground/40" />
-                <span className="text-xs text-primary hover:underline">Click to open full document</span>
+              {/* Documents section */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Documents</p>
+                {subDocs.map(sd => {
+                  const typeColors = { Primary: 'bg-indigo-100 text-indigo-700', Supplement: 'bg-amber-100 text-amber-700', Attachment: 'bg-gray-100 text-gray-700' };
+                  const isSub = sd.type !== 'Primary';
+                  return (
+                    <div
+                      key={sd.id}
+                      onClick={() => toast.info(`Open ${sd.name}`)}
+                      className={cn(
+                        'flex items-center py-2.5 border-b border-border/30 gap-3 cursor-pointer hover:bg-muted/30 transition-colors rounded-sm',
+                        isSub && 'pl-3 border-l-2',
+                        sd.type === 'Supplement' && 'border-l-amber-400',
+                        sd.type === 'Attachment' && 'border-l-gray-400',
+                      )}
+                    >
+                      <File size={16} className={cn('shrink-0', sd.type === 'Primary' ? 'text-red-500' : sd.type === 'Supplement' ? 'text-blue-500' : 'text-green-500')} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{sd.name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className={cn('text-[10px] px-1.5 rounded font-medium', typeColors[sd.type])}>{sd.type}</span>
+                          <span className="text-[10px] text-muted-foreground">·</span>
+                          <span className="text-[10px] text-muted-foreground">{sd.pages} pages</span>
+                        </div>
+                      </div>
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {sd.totalSigners > 0 ? `${sd.signedCount}/${sd.totalSigners} signed` : doc.stage === 'draft' ? 'Not started' : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+                <p className="text-xs text-muted-foreground mt-1.5">All documents visible to all participants</p>
               </div>
+
+              <Separator />
 
               {/* Key Details */}
               <div>
