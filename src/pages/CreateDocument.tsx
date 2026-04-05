@@ -1004,6 +1004,7 @@ const CreateDocument = () => {
                 mode={mode}
                 isMobile
                 onEditDocuments={count > 0 ? () => navigate("/editor") : undefined}
+                lockedDocuments={lockedDocs}
               />
             </DrawerContent>
           </Drawer>
