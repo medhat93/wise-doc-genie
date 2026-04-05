@@ -83,7 +83,7 @@ const SuccessOverlay = ({ participantCount }: { participantCount: number }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const t = setTimeout(() => navigate("/"), 5000);
+    const t = setTimeout(() => navigate("/?sent=true"), 5000);
     return () => clearTimeout(t);
   }, [navigate]);
 

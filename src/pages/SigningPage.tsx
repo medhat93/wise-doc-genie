@@ -65,7 +65,7 @@ export default function SigningPage() {
       {/* Top Header */}
       <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 shrink-0 z-20">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/workspace')}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/')}>
             <ArrowLeft size={18} />
           </Button>
           <div className="flex items-center gap-2">
