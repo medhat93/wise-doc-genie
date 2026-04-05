@@ -424,9 +424,9 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
                             <span className="text-[10px] text-muted-foreground">{sd.pages} {sd.pages === 1 ? 'page' : 'pages'}</span>
                           </div>
                         </div>
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          {sd.totalSigners > 0 ? `${sd.signedCount}/${sd.totalSigners} signed` : sd.type === 'Attachment' ? '' : doc.stage === 'draft' ? 'Not started' : '—'}
-                        </span>
+                        {sd.type !== 'Attachment' && (
+                          <span className="text-xs text-muted-foreground shrink-0">{sd.pages} pg</span>
+                        )}
                       </div>
                       {hasRestriction && (
                         <div className="ml-7 mt-1 space-y-0.5">
