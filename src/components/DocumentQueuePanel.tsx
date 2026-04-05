@@ -97,6 +97,13 @@ const DOC_TYPE_CONFIG: Record<DocumentType, {
     badgeBg: "bg-muted",
     badgeText: "text-muted-foreground",
   },
+  amendment: {
+    label: "Amendment",
+    icon: FileText,
+    borderClass: "border-l-violet-500",
+    badgeBg: "bg-violet-500/10",
+    badgeText: "text-violet-600",
+  },
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
