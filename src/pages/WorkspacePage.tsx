@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import PrimarySidebar from '@/components/workspace/PrimarySidebar';
 import DocumentSidebar from '@/components/workspace/DocumentSidebar';
 import PreviewPanel from '@/components/workspace/PreviewPanel';
+import DocumentActionsMenu from '@/components/workspace/DocumentActionsMenu';
 import { workspaceDocuments } from '@/data/workspaceDocuments';
 import { WorkspaceDocument, SidebarView, QuickLink, DocumentStage } from '@/types/workspace';
 import { cn } from '@/lib/utils';
