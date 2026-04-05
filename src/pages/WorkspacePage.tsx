@@ -118,6 +118,7 @@ function formatWaitingSince(since: string): string {
 
 export default function WorkspacePage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeView, setActiveView] = useState<SidebarView>('all');
   const [activeQuickLink, setActiveQuickLink] = useState<QuickLink | null>(null);
   const [activeTags, setActiveTags] = useState<string[]>([]);
@@ -128,6 +129,20 @@ export default function WorkspacePage() {
   const [statusFilter, setStatusFilter] = useState<DocumentStage[]>([]);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+
+  // Handle query param toasts
+  useEffect(() => {
+    if (searchParams.get('sent') === 'true') {
+      toast.success('Document sent for signature! 🎉', { duration: 4000 });
+      searchParams.delete('sent');
+      setSearchParams(searchParams, { replace: true });
+    }
+    if (searchParams.get('signed') === 'true') {
+      toast.success('Document signed successfully! ✓', { duration: 4000 });
+      searchParams.delete('signed');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
 
   const filteredDocs = useMemo(() => {
     let docs = [...workspaceDocuments];
