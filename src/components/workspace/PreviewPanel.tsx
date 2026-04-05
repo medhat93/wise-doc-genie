@@ -342,6 +342,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   }
 
   return (
+    <>
     <Sheet open={!!doc} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent side="right" className="w-[400px] p-0 flex flex-col [&>button]:hidden">
         {/* Header */}
