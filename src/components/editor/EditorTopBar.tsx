@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ReviewSendDialog from "./ReviewSendDialog";
 import MissingFieldsWarningDialog, { type ParticipantIssue, type DocumentIssue } from "./MissingFieldsWarningDialog";
@@ -11,6 +11,7 @@ import {
   MoreHorizontalIcon,
   Tick01Icon,
   SentIcon,
+  PencilEdit01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -300,6 +301,8 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
   const { participants, placedFields, setDocumentAcknowledgments } = useEditorContext();
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const [title, setTitle] = useState("Untitled Document");
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const [assignOpen, setAssignOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -368,11 +371,25 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
           <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => navigate("/participants")}>
             <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
           </Button>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="max-w-[200px] text-sm font-semibold border-none shadow-none focus-visible:ring-0 bg-transparent h-8"
-          />
+          {isEditingTitle ? (
+            <Input
+              ref={titleInputRef}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => setIsEditingTitle(false)}
+              onKeyDown={(e) => { if (e.key === "Enter") setIsEditingTitle(false); }}
+              className="max-w-[200px] text-sm font-semibold border-none shadow-none focus-visible:ring-1 bg-transparent h-8"
+              autoFocus
+            />
+          ) : (
+            <button
+              onClick={() => { setIsEditingTitle(true); setTimeout(() => titleInputRef.current?.focus(), 0); }}
+              className="flex items-center gap-1.5 group max-w-[200px] min-w-0"
+            >
+              <span className="text-sm font-semibold truncate">{title}</span>
+              <HugeiconsIcon icon={PencilEdit01Icon} size={13} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+            </button>
+          )}
           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-medium text-muted-foreground">
             Draft
           </Badge>
