@@ -238,9 +238,6 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
               <TabsTrigger value="participants" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
                 <Users size={12} /> Participants
               </TabsTrigger>
-              <TabsTrigger value="documents" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
-                <Files size={12} /> Documents
-              </TabsTrigger>
               {hasWorkflow && (
                 <TabsTrigger value="workflow" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
                   <GitPullRequest size={12} /> Workflow
