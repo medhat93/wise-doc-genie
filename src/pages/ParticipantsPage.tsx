@@ -28,7 +28,7 @@ const ParticipantsPageInner = () => {
             variant="ghost"
             size="icon"
             className="h-8 w-8 flex-shrink-0"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/create")}
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
           </Button>

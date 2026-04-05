@@ -83,7 +83,7 @@ const SuccessOverlay = ({ participantCount }: { participantCount: number }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const t = setTimeout(() => navigate("/"), 5000);
+    const t = setTimeout(() => navigate("/?sent=true"), 5000);
     return () => clearTimeout(t);
   }, [navigate]);
 
@@ -112,7 +112,7 @@ const SuccessOverlay = ({ participantCount }: { participantCount: number }) => {
           <Button variant="outline" onClick={() => toast("Status page coming soon")}>
             View status
           </Button>
-          <Button onClick={() => navigate("/")}>Go to workspace</Button>
+          <Button onClick={() => navigate("/?sent=true")}>Go to workspace</Button>
         </div>
       </div>
     </motion.div>

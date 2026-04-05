@@ -11,12 +11,12 @@ import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = {
   home: [
-    { icon: LayoutGrid, label: 'Dashboard', path: '/workspace' },
+    { icon: LayoutGrid, label: 'Dashboard', path: '/' },
     { icon: ListChecks, label: 'My Tasks', path: '/workspace/tasks' },
     { icon: Sparkles, label: 'AI Assistant', path: '/workspace/ai', tint: 'text-purple-500' },
   ],
   documents: [
-    { icon: LayoutGrid, label: 'Workspace', path: '/workspace', active: true },
+    { icon: LayoutGrid, label: 'Workspace', path: '/', active: true },
     { icon: FileText, label: 'Templates', path: '/workspace/templates' },
     { icon: Lock, label: 'Vault', path: '/workspace/vault' },
   ],
@@ -81,11 +81,11 @@ export default function PrimarySidebar() {
         <Tooltip>
           <TooltipTrigger asChild>
             {expanded ? (
-              <Button className="w-full gap-2" onClick={() => navigate('/')}>
+              <Button className="w-full gap-2" onClick={() => navigate('/create')}>
                 <Plus size={16} /> New Document
               </Button>
             ) : (
-              <Button size="icon" className="w-9 h-9 rounded-lg" onClick={() => navigate('/')}>
+              <Button size="icon" className="w-9 h-9 rounded-lg" onClick={() => navigate('/create')}>
                 <Plus size={16} />
               </Button>
             )}

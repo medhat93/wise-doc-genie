@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import PrimarySidebar from '@/components/workspace/PrimarySidebar';
 import DocumentSidebar from '@/components/workspace/DocumentSidebar';
 import PreviewPanel from '@/components/workspace/PreviewPanel';
@@ -117,6 +118,7 @@ function formatWaitingSince(since: string): string {
 
 export default function WorkspacePage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeView, setActiveView] = useState<SidebarView>('all');
   const [activeQuickLink, setActiveQuickLink] = useState<QuickLink | null>(null);
   const [activeTags, setActiveTags] = useState<string[]>([]);
@@ -127,6 +129,20 @@ export default function WorkspacePage() {
   const [statusFilter, setStatusFilter] = useState<DocumentStage[]>([]);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+
+  // Handle query param toasts
+  useEffect(() => {
+    if (searchParams.get('sent') === 'true') {
+      toast.success('Document sent for signature! 🎉', { duration: 4000 });
+      searchParams.delete('sent');
+      setSearchParams(searchParams, { replace: true });
+    }
+    if (searchParams.get('signed') === 'true') {
+      toast.success('Document signed successfully! ✓', { duration: 4000 });
+      searchParams.delete('signed');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
 
   const filteredDocs = useMemo(() => {
     let docs = [...workspaceDocuments];
@@ -215,7 +231,7 @@ export default function WorkspacePage() {
         <div className="h-14 flex items-center justify-between px-6 shrink-0">
           <h1 className="text-2xl font-bold">Documents</h1>
           <div className="flex items-center">
-            <Button className="gap-1.5 rounded-r-none" onClick={() => navigate('/')}>
+            <Button className="gap-1.5 rounded-r-none" onClick={() => navigate('/create')}>
               <Plus size={16} /> New document
             </Button>
             <DropdownMenu>
@@ -225,9 +241,9 @@ export default function WorkspacePage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate('/')}>Blank Document</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/')}>From Template</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/')}>Upload Document</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/create')}>Blank Document</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/create')}>From Template</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/create')}>Upload Document</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
