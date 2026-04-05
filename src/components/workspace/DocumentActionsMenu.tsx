@@ -70,7 +70,7 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
   const vault: MenuItem = { label: 'Move to vault', icon: Lock, onClick: () => toast.success('Moved to vault') };
   const trash: MenuItem = { label: 'Move to trash', icon: Trash2, destructive: true, onClick: onTrash };
 
-  const mgmt = [move, tags, duplicate, participants];
+  const mgmt = [tags, duplicate, participants];
 
   switch (stageKey) {
     case 'draft':
@@ -84,11 +84,11 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
     case 'signing_yours':
       return [[rename, share], [correct, updateExp, markComplete, voidDoc], mgmt, [audit], [trash]];
     case 'completed':
-      return [[rename, share], [transfer, audit], mgmt, [trash]];
+      return [[rename, share], [transfer, vault, audit], mgmt, [trash]];
     case 'declined':
-      return [[rename, share], [audit], [move, tags, participants], [trash]];
+      return [[rename, share], [audit], [tags, participants], [trash]];
     case 'voided':
-      return [[rename, share], [audit], [move, tags, participants], [trash]];
+      return [[rename, share], [audit], [tags, participants], [trash]];
     case 'expired':
       return [[duplicate, rename, share], [updateExp, audit], mgmt, [trash]];
   }
