@@ -103,18 +103,18 @@ const EditorPageInner = () => {
     >
       <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} />
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left — Field settings panel (desktop only) */}
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Left — Field settings panel (desktop only, overlays canvas) */}
         {!isMobile && (
           <AnimatePresence>
             {selectedFieldId && (
               <motion.div
                 key="field-settings-left"
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 320, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
+                initial={{ x: -320, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -320, opacity: 0 }}
                 transition={{ duration: 0.25, ease: "easeInOut" }}
-                className="border-r bg-card flex flex-col overflow-hidden flex-shrink-0"
+                className="absolute left-0 top-0 bottom-0 w-[320px] z-30 border-r bg-card flex flex-col shadow-lg"
               >
                 <EditorFieldSettings onClose={() => setSelectedFieldId(null)} />
               </motion.div>
