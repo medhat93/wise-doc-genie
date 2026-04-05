@@ -33,7 +33,7 @@ import {
   Edit02Icon,
   SentIcon,
 } from "@hugeicons/core-free-icons";
-import { FileText, FilePlus, Paperclip, RotateCw } from "lucide-react";
+import { FileText, FilePlus, Paperclip, RotateCw, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AiIcon from "@/components/AiIcon";
 import RotatePagesDialog from "@/components/RotatePagesDialog";
@@ -464,11 +464,14 @@ const DocumentQueuePanel = ({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const isEmpty = documents.length === 0;
-  const count = documents.length;
-  const primaryCount = documents.filter((d) => d.documentType === "primary").length;
-  const supplementCount = documents.filter((d) => d.documentType === "supplement").length;
-  const attachmentCount = documents.filter((d) => d.documentType === "attachment").length;
+  const hasLocked = lockedDocuments.length > 0;
+  const allDocs = [...lockedDocuments, ...documents];
+  const isEmpty = allDocs.length === 0;
+  const count = allDocs.length;
+  const primaryCount = allDocs.filter((d) => d.documentType === "primary").length;
+  const supplementCount = allDocs.filter((d) => d.documentType === "supplement").length;
+  const attachmentCount = allDocs.filter((d) => d.documentType === "attachment").length;
+  const amendmentCount = allDocs.filter((d) => d.documentType === "amendment").length;
   const hasPrimary = primaryCount > 0;
 
   function handleDragEnd(event: DragEndEvent) {
