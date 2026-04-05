@@ -139,19 +139,6 @@ const MissingFieldsWarningDialog = ({
                         <p className="text-xs text-muted-foreground">
                           No fields placed. This signer will place their own signature and fields during the signing session.
                         </p>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => {
-                            onOpenChange(false);
-                          }}>
-                            That's okay
-                          </Button>
-                          <Button size="sm" className="text-xs h-7" onClick={() => {
-                            onOpenChange(false);
-                            onAddFields(p.id);
-                          }}>
-                            Add fields now
-                          </Button>
-                        </div>
                       </div>
                     ) : (
                       /* Case B: Visible to supplement/attachment with no fields */
