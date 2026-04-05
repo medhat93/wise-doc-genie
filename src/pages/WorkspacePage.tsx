@@ -441,33 +441,124 @@ export default function WorkspacePage() {
                           {/* Status */}
                           <td className="px-2 py-3">
                             <div>
-                              {doc.approvalSteps ? (
-                                <HoverCard openDelay={200} closeDelay={100}>
-                                  <HoverCardTrigger asChild>
-                                    <Badge className={cn('text-[10px] font-medium cursor-default', statusBadge.className)}>{statusBadge.label}</Badge>
-                                  </HoverCardTrigger>
-                                  <HoverCardContent className="w-auto min-w-[240px] p-0" side="bottom" align="start">
-                                    <div className="px-3 py-2 border-b border-border">
-                                      <p className="text-xs font-semibold text-muted-foreground">Approval Progress</p>
-                                    </div>
-                                    {doc.approvalSteps.map(step => (
-                                      <div key={step.name} className="flex items-center justify-between px-3 py-1.5">
-                                        <div className="flex items-center gap-2">
-                                          {step.status === 'completed' ? (
-                                            <CheckCircle size={14} className="text-green-500" />
-                                          ) : (
-                                            <Circle size={14} className={cn(step.status === 'in_progress' ? 'text-primary' : 'text-muted-foreground')} />
-                                          )}
-                                          <span className={cn('text-sm', step.status === 'in_progress' && 'text-primary font-medium')}>{step.name}</span>
-                                        </div>
-                                        <span className="text-xs text-muted-foreground ml-4">{step.assignee}</span>
+                              <HoverCard openDelay={200} closeDelay={100}>
+                                <HoverCardTrigger asChild>
+                                  <Badge className={cn('text-[10px] font-medium cursor-default', statusBadge.className)}>{statusBadge.label}</Badge>
+                                </HoverCardTrigger>
+                                <HoverCardContent className="w-auto min-w-[240px] p-0" side="bottom" align="start">
+                                  {doc.approvalSteps ? (
+                                    <>
+                                      <div className="px-3 py-2 border-b border-border">
+                                        <p className="text-xs font-semibold text-muted-foreground">Approval Progress</p>
                                       </div>
-                                    ))}
-                                  </HoverCardContent>
-                                </HoverCard>
-                              ) : (
-                                <Badge className={cn('text-[10px] font-medium', statusBadge.className)}>{statusBadge.label}</Badge>
-                              )}
+                                      {doc.approvalSteps.map(step => (
+                                        <div key={step.name} className="flex items-center justify-between px-3 py-1.5">
+                                          <div className="flex items-center gap-2">
+                                            {step.status === 'completed' ? (
+                                              <CheckCircle size={14} className="text-green-500" />
+                                            ) : (
+                                              <Circle size={14} className={cn(step.status === 'in_progress' ? 'text-primary' : 'text-muted-foreground')} />
+                                            )}
+                                            <span className={cn('text-sm', step.status === 'in_progress' && 'text-primary font-medium')}>{step.name}</span>
+                                          </div>
+                                          <span className="text-xs text-muted-foreground ml-4">{step.assignee}</span>
+                                        </div>
+                                      ))}
+                                    </>
+                                  ) : ['sent', 'partially_signed', 'waiting', 'requires_action'].includes(doc.stage) ? (
+                                    <>
+                                      <div className="px-3 py-2 border-b border-border">
+                                        <p className="text-xs font-semibold text-muted-foreground">Signing Progress</p>
+                                      </div>
+                                      {doc.participants.filter(p => p.role === 'signer' || p.role === 'approver').map(p => (
+                                        <div key={p.id} className="flex items-center justify-between px-3 py-1.5">
+                                          <div className="flex items-center gap-2">
+                                            {p.status === 'signed' ? (
+                                              <CheckCircle size={14} className="text-green-500" />
+                                            ) : p.status === 'viewed' ? (
+                                              <Eye size={14} className="text-amber-500" />
+                                            ) : p.status === 'sent' ? (
+                                              <Circle size={14} className="text-blue-500" />
+                                            ) : (
+                                              <Circle size={14} className="text-muted-foreground" />
+                                            )}
+                                            <span className={cn('text-sm', p.name === CURRENT_USER && 'text-primary font-medium')}>{p.name}</span>
+                                          </div>
+                                          <span className={cn('text-[11px]', p.status === 'signed' ? 'text-green-600' : p.status === 'viewed' ? 'text-amber-600' : 'text-muted-foreground')}>
+                                            {p.status === 'signed' ? 'Signed' : p.status === 'viewed' ? 'Viewed' : p.status === 'sent' ? 'Sent' : 'Not sent'}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </>
+                                  ) : doc.stage === 'completed' ? (
+                                    <>
+                                      <div className="px-3 py-2 border-b border-border">
+                                        <p className="text-xs font-semibold text-muted-foreground">Completed</p>
+                                      </div>
+                                      {doc.participants.filter(p => p.role === 'signer').map(p => (
+                                        <div key={p.id} className="flex items-center justify-between px-3 py-1.5">
+                                          <div className="flex items-center gap-2">
+                                            <CheckCircle size={14} className="text-green-500" />
+                                            <span className="text-sm">{p.name}</span>
+                                          </div>
+                                          <span className="text-[11px] text-green-600">Signed</span>
+                                        </div>
+                                      ))}
+                                    </>
+                                  ) : doc.stage === 'declined' ? (
+                                    <>
+                                      <div className="px-3 py-2 border-b border-border">
+                                        <p className="text-xs font-semibold text-muted-foreground">Declined</p>
+                                      </div>
+                                      {doc.participants.filter(p => p.role === 'signer').map((p, i) => (
+                                        <div key={p.id} className="flex items-center justify-between px-3 py-1.5">
+                                          <div className="flex items-center gap-2">
+                                            {i === 0 ? <X size={14} className="text-red-500" /> : <Circle size={14} className="text-muted-foreground" />}
+                                            <span className="text-sm">{p.name}</span>
+                                          </div>
+                                          <span className={cn('text-[11px]', i === 0 ? 'text-red-600' : 'text-muted-foreground')}>
+                                            {i === 0 ? 'Declined' : 'Cancelled'}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </>
+                                  ) : doc.stage === 'voided' ? (
+                                    <>
+                                      <div className="px-3 py-2 border-b border-border">
+                                        <p className="text-xs font-semibold text-muted-foreground">Voided</p>
+                                      </div>
+                                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                                        Document was voided by {doc.owner}
+                                      </div>
+                                    </>
+                                  ) : doc.stage === 'expired' ? (
+                                    <>
+                                      <div className="px-3 py-2 border-b border-border">
+                                        <p className="text-xs font-semibold text-muted-foreground">Expired</p>
+                                      </div>
+                                      {doc.participants.filter(p => p.role === 'signer').map(p => (
+                                        <div key={p.id} className="flex items-center justify-between px-3 py-1.5">
+                                          <div className="flex items-center gap-2">
+                                            {p.status === 'signed' ? (
+                                              <CheckCircle size={14} className="text-green-500" />
+                                            ) : (
+                                              <Clock size={14} className="text-amber-500" />
+                                            )}
+                                            <span className="text-sm">{p.name}</span>
+                                          </div>
+                                          <span className={cn('text-[11px]', p.status === 'signed' ? 'text-green-600' : 'text-amber-600')}>
+                                            {p.status === 'signed' ? 'Signed' : 'Expired'}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </>
+                                  ) : (
+                                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                                      {statusBadge.label}
+                                    </div>
+                                  )}
+                                </HoverCardContent>
+                              </HoverCard>
                               {subStatus && (
                                 <p className={cn('text-[10px] mt-0.5 truncate max-w-[120px]', subStatus.className)}>{subStatus.text}</p>
                               )}
