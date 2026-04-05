@@ -231,7 +231,7 @@ export default function WorkspacePage() {
         <div className="h-14 flex items-center justify-between px-6 shrink-0">
           <h1 className="text-2xl font-bold">Documents</h1>
           <div className="flex items-center">
-            <Button className="gap-1.5 rounded-r-none" onClick={() => navigate('/')}>
+            <Button className="gap-1.5 rounded-r-none" onClick={() => navigate('/create')}>
               <Plus size={16} /> New document
             </Button>
             <DropdownMenu>
@@ -241,9 +241,9 @@ export default function WorkspacePage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate('/')}>Blank Document</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/')}>From Template</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/')}>Upload Document</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/create')}>Blank Document</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/create')}>From Template</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/create')}>Upload Document</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
