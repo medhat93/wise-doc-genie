@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { WorkspaceDocument } from '@/types/workspace';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import {
   X, Send, Download, Pencil, MoreHorizontal, Clock, FileText, Eye,
   PenTool, Bell, XCircle, Plus, CheckCircle, Circle, GitPullRequest,
-  Users, Files, File, AlertTriangle, Ban,
+  Users, File, AlertTriangle, Ban, Lock, Copy, Check,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import DocumentActionsMenu from './DocumentActionsMenu';
