@@ -478,7 +478,7 @@ export default function WorkspacePage() {
                                               <CheckCircle size={14} className="text-green-500" />
                                             ) : p.status === 'viewed' ? (
                                               <Eye size={14} className="text-amber-500" />
-                                            ) : p.status === 'sent' ? (
+                                            ) : p.status === 'pending' ? (
                                               <Circle size={14} className="text-blue-500" />
                                             ) : (
                                               <Circle size={14} className="text-muted-foreground" />
@@ -486,7 +486,7 @@ export default function WorkspacePage() {
                                             <span className={cn('text-sm', p.name === CURRENT_USER && 'text-primary font-medium')}>{p.name}</span>
                                           </div>
                                           <span className={cn('text-[11px]', p.status === 'signed' ? 'text-green-600' : p.status === 'viewed' ? 'text-amber-600' : 'text-muted-foreground')}>
-                                            {p.status === 'signed' ? 'Signed' : p.status === 'viewed' ? 'Viewed' : p.status === 'sent' ? 'Sent' : 'Not sent'}
+                                            {p.status === 'signed' ? 'Signed' : p.status === 'viewed' ? 'Viewed' : p.status === 'pending' ? 'Sent' : 'Not sent'}
                                           </span>
                                         </div>
                                       ))}
