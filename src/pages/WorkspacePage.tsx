@@ -22,7 +22,8 @@ import {
 import {
   Plus, ChevronDown, Search, LayoutGrid, List, MoreVertical,
   Eye, Pencil, Send, Download, FolderInput, Trash2, ChevronLeft, ChevronRight,
-  Bell, Check, FileText, Settings, Tag, Share2, Activity, CircleDot, Circle, CheckCircle
+  Bell, Check, FileText, Settings, Tag, Share2, Activity, CircleDot, Circle, CheckCircle,
+  X, Clock
 } from 'lucide-react';
 
 const CURRENT_USER = 'Ahmad Medhat';
