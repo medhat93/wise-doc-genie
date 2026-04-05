@@ -699,31 +699,28 @@ const CreateDocument = () => {
                 Queue ({count})
               </Button>
             )}
-            {isEsign ? (
-              <Button
-                variant="default"
-                size="sm"
-                disabled={isEmpty || !allComplete || !hasPrimary}
-                className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
-                onClick={() => navigate("/participants", { state: { documents, mode } })}
-              >
-                <span className="hidden sm:inline">Next: Add Participants</span>
-                <span className="sm:hidden">Next</span>
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
-              </Button>
-            ) : (
-              <Button
-                variant="default"
-                size="sm"
-                disabled={isEmpty || !allComplete || !hasPrimary}
-                className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
-                onClick={() => navigate("/participants", { state: { documents, mode } })}
-              >
-                <span className="hidden sm:inline">Next: Add Participants</span>
-                <span className="sm:hidden">Next</span>
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
-              </Button>
-            )}
+            {(() => {
+              const modeParams = new URLSearchParams();
+              if (flowMode) modeParams.set("mode", flowMode);
+              if (correctionDocId) modeParams.set("id", correctionDocId);
+              if (followUpParentId) modeParams.set("parentId", followUpParentId);
+              if (followUpChildType && isFollowUp) modeParams.set("childType", followUpChildType);
+              if (relatedTo) modeParams.set("relatedTo", relatedTo);
+              const navTarget = `/participants${modeParams.toString() ? `?${modeParams.toString()}` : ""}`;
+              return (
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={isEmpty || !allComplete || !hasPrimary}
+                  className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
+                  onClick={() => navigate(navTarget, { state: { documents, mode } })}
+                >
+                  <span className="hidden sm:inline">Next: {isCorrection ? "Participants" : "Add Participants"}</span>
+                  <span className="sm:hidden">Next</span>
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
+                </Button>
+              );
+            })()}
           </div>
         </div>
       </header>
