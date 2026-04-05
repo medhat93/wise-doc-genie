@@ -96,7 +96,7 @@ interface EditorFieldSettingsProps {
   showBackButton?: boolean;
 }
 
-const EditorFieldSettings = ({ onClose }: EditorFieldSettingsProps) => {
+const EditorFieldSettings = ({ onClose, showBackButton }: EditorFieldSettingsProps) => {
   const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, participants } = useEditorContext();
   const field = placedFields.find((f) => f.id === selectedFieldId);
 
