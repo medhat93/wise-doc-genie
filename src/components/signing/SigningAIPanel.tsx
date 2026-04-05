@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sparkles, X, Send } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import ReactMarkdown from 'react-markdown';
+
 
 interface ChatMessage {
   id: string;
