@@ -231,6 +231,7 @@ const CreateDocument = () => {
   }, [isCorrection, isFollowUp]);
 
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
   const [queueManuallyOpened, setQueueManuallyOpened] = useState(false);
   const hasDocuments = documents.length > 0 || lockedDocs.length > 0;
@@ -1197,6 +1198,26 @@ const CreateDocument = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Close / Save as Draft confirmation */}
+      <AlertDialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save as draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Would you like to save this document as a draft before leaving?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setShowCloseDialog(false); navigate("/"); }}>
+              Discard
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setShowCloseDialog(false); sonnerToast.success("Draft saved"); navigate("/"); }}>
+              Save as draft
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
