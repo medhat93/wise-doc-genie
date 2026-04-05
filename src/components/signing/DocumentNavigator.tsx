@@ -41,7 +41,7 @@ export default function DocumentNavigator({ documents, activeDocId, onSelectDoc,
   const progressPct = (reviewedCount / documents.length) * 100;
 
   return (
-    <div className="w-[220px] border-l border-border bg-card flex flex-col shrink-0">
+    <div className="w-[220px] border-r border-border bg-card flex flex-col shrink-0">
       {/* Header */}
       <div className="p-3 border-b border-border space-y-2">
         <div className="flex items-center justify-between">
