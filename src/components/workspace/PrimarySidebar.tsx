@@ -16,7 +16,7 @@ const NAV_ITEMS = {
     { icon: Sparkles, label: 'AI Assistant', path: '/workspace/ai', tint: 'text-purple-500' },
   ],
   documents: [
-    { icon: LayoutGrid, label: 'Workspace', path: '/workspace', active: true },
+    { icon: LayoutGrid, label: 'Workspace', path: '/', active: true },
     { icon: FileText, label: 'Templates', path: '/workspace/templates' },
     { icon: Lock, label: 'Vault', path: '/workspace/vault' },
   ],
