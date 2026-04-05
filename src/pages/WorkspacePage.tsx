@@ -473,7 +473,6 @@ export default function WorkspacePage() {
                               >
                                 <action.icon size={14} /> {action.label}
                               </Button>
-                              </Button>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <button className="p-1 rounded hover:bg-muted h-7 w-7 flex items-center justify-center">
