@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare } from "lucide-react";
+import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare, Sparkles, ArrowRight } from "lucide-react";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
