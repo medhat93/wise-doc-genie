@@ -585,17 +585,18 @@ interface EditorCanvasProps {
   showToolbar?: boolean;
   onFieldSelect?: (fieldId: string | null) => void;
   onOpenComments?: () => void;
+  onOpenAi?: () => void;
   isEsign?: boolean;
 }
 
-const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsign }: EditorCanvasProps) => {
+const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpenAi, isEsign }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
   const [showIndicator, setShowIndicator] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, commentsPanelOpen, setPendingCommentRef, variableValues } = useEditorContext();
+  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues } = useEditorContext();
 
   // Text selection toolbar state
   const [selectionToolbar, setSelectionToolbar] = useState<{ x: number; y: number; text: string } | null>(null);
@@ -695,6 +696,15 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
     window.getSelection()?.removeAllRanges();
     onOpenComments?.();
   }, [selectionToolbar, setPendingCommentRef, onOpenComments]);
+
+  // Handle Ask AI from selection toolbar
+  const handleSelectionAskAi = useCallback((question: string) => {
+    if (!selectionToolbar) return;
+    setPendingAiQuestion({ question, selectedText: selectionToolbar.text });
+    setSelectionToolbar(null);
+    window.getSelection()?.removeAllRanges();
+    onOpenAi?.();
+  }, [selectionToolbar, setPendingAiQuestion, onOpenAi]);
 
   // Handle clicking comment highlights in document
   const handleClickHighlight = useCallback((sectionRef: string) => {
@@ -801,6 +811,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
             <SelectionToolbar
               position={{ x: selectionToolbar.x, y: selectionToolbar.y }}
               onComment={handleSelectionComment}
+              onAskAi={handleSelectionAskAi}
               onDismiss={() => setSelectionToolbar(null)}
             />
           )}
