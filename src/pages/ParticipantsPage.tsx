@@ -163,6 +163,25 @@ const ParticipantsPageInner = () => {
           <EditorParticipantsPanel />
         </div>
       </div>
+      {/* Close / Save as Draft confirmation */}
+      <AlertDialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save as draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Would you like to save this document as a draft before leaving?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setShowCloseDialog(false); navigate("/"); }}>
+              Discard
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setShowCloseDialog(false); toast.success("Draft saved"); navigate("/"); }}>
+              Save as draft
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
