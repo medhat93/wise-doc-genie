@@ -210,6 +210,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
+  const [followUpOpen, setFollowUpOpen] = useState(false);
   const renameRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -307,6 +308,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setFollowUpOpen(true)}><LinkIcon size={12} /> Add follow-up</Button>
           <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => toast.success('Moved to vault')}><Lock size={12} /> Move to vault</Button>
           {moreMenu}
         </>
