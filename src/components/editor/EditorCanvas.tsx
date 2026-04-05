@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare } from "lucide-react";
+import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare, Sparkles, ArrowRight } from "lucide-react";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
@@ -313,39 +313,98 @@ const ScrollIndicator = ({ doc }: { doc: EditorDocument | null }) => (
 const SelectionToolbar = ({
   position,
   onComment,
+  onAskAi,
   onDismiss,
 }: {
   position: { x: number; y: number };
   onComment: () => void;
+  onAskAi: (question: string) => void;
   onDismiss: () => void;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 4 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 4 }}
-    transition={{ duration: 0.15 }}
-    className="fixed z-50 flex items-center gap-0.5 bg-card border shadow-lg rounded-lg px-1 py-1"
-    style={{ left: position.x, top: position.y }}
-    onMouseDown={(e) => e.preventDefault()}
-  >
-    <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
-      <Bold size={14} />
-    </button>
-    <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
-      <Italic size={14} />
-    </button>
-    <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
-      <Highlighter size={14} />
-    </button>
-    <div className="w-px h-5 bg-border mx-0.5" />
-    <button
-      className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent"
-      onClick={onComment}
+}) => {
+  const [showAiInput, setShowAiInput] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (showAiInput) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [showAiInput]);
+
+  const handleSubmit = () => {
+    if (aiQuestion.trim()) {
+      onAskAi(aiQuestion.trim());
+      setShowAiInput(false);
+      setAiQuestion("");
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }}
+      transition={{ duration: 0.15 }}
+      className="fixed z-50 flex items-center gap-0.5 bg-card border shadow-lg rounded-lg px-1 py-1"
+      style={{ left: position.x, top: position.y }}
+      onMouseDown={(e) => e.preventDefault()}
     >
-      <MessageSquare size={14} />
-    </button>
-  </motion.div>
-);
+      {showAiInput ? (
+        <div className="flex items-center gap-1 px-1">
+          <Sparkles size={14} className="text-primary shrink-0" />
+          <input
+            ref={inputRef}
+            value={aiQuestion}
+            onChange={(e) => setAiQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSubmit();
+              if (e.key === "Escape") { setShowAiInput(false); setAiQuestion(""); }
+            }}
+            placeholder="Ask AI about this text..."
+            className="text-xs bg-transparent border-none outline-none w-[200px] text-foreground placeholder:text-muted-foreground"
+          />
+          <button
+            className="h-6 w-6 flex items-center justify-center rounded text-primary hover:bg-primary/10 disabled:opacity-40"
+            onClick={handleSubmit}
+            disabled={!aiQuestion.trim()}
+          >
+            <ArrowRight size={12} />
+          </button>
+        </div>
+      ) : (
+        <>
+          <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
+            <Bold size={14} />
+          </button>
+          <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
+            <Italic size={14} />
+          </button>
+          <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
+            <Highlighter size={14} />
+          </button>
+          <div className="w-px h-5 bg-border mx-0.5" />
+          <button
+            className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent"
+            onClick={onComment}
+          >
+            <MessageSquare size={14} />
+          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="h-8 w-8 flex items-center justify-center rounded-md text-primary hover:bg-primary/10"
+                onClick={() => setShowAiInput(true)}
+              >
+                <Sparkles size={14} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">Ask AI</TooltipContent>
+          </Tooltip>
+        </>
+      )}
+    </motion.div>
+  );
+};
 
 /* ── Floating comment bubble ── */
 const CommentBubble = ({ comment, count, onClick }: { comment: Comment; count: number; onClick: () => void }) => (
@@ -526,17 +585,18 @@ interface EditorCanvasProps {
   showToolbar?: boolean;
   onFieldSelect?: (fieldId: string | null) => void;
   onOpenComments?: () => void;
+  onOpenAi?: () => void;
   isEsign?: boolean;
 }
 
-const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsign }: EditorCanvasProps) => {
+const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpenAi, isEsign }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
   const [showIndicator, setShowIndicator] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, commentsPanelOpen, setPendingCommentRef, variableValues } = useEditorContext();
+  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues } = useEditorContext();
 
   // Text selection toolbar state
   const [selectionToolbar, setSelectionToolbar] = useState<{ x: number; y: number; text: string } | null>(null);
@@ -636,6 +696,15 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
     window.getSelection()?.removeAllRanges();
     onOpenComments?.();
   }, [selectionToolbar, setPendingCommentRef, onOpenComments]);
+
+  // Handle Ask AI from selection toolbar
+  const handleSelectionAskAi = useCallback((question: string) => {
+    if (!selectionToolbar) return;
+    setPendingAiQuestion({ question, selectedText: selectionToolbar.text });
+    setSelectionToolbar(null);
+    window.getSelection()?.removeAllRanges();
+    onOpenAi?.();
+  }, [selectionToolbar, setPendingAiQuestion, onOpenAi]);
 
   // Handle clicking comment highlights in document
   const handleClickHighlight = useCallback((sectionRef: string) => {
@@ -742,6 +811,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
             <SelectionToolbar
               position={{ x: selectionToolbar.x, y: selectionToolbar.y }}
               onComment={handleSelectionComment}
+              onAskAi={handleSelectionAskAi}
               onDismiss={() => setSelectionToolbar(null)}
             />
           )}

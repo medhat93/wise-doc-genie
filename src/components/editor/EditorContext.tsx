@@ -92,6 +92,8 @@ interface EditorContextType {
   usedVariables: string[];
   documentAcknowledgments: Record<string, Record<string, AcknowledgmentLevel>>;
   setDocumentAcknowledgments: React.Dispatch<React.SetStateAction<Record<string, Record<string, AcknowledgmentLevel>>>>;
+  pendingAiQuestion: { question: string; selectedText: string } | null;
+  setPendingAiQuestion: (q: { question: string; selectedText: string } | null) => void;
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
@@ -130,6 +132,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [commentsPanelOpen, setCommentsPanelOpen] = useState(false);
   const [variableValues, setVariableValues] = useState<Record<string, string>>(INITIAL_VARIABLE_VALUES);
   const [documentAcknowledgments, setDocumentAcknowledgments] = useState<Record<string, Record<string, AcknowledgmentLevel>>>({});
+  const [pendingAiQuestion, setPendingAiQuestion] = useState<{ question: string; selectedText: string } | null>(null);
 
   return (
     <EditorContext.Provider value={{
@@ -143,6 +146,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       variableValues, setVariableValues,
       usedVariables: USED_VARIABLES,
       documentAcknowledgments, setDocumentAcknowledgments,
+      pendingAiQuestion, setPendingAiQuestion,
     }}>
       {children}
     </EditorContext.Provider>
