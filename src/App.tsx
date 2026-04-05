@@ -19,6 +19,7 @@ const App = () => (
           <Route path="/" element={<CreateDocument />} />
           <Route path="/participants" element={<ParticipantsPage />} />
           <Route path="/editor" element={<EditorPage />} />
+          <Route path="/workspace" element={<WorkspacePage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </EditorProvider>
