@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = {
   home: [
-    { icon: LayoutGrid, label: 'Dashboard', path: '/workspace' },
+    { icon: LayoutGrid, label: 'Dashboard', path: '/' },
     { icon: ListChecks, label: 'My Tasks', path: '/workspace/tasks' },
     { icon: Sparkles, label: 'AI Assistant', path: '/workspace/ai', tint: 'text-purple-500' },
   ],
