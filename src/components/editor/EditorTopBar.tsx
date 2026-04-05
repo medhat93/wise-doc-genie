@@ -54,7 +54,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays } from "date-fns";
-import { CalendarIcon, Check, Copy, Link, Trash2, Share2, FileDown } from "lucide-react";
+import { CalendarIcon, Check, Copy, Link, Trash2, Share2, FileDown, X, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -67,66 +67,199 @@ const MOCK_USERS = [
   { id: "u5", name: "David Chen", email: "david@company.com" },
 ];
 
+const MOCK_TEAMS = [
+  { id: "t1", name: "Marketing team", count: 25 },
+  { id: "t2", name: "Legal team", count: 8 },
+];
+
+const PERMISSION_LEVELS = ["View", "Comment", "Suggest", "Edit"] as const;
+
 const AssignDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
-  const [assignee, setAssignee] = useState("");
-  const [taskType, setTaskType] = useState("review");
-  const [permission, setPermission] = useState("comment");
+  const [assignees, setAssignees] = useState<{ id: string; label: string }[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [role, setRole] = useState("reviewer");
+  const [permissionIndex, setPermissionIndex] = useState(2); // default Suggest
+  const [message, setMessage] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const removeAssignee = (id: string) => setAssignees((prev) => prev.filter((a) => a.id !== id));
+
+  const addAssignee = (id: string, label: string) => {
+    if (!assignees.find((a) => a.id === id)) {
+      setAssignees((prev) => [...prev, { id, label }]);
+    }
+    setInputValue("");
+    setShowSuggestions(false);
+    inputRef.current?.focus();
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && inputValue.includes("@")) {
+      e.preventDefault();
+      addAssignee(`email-${inputValue}`, inputValue);
+    }
+    if (e.key === "Backspace" && !inputValue && assignees.length > 0) {
+      removeAssignee(assignees[assignees.length - 1].id);
+    }
+  };
+
+  const filteredUsers = MOCK_USERS.filter(
+    (u) =>
+      !assignees.find((a) => a.id === u.id) &&
+      (u.name.toLowerCase().includes(inputValue.toLowerCase()) ||
+        u.email.toLowerCase().includes(inputValue.toLowerCase()))
+  );
+  const filteredTeams = MOCK_TEAMS.filter(
+    (t) => !assignees.find((a) => a.id === t.id) && t.name.toLowerCase().includes(inputValue.toLowerCase())
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>Assign Task</DialogTitle>
-          <DialogDescription>Assign this document to a team member for review or approval.</DialogDescription>
+          <DialogTitle>Assign</DialogTitle>
+          <DialogDescription className="sr-only">Assign this document to team members</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label className="text-sm">Assignee</Label>
-            <Select value={assignee} onValueChange={setAssignee}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select a person" /></SelectTrigger>
-              <SelectContent>
-                {MOCK_USERS.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>{u.name} — {u.email}</SelectItem>
+        <div className="space-y-5 py-1">
+          {/* Assignees + Role row */}
+          <div className="flex gap-3 items-start">
+            <div className="flex-1 space-y-1.5">
+              <Label className="text-xs font-medium">Assignee/s</Label>
+              <div
+                className="min-h-[38px] flex flex-wrap items-center gap-1.5 border rounded-md px-2 py-1.5 cursor-text bg-background focus-within:ring-1 focus-within:ring-ring"
+                onClick={() => inputRef.current?.focus()}
+              >
+                {assignees.map((a) => (
+                  <span
+                    key={a.id}
+                    className="inline-flex items-center gap-1 bg-muted rounded-md px-2 py-0.5 text-xs font-medium"
+                  >
+                    {a.label}
+                    <button onClick={() => removeAssignee(a.id)} className="text-muted-foreground hover:text-foreground ml-0.5">
+                      <X size={10} />
+                    </button>
+                  </span>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-sm">Task type</Label>
-            <Select value={taskType} onValueChange={setTaskType}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="review">Review</SelectItem>
-                <SelectItem value="approve">Approve</SelectItem>
-                <SelectItem value="fill">Fill smart fields</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-sm">Permission level</Label>
-            <div className="flex border rounded-lg overflow-hidden">
-              {["view", "comment", "suggest", "edit"].map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPermission(p)}
-                  className={cn(
-                    "flex-1 py-1.5 text-xs font-medium capitalize transition-colors",
-                    permission === p ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  {p}
-                </button>
-              ))}
+                <input
+                  ref={inputRef}
+                  value={inputValue}
+                  onChange={(e) => { setInputValue(e.target.value); setShowSuggestions(true); }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  onKeyDown={handleInputKeyDown}
+                  placeholder={assignees.length === 0 ? "Enter team, member name, or external email" : ""}
+                  className="flex-1 min-w-[120px] bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                />
+              </div>
+              {/* Suggestions dropdown */}
+              {showSuggestions && (filteredUsers.length > 0 || filteredTeams.length > 0) && (
+                <div className="border rounded-md bg-popover shadow-md max-h-[160px] overflow-y-auto">
+                  {filteredTeams.map((t) => (
+                    <button
+                      key={t.id}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => addAssignee(t.id, `${t.name} (${t.count})`)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center gap-2"
+                    >
+                      <span className="h-5 w-5 rounded bg-primary/15 flex items-center justify-center text-[8px] font-bold text-primary">T</span>
+                      <span>{t.name}</span>
+                      <span className="text-muted-foreground text-xs">({t.count})</span>
+                    </button>
+                  ))}
+                  {filteredUsers.map((u) => (
+                    <button
+                      key={u.id}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => addAssignee(u.id, u.email.split("@")[0] + "@" + u.email.split("@")[1].split(".")[0])}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center gap-2"
+                    >
+                      <span className="h-5 w-5 rounded-full bg-primary/15 flex items-center justify-center text-[8px] font-bold text-primary">
+                        {u.name.split(" ").map((n) => n[0]).join("")}
+                      </span>
+                      <span>{u.name}</span>
+                      <span className="text-muted-foreground text-xs">{u.email}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="w-[120px] space-y-1.5 flex-shrink-0">
+              <Label className="text-xs font-medium">Role</Label>
+              <Select value={role} onValueChange={setRole}>
+                <SelectTrigger className="h-[38px] text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="reviewer">Reviewer</SelectItem>
+                  <SelectItem value="approver">Approver</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
+
+          {/* Permission level slider */}
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-1.5">
+              <Label className="text-xs font-medium">Permission level</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info size={12} className="text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs max-w-[200px]">
+                  Set what assignees can do
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="relative px-1">
+              {/* Track */}
+              <div className="h-[2px] bg-border rounded-full relative">
+                <div
+                  className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all"
+                  style={{ width: `${(permissionIndex / (PERMISSION_LEVELS.length - 1)) * 100}%` }}
+                />
+              </div>
+              {/* Dots + Labels */}
+              <div className="flex justify-between -mt-[5px]">
+                {PERMISSION_LEVELS.map((level, i) => (
+                  <button
+                    key={level}
+                    onClick={() => setPermissionIndex(i)}
+                    className="flex flex-col items-center gap-1.5 group"
+                  >
+                    <div
+                      className={cn(
+                        "h-[10px] w-[10px] rounded-full border-2 transition-all",
+                        i <= permissionIndex
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground/40 bg-card"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "text-[11px] transition-colors",
+                        i === permissionIndex ? "text-primary font-semibold" : "text-muted-foreground"
+                      )}
+                    >
+                      {level}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Message */}
           <div className="space-y-1.5">
-            <Label className="text-sm">Message (optional)</Label>
-            <Textarea placeholder="Add a note for the assignee..." className="min-h-[60px] text-sm resize-none" />
+            <Textarea
+              placeholder="Message (optional)"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="min-h-[72px] text-sm resize-none"
+            />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button size="sm" disabled={!assignee} onClick={() => { toast.success("Task assigned"); onOpenChange(false); }}>Assign</Button>
+          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button size="sm" disabled={assignees.length === 0} onClick={() => { toast.success("Task assigned"); onOpenChange(false); setAssignees([]); setMessage(""); }}>Assign</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
