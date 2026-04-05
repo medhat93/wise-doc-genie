@@ -7,7 +7,7 @@ import EditorCanvas from "@/components/editor/EditorCanvas";
 import EditorPanelToolbar, { type PanelId } from "@/components/editor/EditorPanelToolbar";
 import EditorPanel from "@/components/editor/EditorPanel";
 import { useEditorContext } from "@/components/editor/EditorContext";
-import EditorFieldSettings from "@/components/editor/EditorFieldSettings";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
