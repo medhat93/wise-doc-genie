@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   X, Send, Download, Pencil, MoreHorizontal, Clock, FileText, Eye,
   PenTool, Bell, XCircle, Plus, CheckCircle, Circle, GitPullRequest,
-  Users, File, AlertTriangle, Ban, Lock, Copy, Check,
+  Users, File, AlertTriangle, Ban, Lock, Copy, Check, Link as LinkIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import DocumentActionsMenu from './DocumentActionsMenu';
+import FollowUpDialog from './FollowUpDialog';
 
 /* ── stage badge config ─────────────────────────────────────── */
 const stageConfig: Record<string, { label: string; className: string; icon: React.ElementType }> = {
