@@ -81,11 +81,11 @@ export default function PrimarySidebar() {
         <Tooltip>
           <TooltipTrigger asChild>
             {expanded ? (
-              <Button className="w-full gap-2" onClick={() => navigate('/')}>
+              <Button className="w-full gap-2" onClick={() => navigate('/create')}>
                 <Plus size={16} /> New Document
               </Button>
             ) : (
-              <Button size="icon" className="w-9 h-9 rounded-lg" onClick={() => navigate('/')}>
+              <Button size="icon" className="w-9 h-9 rounded-lg" onClick={() => navigate('/create')}>
                 <Plus size={16} />
               </Button>
             )}
