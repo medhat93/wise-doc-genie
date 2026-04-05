@@ -41,6 +41,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -442,6 +452,7 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
   const [sendOpen, setSendOpen] = useState(false);
   const [warningOpen, setWarningOpen] = useState(false);
   const [participantIssues, setParticipantIssues] = useState<ParticipantIssue[]>([]);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
 
   // Mock documents for issue checking
   const MOCK_DOCS = [
@@ -501,8 +512,8 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
       <header className="h-14 border-b flex items-center justify-between px-4 flex-shrink-0 bg-card">
         {/* Left */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => navigate("/participants")}>
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
+          <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setShowCloseDialog(true)}>
+            <X className="h-4 w-4" />
           </Button>
           {isEditingTitle ? (
             <Input
@@ -582,6 +593,10 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
 
         {/* Right */}
         <div className="flex items-center gap-1.5 flex-1 justify-end">
+          <Button variant="outline" size="sm" className="hidden sm:flex gap-1.5 h-8 text-xs" onClick={() => navigate("/participants")}>
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
+            Back
+          </Button>
           <Button variant="outline" size="sm" className="hidden sm:flex gap-1.5 h-8 text-xs" onClick={() => setAssignOpen(true)}>
             <HugeiconsIcon icon={UserAdd01Icon} size={14} />
             Assign
@@ -642,6 +657,26 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
           setSendOpen(true);
         }}
       />
+
+      {/* Close / Save as Draft confirmation */}
+      <AlertDialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save as draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Would you like to save this document as a draft before leaving?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setShowCloseDialog(false); navigate("/"); }}>
+              Discard
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setShowCloseDialog(false); toast.success("Draft saved"); navigate("/"); }}>
+              Save as draft
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

@@ -2,9 +2,19 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
-import { AlertTriangle, Link as LinkIcon } from "lucide-react";
+import { AlertTriangle, Link as LinkIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import StepIndicator, { type FlowMode } from "@/components/StepIndicator";
 import EditorParticipantsPanel from "@/components/editor/EditorParticipantsPanel";
 import { useEditorContext } from "@/components/editor/EditorContext";
@@ -15,6 +25,7 @@ const ParticipantsPageInner = () => {
   const [searchParams] = useSearchParams();
   const { participants } = useEditorContext();
   const [title] = useState("Untitled Document");
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
 
   const flowMode = searchParams.get("mode") as "correction" | "followup" | null;
   const correctionDocId = searchParams.get("id");
@@ -94,9 +105,9 @@ const ParticipantsPageInner = () => {
             variant="ghost"
             size="icon"
             className="h-8 w-8 flex-shrink-0"
-            onClick={() => navigate(buildBackUrl())}
+            onClick={() => setShowCloseDialog(true)}
           >
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
+            <X className="h-4 w-4" />
           </Button>
           <span className="text-sm font-semibold truncate max-w-[200px]">{title}</span>
           <Badge
@@ -112,6 +123,15 @@ const ParticipantsPageInner = () => {
 
         {/* Right */}
         <div className="flex items-center gap-2 flex-1 justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1.5"
+            onClick={() => navigate(buildBackUrl())}
+          >
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
+            <span className="hidden sm:inline">Back</span>
+          </Button>
           <Button
             size="sm"
             className="h-8 text-xs gap-1.5"
@@ -143,6 +163,25 @@ const ParticipantsPageInner = () => {
           <EditorParticipantsPanel />
         </div>
       </div>
+      {/* Close / Save as Draft confirmation */}
+      <AlertDialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save as draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Would you like to save this document as a draft before leaving?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setShowCloseDialog(false); navigate("/"); }}>
+              Discard
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setShowCloseDialog(false); toast.success("Draft saved"); navigate("/"); }}>
+              Save as draft
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
