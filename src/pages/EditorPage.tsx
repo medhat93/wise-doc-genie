@@ -7,6 +7,7 @@ import EditorCanvas from "@/components/editor/EditorCanvas";
 import EditorPanelToolbar, { type PanelId } from "@/components/editor/EditorPanelToolbar";
 import EditorPanel from "@/components/editor/EditorPanel";
 import { useEditorContext } from "@/components/editor/EditorContext";
+import CorrectionBanner from "@/components/editor/CorrectionBanner";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -56,6 +57,11 @@ const EditorPageInner = () => {
   const [searchParams] = useSearchParams();
   const docType = searchParams.get("type") || "";
   const initialMode = searchParams.get("mode") || "full";
+  const editorMode = searchParams.get("mode") || "full";
+  const isCorrection = editorMode === "correction";
+  const isFollowUp = editorMode === "followup";
+  const parentName = isFollowUp ? "Annual Review — Acme Corp" : undefined;
+  const childType = searchParams.get("childType") || "amendment";
   const [isEsign, setIsEsign] = useState(initialMode === "esign");
   const isMobile = useIsMobile();
   const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen } = useEditorContext();
@@ -104,6 +110,14 @@ const EditorPageInner = () => {
       transition={{ duration: 0.3 }}
       className="h-screen flex flex-col bg-background"
     >
+      {(isCorrection || isFollowUp) && (
+        <CorrectionBanner
+          mode={isCorrection ? 'correction' : 'followup'}
+          parentName={parentName}
+          childType={childType}
+        />
+      )}
+
       <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} />
 
       <div className="flex flex-1 overflow-hidden">
