@@ -55,7 +55,6 @@ const MiniFieldIllustration = () => (
 
 const ACK_OPTIONS: { value: AcknowledgmentLevel; label: string; desc: string }[] = [
   { value: "none", label: "No action needed", desc: "Document is available for reference only" },
-  { value: "must_view", label: "Must view before signing", desc: "Signer must view all pages of this document" },
   { value: "must_view_accept", label: "Must view and accept", desc: "Signer must view and explicitly accept this document" },
 ];
 
