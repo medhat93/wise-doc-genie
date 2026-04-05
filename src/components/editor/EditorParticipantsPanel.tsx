@@ -147,7 +147,7 @@ const DEMO_PARTICIPANTS: Participant[] = [
   { id: "p1", name: "Ahmed Al-Rashid", email: "ahmed@signit.sa", role: "signer", color: COLORS[0], order: 1, language: "en", sendingMethod: "email", needsVerification: false },
   { id: "p2", name: "Sarah Johnson", email: "sarah@acme.com", role: "signer", color: COLORS[1], order: 2, language: "en", sendingMethod: "email", needsVerification: true, verificationMethod: "sms" },
   { id: "p3", name: "Adel Al-Dossary", email: "adel@enterprise.sa", role: "signer", color: COLORS[3], order: 2, language: "en", sendingMethod: "email", needsVerification: true, verificationMethod: "nafath_only", verificationSpecs: "with_id_biometrics", nationalId: "1087654321" },
-  { id: "p4", name: "Mohammed Al-Faisal", email: "mohammed@legal.sa", role: "approver", color: COLORS[2], order: 0, language: "ar", sendingMethod: "sms", sendingPhone: "+966 50 123 4567", needsVerification: true, verificationMethod: "nafath_only", verificationSpecs: "with_id", nationalId: "1012345678" },
+  { id: "p4", name: "Mohammed Al-Faisal", email: "mohammed@legal.sa", role: "signer", color: COLORS[2], order: 3, language: "ar", sendingMethod: "sms", sendingPhone: "+966 50 123 4567", needsVerification: true, verificationMethod: "nafath_only", verificationSpecs: "with_id", nationalId: "1012345678" },
 ];
 
 const MOCK_WORKFLOWS = [
