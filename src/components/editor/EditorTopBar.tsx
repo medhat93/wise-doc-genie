@@ -452,6 +452,7 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
   const [sendOpen, setSendOpen] = useState(false);
   const [warningOpen, setWarningOpen] = useState(false);
   const [participantIssues, setParticipantIssues] = useState<ParticipantIssue[]>([]);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
 
   // Mock documents for issue checking
   const MOCK_DOCS = [
