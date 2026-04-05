@@ -727,6 +727,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
                         onSelect={() => handleFieldSelect(f.id)}
                         onRemove={() => removePlacedField(f.id)}
                         onDuplicate={() => duplicateField(f)}
+                        onUpdateField={updateField}
                       />
                     ))}
                   </div>
