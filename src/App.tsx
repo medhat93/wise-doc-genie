@@ -7,6 +7,7 @@ import CreateDocument from "./pages/CreateDocument";
 import ParticipantsPage from "./pages/ParticipantsPage";
 import EditorPage from "./pages/EditorPage";
 import WorkspacePage from "./pages/WorkspacePage";
+import SigningPage from "./pages/SigningPage";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/participants" element={<ParticipantsPage />} />
           <Route path="/editor" element={<EditorPage />} />
           <Route path="/workspace" element={<WorkspacePage />} />
+          <Route path="/signing/:id" element={<SigningPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </EditorProvider>
