@@ -593,6 +593,10 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
 
         {/* Right */}
         <div className="flex items-center gap-1.5 flex-1 justify-end">
+          <Button variant="outline" size="sm" className="hidden sm:flex gap-1.5 h-8 text-xs" onClick={() => navigate("/participants")}>
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
+            Back
+          </Button>
           <Button variant="outline" size="sm" className="hidden sm:flex gap-1.5 h-8 text-xs" onClick={() => setAssignOpen(true)}>
             <HugeiconsIcon icon={UserAdd01Icon} size={14} />
             Assign
