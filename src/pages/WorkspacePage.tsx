@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import PrimarySidebar from '@/components/workspace/PrimarySidebar';
 import DocumentSidebar from '@/components/workspace/DocumentSidebar';
 import PreviewPanel from '@/components/workspace/PreviewPanel';
+import DocumentActionsMenu from '@/components/workspace/DocumentActionsMenu';
 import { workspaceDocuments } from '@/data/workspaceDocuments';
 import { WorkspaceDocument, SidebarView, QuickLink, DocumentStage } from '@/types/workspace';
 import { cn } from '@/lib/utils';
@@ -581,25 +582,7 @@ export default function WorkspacePage() {
                               >
                                 <action.icon size={14} /> {action.label}
                               </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <button className="p-1 rounded hover:bg-muted h-7 w-7 flex items-center justify-center">
-                                    <MoreVertical size={14} />
-                                  </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem><Eye size={13} className="mr-2" /> View</DropdownMenuItem>
-                                  <DropdownMenuItem><Pencil size={13} className="mr-2" /> Edit</DropdownMenuItem>
-                                  <DropdownMenuItem><Send size={13} className="mr-2" /> Send</DropdownMenuItem>
-                                  <DropdownMenuItem><Download size={13} className="mr-2" /> Download</DropdownMenuItem>
-                                  <DropdownMenuItem><FolderInput size={13} className="mr-2" /> Move to folder</DropdownMenuItem>
-                                  <DropdownMenuItem><Tag size={13} className="mr-2" /> Add tag</DropdownMenuItem>
-                                  <DropdownMenuItem><Share2 size={13} className="mr-2" /> Share</DropdownMenuItem>
-                                  <DropdownMenuItem><Activity size={13} className="mr-2" /> View activity</DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="text-destructive"><Trash2 size={13} className="mr-2" /> Delete</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <DocumentActionsMenu doc={doc} />
                             </div>
                           </td>
                           <td />
