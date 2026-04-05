@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect, DragEvent, useMemo } from "react";
-import { X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { X, AlertTriangle, Link as LinkIcon } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast as sonnerToast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
