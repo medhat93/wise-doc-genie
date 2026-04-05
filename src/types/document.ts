@@ -1,4 +1,4 @@
-export type DocumentType = 'primary' | 'supplement' | 'attachment';
+export type DocumentType = 'primary' | 'supplement' | 'attachment' | 'amendment';
 
 export interface UploadedDocument {
   id: string;
@@ -20,6 +20,8 @@ export interface UploadedDocument {
   // Drive import additions
   isDriveImport?: boolean;
   driveProvider?: string;
+  // Locked state for correction/followup flows
+  isLocked?: boolean;
 }
 
 export interface DriveFile {

@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect, DragEvent, useMemo } from "react";
-import { X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { X, AlertTriangle, Link as LinkIcon } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast as sonnerToast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -188,12 +189,41 @@ function TemplateCardSkeleton() {
 
 const CreateDocument = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const [mode, setMode] = useState<CreateDocumentMode>("full");
+
+  // Flow mode from URL params
+  const flowMode = searchParams.get("mode") as "correction" | "followup" | null;
+  const correctionDocId = searchParams.get("id");
+  const followUpParentId = searchParams.get("parentId");
+  const followUpChildType = searchParams.get("childType") || "amendment";
+  const relatedTo = searchParams.get("relatedTo");
+  const isCorrection = flowMode === "correction";
+  const isFollowUp = flowMode === "followup";
+  const isRelated = !!relatedTo && !flowMode;
+
+  // Mock data for correction/followup locked documents
+  const lockedDocs: UploadedDocument[] = useMemo(() => {
+    if (isCorrection) {
+      return [
+        { id: "locked-merged", name: "Original Documents (Merged)", type: "application/pdf", progress: 100, status: "complete", pageCount: 8, documentType: "primary", isLocked: true },
+        { id: "locked-schedule", name: "Schedule A — Pricing", type: "application/pdf", progress: 100, status: "complete", pageCount: 2, documentType: "supplement", isLocked: true },
+        { id: "locked-insurance", name: "Insurance Certificate", type: "application/pdf", progress: 100, status: "complete", pageCount: 1, documentType: "attachment", isLocked: true },
+      ];
+    }
+    if (isFollowUp) {
+      return [
+        { id: "locked-parent", name: "Annual Review — Acme Corp", type: "application/pdf", progress: 100, status: "complete", pageCount: 5, documentType: "primary", isLocked: true },
+      ];
+    }
+    return [];
+  }, [isCorrection, isFollowUp]);
+
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
   const [queueManuallyOpened, setQueueManuallyOpened] = useState(false);
-  const hasDocuments = documents.length > 0;
+  const hasDocuments = documents.length > 0 || lockedDocs.length > 0;
   const showQueue = hasDocuments || queueManuallyOpened;
   const [isDragActive, setIsDragActive] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
@@ -244,10 +274,11 @@ const CreateDocument = () => {
   }, []);
 
   const isEsign = mode === "esign";
-  const isEmpty = documents.length === 0;
-  const allComplete = documents.length > 0 && documents.every((d) => d.status === "complete");
-  const count = documents.length;
-  const hasPrimary = documents.some((d) => d.documentType === "primary");
+  const allDocs = [...lockedDocs, ...documents];
+  const isEmpty = allDocs.length === 0;
+  const allComplete = allDocs.length > 0 && allDocs.every((d) => d.status === "complete");
+  const count = allDocs.length;
+  const hasPrimary = allDocs.some((d) => d.documentType === "primary");
 
   const connectedDriveIds = Object.entries(connectedProviders)
     .filter(([, v]) => v)
@@ -596,6 +627,38 @@ const CreateDocument = () => {
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
+      {/* ─── Correction/Follow-up Banners ────────────────────────────── */}
+      {isCorrection && (
+        <div className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-300 dark:border-amber-800 px-4 py-2 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-300">
+            <AlertTriangle size={16} />
+            Correcting: Office Lease Renewal. Signers are paused until you save or discard.
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" className="h-7 text-xs" onClick={() => { sonnerToast.success("Corrections saved — signing resumed"); navigate("/"); }}>Save &amp; resume signing</Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { sonnerToast("Changes discarded"); navigate("/"); }}>Discard changes</Button>
+          </div>
+        </div>
+      )}
+      {isFollowUp && (
+        <div className="bg-blue-50 dark:bg-blue-950/30 border-b border-blue-300 dark:border-blue-800 px-4 py-2 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2 text-sm font-medium text-blue-800 dark:text-blue-300">
+            <LinkIcon size={16} />
+            Follow-up to: Annual Review — Acme Corp
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { sonnerToast("Follow-up cancelled"); navigate("/"); }}>Cancel follow-up</Button>
+          </div>
+        </div>
+      )}
+      {isRelated && (
+        <div className="bg-muted/50 border-b px-4 py-2 flex items-center gap-2 text-xs text-muted-foreground shrink-0">
+          <LinkIcon size={12} />
+          Related to: Annual Review — Acme Corp
+          <button className="ml-auto text-muted-foreground/60 hover:text-muted-foreground" onClick={() => navigate("/create")}>✕</button>
+        </div>
+      )}
+
       {/* ─── Header ──────────────────────────────────────────────────────── */}
       <header className="border-b bg-background flex-shrink-0">
         <div className="relative h-auto min-h-[3.5rem] md:h-16 flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 gap-2 sm:gap-0">
@@ -607,7 +670,7 @@ const CreateDocument = () => {
               <X className="h-4 w-4" />
             </button>
             <nav className="flex items-center gap-1.5 text-sm">
-              <span className="font-medium text-sm">New document</span>
+              <span className="font-medium text-sm">{isCorrection ? "Correct document" : isFollowUp ? "Follow-up document" : "New document"}</span>
             </nav>
           </div>
 
@@ -615,17 +678,17 @@ const CreateDocument = () => {
           <div className="hidden sm:flex items-center gap-3 absolute left-1/2 -translate-x-1/2">
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">1</div>
-              <span className="text-xs font-medium text-foreground">Add Documents</span>
+              <span className="text-xs font-medium text-foreground">{isCorrection ? "Documents" : "Add Documents"}</span>
             </div>
             <div className="w-6 h-px bg-border" />
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-xs font-semibold">2</div>
-              <span className="text-xs text-muted-foreground/50">Add Participants</span>
+              <span className="text-xs text-muted-foreground/50">{isCorrection ? "Participants" : isFollowUp ? "Participants" : "Add Participants"}</span>
             </div>
             <div className="w-6 h-px bg-border" />
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-xs font-semibold">3</div>
-              <span className="text-xs text-muted-foreground/50">Prepare & Send</span>
+              <span className="text-xs text-muted-foreground/50">{isCorrection ? "Review & Save" : "Prepare & Send"}</span>
             </div>
           </div>
 
@@ -636,31 +699,28 @@ const CreateDocument = () => {
                 Queue ({count})
               </Button>
             )}
-            {isEsign ? (
-              <Button
-                variant="default"
-                size="sm"
-                disabled={isEmpty || !allComplete || !hasPrimary}
-                className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
-                onClick={() => navigate("/participants", { state: { documents, mode } })}
-              >
-                <span className="hidden sm:inline">Next: Add Participants</span>
-                <span className="sm:hidden">Next</span>
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
-              </Button>
-            ) : (
-              <Button
-                variant="default"
-                size="sm"
-                disabled={isEmpty || !allComplete || !hasPrimary}
-                className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
-                onClick={() => navigate("/participants", { state: { documents, mode } })}
-              >
-                <span className="hidden sm:inline">Next: Add Participants</span>
-                <span className="sm:hidden">Next</span>
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
-              </Button>
-            )}
+            {(() => {
+              const modeParams = new URLSearchParams();
+              if (flowMode) modeParams.set("mode", flowMode);
+              if (correctionDocId) modeParams.set("id", correctionDocId);
+              if (followUpParentId) modeParams.set("parentId", followUpParentId);
+              if (followUpChildType && isFollowUp) modeParams.set("childType", followUpChildType);
+              if (relatedTo) modeParams.set("relatedTo", relatedTo);
+              const navTarget = `/participants${modeParams.toString() ? `?${modeParams.toString()}` : ""}`;
+              return (
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={isEmpty || !allComplete || !hasPrimary}
+                  className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
+                  onClick={() => navigate(navTarget, { state: { documents, mode } })}
+                >
+                  <span className="hidden sm:inline">Next: {isCorrection ? "Participants" : "Add Participants"}</span>
+                  <span className="sm:hidden">Next</span>
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
+                </Button>
+              );
+            })()}
           </div>
         </div>
       </header>
@@ -926,6 +986,7 @@ const CreateDocument = () => {
                   onAddFiles={() => fileInputRef.current?.click()}
                   mode={mode}
                   onEditDocuments={count > 0 ? () => navigate("/editor") : undefined}
+                  lockedDocuments={lockedDocs}
                 />
               </motion.div>
             )}
@@ -943,6 +1004,7 @@ const CreateDocument = () => {
                 mode={mode}
                 isMobile
                 onEditDocuments={count > 0 ? () => navigate("/editor") : undefined}
+                lockedDocuments={lockedDocs}
               />
             </DrawerContent>
           </Drawer>

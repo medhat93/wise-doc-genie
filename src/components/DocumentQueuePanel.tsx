@@ -33,7 +33,7 @@ import {
   Edit02Icon,
   SentIcon,
 } from "@hugeicons/core-free-icons";
-import { FileText, FilePlus, Paperclip, RotateCw } from "lucide-react";
+import { FileText, FilePlus, Paperclip, RotateCw, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AiIcon from "@/components/AiIcon";
 import RotatePagesDialog from "@/components/RotatePagesDialog";
@@ -65,6 +65,7 @@ interface DocumentQueuePanelProps {
   mode?: CreateDocumentMode;
   isMobile?: boolean;
   onEditDocuments?: () => void;
+  lockedDocuments?: UploadedDocument[];
 }
 
 // ─── Document type config ──────────────────────────────────────────────────
@@ -96,6 +97,13 @@ const DOC_TYPE_CONFIG: Record<DocumentType, {
     borderClass: "border-l-muted-foreground",
     badgeBg: "bg-muted",
     badgeText: "text-muted-foreground",
+  },
+  amendment: {
+    label: "Amendment",
+    icon: FileText,
+    borderClass: "border-l-violet-500",
+    badgeBg: "bg-violet-500/10",
+    badgeText: "text-violet-600",
   },
 };
 
@@ -437,6 +445,7 @@ const DocumentQueuePanel = ({
   mode = "full",
   isMobile = false,
   onEditDocuments,
+  lockedDocuments = [],
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
   const [rotateDoc, setRotateDoc] = useState<UploadedDocument | null>(null);
@@ -455,11 +464,14 @@ const DocumentQueuePanel = ({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const isEmpty = documents.length === 0;
-  const count = documents.length;
-  const primaryCount = documents.filter((d) => d.documentType === "primary").length;
-  const supplementCount = documents.filter((d) => d.documentType === "supplement").length;
-  const attachmentCount = documents.filter((d) => d.documentType === "attachment").length;
+  const hasLocked = lockedDocuments.length > 0;
+  const allDocs = [...lockedDocuments, ...documents];
+  const isEmpty = allDocs.length === 0;
+  const count = allDocs.length;
+  const primaryCount = allDocs.filter((d) => d.documentType === "primary").length;
+  const supplementCount = allDocs.filter((d) => d.documentType === "supplement").length;
+  const attachmentCount = allDocs.filter((d) => d.documentType === "attachment").length;
+  const amendmentCount = allDocs.filter((d) => d.documentType === "amendment").length;
   const hasPrimary = primaryCount > 0;
 
   function handleDragEnd(event: DragEndEvent) {
@@ -488,6 +500,7 @@ const DocumentQueuePanel = ({
   if (primaryCount > 0) footerParts.push(`${primaryCount} primary`);
   if (supplementCount > 0) footerParts.push(`${supplementCount} supplement`);
   if (attachmentCount > 0) footerParts.push(`${attachmentCount} attachment`);
+  if (amendmentCount > 0) footerParts.push(`${amendmentCount} amendment`);
 
   return (
     <div className={isMobile ? "flex flex-col" : "w-[260px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
@@ -505,9 +518,50 @@ const DocumentQueuePanel = ({
             </div>
           </div>
         ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={documents.map((d) => d.id)} strategy={verticalListSortingStrategy}>
-              <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-1 gap-2">
+            {/* Locked documents (not sortable) */}
+            {hasLocked && (
+              <>
+                {lockedDocuments.map((doc) => {
+                  const typeConfig = DOC_TYPE_CONFIG[doc.documentType];
+                  return (
+                    <div key={doc.id} className="relative">
+                      <Card className={`overflow-hidden border-l-[3px] opacity-70 ${typeConfig.borderClass}`}>
+                        <div className="absolute top-1.5 right-1.5 z-10">
+                          <Lock size={12} className="text-muted-foreground" />
+                        </div>
+                        <VerticalThumbnail doc={doc} />
+                        <div className="p-2.5 flex flex-col gap-1.5">
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[200px] break-words text-xs">{doc.name}</TooltipContent>
+                          </Tooltip>
+                          <p className="text-[11px] text-muted-foreground">{doc.pageCount ?? 0} pages</p>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${typeConfig.badgeBg} ${typeConfig.badgeText}`}>
+                              <Lock size={8} />
+                              {typeConfig.label} · Locked
+                            </span>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+                  );
+                })}
+                {/* Separator */}
+                <div className="flex items-center gap-2 py-1">
+                  <div className="flex-1 border-t border-dashed border-muted-foreground/30" />
+                  <span className="text-[10px] text-muted-foreground/60 font-medium">New documents</span>
+                  <div className="flex-1 border-t border-dashed border-muted-foreground/30" />
+                </div>
+              </>
+            )}
+
+            {/* Sortable new documents */}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={documents.map((d) => d.id)} strategy={verticalListSortingStrategy}>
                 <AnimatePresence initial={false}>
                   {documents.map((doc) => (
                     <motion.div
@@ -528,9 +582,9 @@ const DocumentQueuePanel = ({
                     </motion.div>
                   ))}
                 </AnimatePresence>
-              </div>
-            </SortableContext>
-          </DndContext>
+              </SortableContext>
+            </DndContext>
+          </div>
         )}
       </div>
 

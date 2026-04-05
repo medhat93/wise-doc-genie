@@ -111,7 +111,7 @@ export default function CorrectionDialog({ doc, open, onOpenChange }: Props) {
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={() => {
             onOpenChange(false);
-            navigate(`/editor?mode=correction&id=${doc.id}`);
+            navigate(`/create?mode=correction&id=${doc.id}`);
           }}>
             Enter correction mode
           </Button>
