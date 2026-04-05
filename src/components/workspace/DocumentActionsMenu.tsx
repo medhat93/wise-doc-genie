@@ -9,155 +9,174 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Eye, Download, Pencil, Share2, FolderInput, Tag, Copy, Users,
+  Download, Pencil, Share2, FolderInput, Tag, Copy, Users,
   Bell, CalendarDays, CheckCircle, Edit, XCircle, ArrowRight, Lock,
-  FileSearch, Trash2, MoreVertical,
+  FileSearch, Trash2, MoreHorizontal,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
+/* ── helpers ────────────────────────────────────────────────── */
+type StageKey = 'draft' | 'approval_waiting' | 'approval_yours' | 'signing_waiting' | 'signing_yours' | 'completed' | 'declined' | 'voided' | 'expired';
+
+function resolveStageKey(doc: WorkspaceDocument): StageKey {
+  const s = doc.stage;
+  if (s === 'draft') return 'draft';
+  if (['approving', 'approved'].includes(s)) {
+    // "your action" when waitingFor is Ahmad Medhat (the logged-in user)
+    return doc.waitingFor?.name === 'Ahmad Medhat' ? 'approval_yours' : 'approval_waiting';
+  }
+  if (['sent', 'partially_signed', 'waiting', 'expiring'].includes(s)) return 'signing_waiting';
+  if (s === 'requires_action') return 'signing_yours';
+  if (s === 'completed') return 'completed';
+  if (s === 'declined') return 'declined';
+  if (s === 'voided') return 'voided';
+  if (s === 'expired') return 'expired';
+  return 'draft';
+}
+
+interface MenuItem {
+  label: string;
+  icon: React.ElementType;
+  onClick?: () => void;
+  destructive?: boolean;
+  subText?: string;
+}
+
+type MenuGroup = MenuItem[];
+
+function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
+  onTrash: () => void;
+  onVoid: () => void;
+  onParticipants?: () => void;
+  onRename?: () => void;
+}): MenuGroup[] {
+  const { onTrash, onVoid, onParticipants, onRename } = callbacks;
+
+  const rename: MenuItem = { label: 'Rename', icon: Pencil, onClick: onRename || (() => toast.success('Document renamed')) };
+  const share: MenuItem = { label: 'Share', icon: Share2, onClick: () => toast.success('Share link copied') };
+  const download: MenuItem = { label: 'Download', icon: Download, onClick: () => toast.success('Download started') };
+  const edit: MenuItem = { label: 'Edit', icon: Pencil, onClick: () => toast.info('Opening editor...') };
+  const correct: MenuItem = { label: 'Correct', icon: Edit, onClick: () => toast.info('Opening correction mode...') };
+  const updateExp: MenuItem = { label: 'Update expiration', icon: CalendarDays, onClick: () => toast.success('Expiration updated') };
+  const markComplete: MenuItem = { label: 'Mark as complete', icon: CheckCircle, onClick: () => toast.success('Document marked as complete') };
+  const remind: MenuItem = { label: 'Send reminder', icon: Bell, onClick: () => toast.success(`Reminder sent to ${doc.participants.filter(p => p.status === 'pending').length} pending participants`) };
+  const voidDoc: MenuItem = { label: 'Void document', icon: XCircle, destructive: true, subText: 'This cannot be undone', onClick: onVoid };
+  const transfer: MenuItem = { label: 'Transfer ownership', icon: ArrowRight, onClick: () => toast.success('Ownership transferred') };
+  const audit: MenuItem = { label: 'Audit trail', icon: FileSearch, onClick: () => toast.info('Opening audit trail...') };
+  const move: MenuItem = { label: 'Move', icon: FolderInput, onClick: () => toast.success('Moved to folder') };
+  const tags: MenuItem = { label: 'Manage tags', icon: Tag, onClick: () => toast.success('Tags updated') };
+  const duplicate: MenuItem = { label: 'Duplicate', icon: Copy, onClick: () => toast.success('Document duplicated') };
+  const participants: MenuItem = { label: 'Participants details', icon: Users, onClick: onParticipants };
+  const vault: MenuItem = { label: 'Move to vault', icon: Lock, onClick: () => toast.success('Moved to vault') };
+  const trash: MenuItem = { label: 'Move to trash', icon: Trash2, destructive: true, onClick: onTrash };
+
+  const mgmt = [move, tags, duplicate, participants];
+
+  switch (stageKey) {
+    case 'draft':
+      return [[download, rename, share], mgmt, [trash]];
+    case 'approval_waiting':
+      return [[edit, rename, share], [updateExp, markComplete], mgmt, [trash]];
+    case 'approval_yours':
+      return [[download, rename, share], [updateExp, markComplete], mgmt, [trash]];
+    case 'signing_waiting':
+      return [[edit, correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]];
+    case 'signing_yours':
+      return [[rename, share], [correct, updateExp, markComplete, voidDoc], mgmt, [audit], [trash]];
+    case 'completed':
+      return [[rename, share], [transfer, audit], mgmt, [trash]];
+    case 'declined':
+      return [[rename, share], [audit], [move, tags, participants], [trash]];
+    case 'voided':
+      return [[rename, share], [audit], [move, tags, participants], [trash]];
+    case 'expired':
+      return [[duplicate, rename, share], [updateExp, audit], mgmt, [trash]];
+  }
+}
+
+/* ── exported component ─────────────────────────────────────── */
 interface Props {
   doc: WorkspaceDocument;
   trigger?: React.ReactNode;
+  onParticipants?: () => void;
+  onRename?: () => void;
 }
 
-export default function DocumentActionsMenu({ doc, trigger }: Props) {
+export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRename }: Props) {
   const [trashOpen, setTrashOpen] = useState(false);
+  const [voidOpen, setVoidOpen] = useState(false);
 
-  const stageActions = getStageActions(doc.stage);
+  const stageKey = resolveStageKey(doc);
+  const groups = getMenuGroups(stageKey, doc, {
+    onTrash: () => setTrashOpen(true),
+    onVoid: () => setVoidOpen(true),
+    onParticipants,
+    onRename,
+  });
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           {trigger || (
-            <button className="p-1 rounded hover:bg-muted h-7 w-7 flex items-center justify-center">
-              <MoreVertical size={14} />
-            </button>
+            <Button variant="ghost" className="h-7 w-7 p-0">
+              <MoreHorizontal size={14} />
+            </Button>
           )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          {/* Group 1 — Universal */}
-          <DropdownMenuItem className="gap-2 px-3 py-2 text-sm">
-            <Eye size={16} className="text-muted-foreground" /> Open document
-          </DropdownMenuItem>
-          <DropdownMenuItem className="gap-2 px-3 py-2 text-sm" onClick={() => toast.success('Download started')}>
-            <Download size={16} className="text-muted-foreground" /> Download PDF + audit trail
-          </DropdownMenuItem>
-          <DropdownMenuItem className="gap-2 px-3 py-2 text-sm" onClick={() => toast.success('Document renamed')}>
-            <Pencil size={16} className="text-muted-foreground" /> Rename document
-          </DropdownMenuItem>
-          <DropdownMenuItem className="gap-2 px-3 py-2 text-sm" onClick={() => toast.success('Share link copied')}>
-            <Share2 size={16} className="text-muted-foreground" /> Share with team members
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator className="my-1 border-border/50" />
-
-          {/* Group 2 — Document Management */}
-          <DropdownMenuItem className="gap-2 px-3 py-2 text-sm" onClick={() => toast.success('Moved to folder')}>
-            <FolderInput size={16} className="text-muted-foreground" /> Move to folder
-          </DropdownMenuItem>
-          <DropdownMenuItem className="gap-2 px-3 py-2 text-sm" onClick={() => toast.success('Tags updated')}>
-            <Tag size={16} className="text-muted-foreground" /> Add or remove tags
-          </DropdownMenuItem>
-          <DropdownMenuItem className="gap-2 px-3 py-2 text-sm" onClick={() => toast.success('Document duplicated')}>
-            <Copy size={16} className="text-muted-foreground" /> Create a copy
-          </DropdownMenuItem>
-          <DropdownMenuItem className="gap-2 px-3 py-2 text-sm">
-            <Users size={16} className="text-muted-foreground" /> View participants
-          </DropdownMenuItem>
-
-          {stageActions.length > 0 && (
-            <>
-              <DropdownMenuSeparator className="my-1 border-border/50" />
-              {stageActions.map(action => (
+          {groups.map((group, gi) => (
+            <React.Fragment key={gi}>
+              {gi > 0 && <DropdownMenuSeparator className="my-1 border-border/50" />}
+              {group.map(item => (
                 <DropdownMenuItem
-                  key={action.label}
-                  className="gap-2 px-3 py-2 text-sm"
-                  onClick={() => {
-                    if (action.label === 'Cancel and void this request') {
-                      toast('Document voided', {
-                        description: 'Undo',
-                        duration: 5000,
-                        action: { label: 'Undo', onClick: () => toast.success('Void undone') },
-                      });
-                    } else {
-                      toast.success(action.toast);
-                    }
-                  }}
+                  key={item.label}
+                  className={`gap-2 px-3 py-2 text-sm ${item.destructive ? 'text-destructive focus:text-destructive' : ''}`}
+                  onClick={item.onClick}
                 >
-                  <action.icon size={16} className="text-muted-foreground" /> {action.label}
+                  <item.icon size={16} className={item.destructive ? '' : 'text-muted-foreground'} />
+                  <div className="flex-1">
+                    <span>{item.label}</span>
+                    {item.subText && <p className="text-[10px] text-muted-foreground">{item.subText}</p>}
+                  </div>
                 </DropdownMenuItem>
               ))}
-            </>
-          )}
-
-          <DropdownMenuSeparator className="my-1 border-border/50" />
-
-          {/* Group 4 — Destructive */}
-          <DropdownMenuItem
-            className="gap-2 px-3 py-2 text-sm text-destructive focus:text-destructive"
-            onClick={() => setTrashOpen(true)}
-          >
-            <Trash2 size={16} /> Move to trash
-          </DropdownMenuItem>
+            </React.Fragment>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Trash confirmation */}
       <AlertDialog open={trashOpen} onOpenChange={setTrashOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Move to trash?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Move "{doc.name}" to trash? You can restore it within 30 days.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Move "{doc.name}" to trash? You can restore it within 30 days.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                toast('Moved to trash', {
-                  duration: 5000,
-                  action: { label: 'Undo', onClick: () => toast.success('Restored from trash') },
-                });
-              }}
-            >
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => toast('Moved to trash', { duration: 5000, action: { label: 'Undo', onClick: () => toast.success('Restored from trash') } })}>
               Move to trash
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Void confirmation */}
+      <AlertDialog open={voidOpen} onOpenChange={setVoidOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Void "{doc.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>This will cancel all pending actions. This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => toast('Document voided', { duration: 5000, action: { label: 'Undo', onClick: () => toast.success('Void undone') } })}>
+              Void document
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
   );
-}
-
-function getStageActions(stage: string) {
-  const actions: { label: string; icon: React.ElementType; toast: string }[] = [];
-
-  if (['approving', 'approved'].includes(stage)) {
-    actions.push(
-      { label: 'Remind pending approvers', icon: Bell, toast: 'Reminder sent to pending approvers' },
-      { label: 'Change expiration date', icon: CalendarDays, toast: 'Expiration updated' },
-      { label: 'Manually mark as completed', icon: CheckCircle, toast: 'Document marked as completed' },
-    );
-  } else if (['sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'].includes(stage)) {
-    actions.push(
-      { label: 'Modify recipients or fields', icon: Edit, toast: 'Document correction started' },
-      { label: 'Remind pending signers', icon: Bell, toast: 'Reminder sent to pending signers' },
-      { label: 'Change expiration date', icon: CalendarDays, toast: 'Expiration updated' },
-      { label: 'Manually mark as completed', icon: CheckCircle, toast: 'Document marked as completed' },
-      { label: 'Cancel and void this request', icon: XCircle, toast: 'Document voided' },
-    );
-  } else if (stage === 'completed') {
-    actions.push(
-      { label: 'Transfer to another member', icon: ArrowRight, toast: 'Ownership transferred' },
-      { label: 'Archive in the vault', icon: Lock, toast: 'Moved to vault' },
-      { label: 'View detailed audit history', icon: FileSearch, toast: '' },
-    );
-  } else if (['declined', 'voided', 'expired'].includes(stage)) {
-    actions.push(
-      { label: 'View audit history', icon: FileSearch, toast: '' },
-    );
-  }
-
-  return actions;
 }
