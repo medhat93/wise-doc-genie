@@ -189,8 +189,7 @@ export default function SigningPage() {
       {/* Completion overlay */}
       {showComplete && (
         <SigningComplete onGoBack={() => {
-          toast.success('Document signed successfully!');
-          navigate('/workspace');
+          navigate('/?signed=true');
         }} />
       )}
     </div>
