@@ -184,6 +184,12 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Correction dialog */}
+      <CorrectionDialog doc={doc} open={correctionOpen} onOpenChange={setCorrectionOpen} />
+
+      {/* Follow-up dialog */}
+      <FollowUpDialog doc={doc} open={followUpOpen} onOpenChange={setFollowUpOpen} />
     </>
   );
 }
