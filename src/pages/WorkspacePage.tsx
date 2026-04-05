@@ -398,6 +398,11 @@ export default function WorkspacePage() {
                               <FileText size={16} className="text-muted-foreground mt-0.5 shrink-0" />
                               <div className="min-w-0">
                                 <p className="font-medium truncate">{doc.name}</p>
+                                {doc.followUpTo && (
+                                  <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                                    <span className="inline-block">🔗</span> Follow-up to {doc.followUpTo.name}
+                                  </p>
+                                )}
                                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                   {doc.tags.slice(0, 2).map(t => (
                                     <span key={t} className={cn('px-1.5 rounded text-[10px] font-medium leading-relaxed', getTagColor(t))}>{t}</span>

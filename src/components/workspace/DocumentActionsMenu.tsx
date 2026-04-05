@@ -9,11 +9,13 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Download, Pencil, Share2, FolderInput, Tag, Copy, Users,
+  Download, Pencil, Share2, Tag, Copy, Users,
   Bell, CalendarDays, CheckCircle, Edit, XCircle, ArrowRight, Lock,
-  FileSearch, Trash2, MoreHorizontal,
+  FileSearch, Trash2, MoreHorizontal, Link as LinkIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import CorrectionDialog from './CorrectionDialog';
+import FollowUpDialog from './FollowUpDialog';
 
 /* ── helpers ────────────────────────────────────────────────── */
 type StageKey = 'draft' | 'approval_waiting' | 'approval_yours' | 'signing_waiting' | 'signing_yours' | 'completed' | 'declined' | 'voided' | 'expired';
@@ -22,7 +24,6 @@ function resolveStageKey(doc: WorkspaceDocument): StageKey {
   const s = doc.stage;
   if (s === 'draft') return 'draft';
   if (['approving', 'approved'].includes(s)) {
-    // "your action" when waitingFor is Ahmad Medhat (the logged-in user)
     return doc.waitingFor?.name === 'Ahmad Medhat' ? 'approval_yours' : 'approval_waiting';
   }
   if (['sent', 'partially_signed', 'waiting', 'expiring'].includes(s)) return 'signing_waiting';
@@ -49,26 +50,28 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
   onVoid: () => void;
   onParticipants?: () => void;
   onRename?: () => void;
+  onCorrect?: () => void;
+  onFollowUp?: () => void;
 }): MenuGroup[] {
-  const { onTrash, onVoid, onParticipants, onRename } = callbacks;
+  const { onTrash, onVoid, onParticipants, onRename, onCorrect, onFollowUp } = callbacks;
 
   const rename: MenuItem = { label: 'Rename', icon: Pencil, onClick: onRename || (() => toast.success('Document renamed')) };
   const share: MenuItem = { label: 'Share', icon: Share2, onClick: () => toast.success('Share link copied') };
   const download: MenuItem = { label: 'Download', icon: Download, onClick: () => toast.success('Download started') };
   const edit: MenuItem = { label: 'Edit', icon: Pencil, onClick: () => toast.info('Opening editor...') };
-  const correct: MenuItem = { label: 'Correct', icon: Edit, onClick: () => toast.info('Opening correction mode...') };
+  const correct: MenuItem = { label: 'Correct', icon: Edit, onClick: onCorrect };
   const updateExp: MenuItem = { label: 'Update expiration', icon: CalendarDays, onClick: () => toast.success('Expiration updated') };
   const markComplete: MenuItem = { label: 'Mark as complete', icon: CheckCircle, onClick: () => toast.success('Document marked as complete') };
   const remind: MenuItem = { label: 'Send reminder', icon: Bell, onClick: () => toast.success(`Reminder sent to ${doc.participants.filter(p => p.status === 'pending').length} pending participants`) };
   const voidDoc: MenuItem = { label: 'Void document', icon: XCircle, destructive: true, subText: 'This cannot be undone', onClick: onVoid };
   const transfer: MenuItem = { label: 'Transfer ownership', icon: ArrowRight, onClick: () => toast.success('Ownership transferred') };
   const audit: MenuItem = { label: 'Audit trail', icon: FileSearch, onClick: () => toast.info('Opening audit trail...') };
-  const move: MenuItem = { label: 'Move', icon: FolderInput, onClick: () => toast.success('Moved to folder') };
   const tags: MenuItem = { label: 'Manage tags', icon: Tag, onClick: () => toast.success('Tags updated') };
   const duplicate: MenuItem = { label: 'Duplicate', icon: Copy, onClick: () => toast.success('Document duplicated') };
   const participants: MenuItem = { label: 'Participants details', icon: Users, onClick: onParticipants };
   const vault: MenuItem = { label: 'Move to vault', icon: Lock, onClick: () => toast.success('Moved to vault') };
   const trash: MenuItem = { label: 'Move to trash', icon: Trash2, destructive: true, onClick: onTrash };
+  const followUp: MenuItem = { label: 'Add follow-up', icon: LinkIcon, onClick: onFollowUp };
 
   const mgmt = [tags, duplicate, participants];
 
@@ -76,15 +79,15 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
     case 'draft':
       return [[download, rename, share], mgmt, [trash]];
     case 'approval_waiting':
-      return [[edit, rename, share], [updateExp, markComplete], mgmt, [trash]];
+      return [[edit, correct, rename, share], [updateExp, markComplete], mgmt, [trash]];
     case 'approval_yours':
-      return [[download, rename, share], [updateExp, markComplete], mgmt, [trash]];
+      return [[download, correct, rename, share], [updateExp, markComplete], mgmt, [trash]];
     case 'signing_waiting':
       return [[edit, correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]];
     case 'signing_yours':
       return [[rename, share], [correct, updateExp, markComplete, voidDoc], mgmt, [audit], [trash]];
     case 'completed':
-      return [[rename, share], [transfer, vault, audit], mgmt, [trash]];
+      return [[rename, share], [followUp, transfer, vault, audit], mgmt, [trash]];
     case 'declined':
       return [[rename, share], [audit], [tags, participants], [trash]];
     case 'voided':
@@ -105,6 +108,8 @@ interface Props {
 export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRename }: Props) {
   const [trashOpen, setTrashOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
 
   const stageKey = resolveStageKey(doc);
   const groups = getMenuGroups(stageKey, doc, {
@@ -112,6 +117,8 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
     onVoid: () => setVoidOpen(true),
     onParticipants,
     onRename,
+    onCorrect: () => setCorrectionOpen(true),
+    onFollowUp: () => setFollowUpOpen(true),
   });
 
   return (
@@ -177,6 +184,12 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Correction dialog */}
+      <CorrectionDialog doc={doc} open={correctionOpen} onOpenChange={setCorrectionOpen} />
+
+      {/* Follow-up dialog */}
+      <FollowUpDialog doc={doc} open={followUpOpen} onOpenChange={setFollowUpOpen} />
     </>
   );
 }

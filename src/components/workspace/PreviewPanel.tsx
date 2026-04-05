@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   X, Send, Download, Pencil, MoreHorizontal, Clock, FileText, Eye,
   PenTool, Bell, XCircle, Plus, CheckCircle, Circle, GitPullRequest,
-  Users, File, AlertTriangle, Ban, Lock, Copy, Check,
+  Users, File, AlertTriangle, Ban, Lock, Copy, Check, Link as LinkIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import DocumentActionsMenu from './DocumentActionsMenu';
+import FollowUpDialog from './FollowUpDialog';
 
 /* ── stage badge config ─────────────────────────────────────── */
 const stageConfig: Record<string, { label: string; className: string; icon: React.ElementType }> = {
@@ -209,6 +210,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
+  const [followUpOpen, setFollowUpOpen] = useState(false);
   const renameRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -306,6 +308,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setFollowUpOpen(true)}><LinkIcon size={12} /> Add follow-up</Button>
           <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => toast.success('Moved to vault')}><Lock size={12} /> Move to vault</Button>
           {moreMenu}
         </>
@@ -339,6 +342,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   }
 
   return (
+    <>
     <Sheet open={!!doc} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent side="right" className="w-[400px] p-0 flex flex-col [&>button]:hidden">
         {/* Header */}
@@ -396,6 +400,17 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
           <div className="flex-1 overflow-y-auto">
             {/* ═══ TAB 1: OVERVIEW ═══ */}
             <TabsContent value="overview" className="p-4 space-y-4 mt-0">
+              {/* Follow-up parent link */}
+              {doc.followUpTo && (
+                <div className="bg-muted/30 rounded-lg p-3 flex items-center gap-2 text-sm">
+                  <span>🔗</span>
+                  <span className="text-muted-foreground">Parent document:</span>
+                  <button className="text-primary hover:underline font-medium" onClick={() => toast.info(`Open ${doc.followUpTo!.name}`)}>
+                    {doc.followUpTo.name}
+                  </button>
+                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5">Completed</Badge>
+                </div>
+              )}
               {/* Documents section */}
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Documents</p>
@@ -674,6 +689,8 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         </Tabs>
       </SheetContent>
     </Sheet>
+    <FollowUpDialog doc={doc} open={followUpOpen} onOpenChange={setFollowUpOpen} />
+    </>
   );
 }
 
