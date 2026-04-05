@@ -530,8 +530,6 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, isEsi
         height: parsed.defaultHeight,
       };
       setPlacedFields((prev) => [...prev, newField]);
-      setSelectedFieldId(newField.id);
-      onFieldSelect?.(newField.id);
     } catch {}
   }, [setPlacedFields, setSelectedFieldId, onFieldSelect]);
 
