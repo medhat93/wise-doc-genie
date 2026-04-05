@@ -65,6 +65,7 @@ interface DocumentQueuePanelProps {
   mode?: CreateDocumentMode;
   isMobile?: boolean;
   onEditDocuments?: () => void;
+  lockedDocuments?: UploadedDocument[];
 }
 
 // ─── Document type config ──────────────────────────────────────────────────
@@ -444,6 +445,7 @@ const DocumentQueuePanel = ({
   mode = "full",
   isMobile = false,
   onEditDocuments,
+  lockedDocuments = [],
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
   const [rotateDoc, setRotateDoc] = useState<UploadedDocument | null>(null);
