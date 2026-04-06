@@ -257,28 +257,6 @@ const ReviewSendDialog = ({
                     </div>
                     <span className="text-xs text-muted-foreground">{doc.pages} pages</span>
                   </div>
-                  {/* Show acknowledgment requirements for supplement/attachment */}
-                  {(doc.type === "Supplement" || doc.type === "Attachment") && (() => {
-                    const docAcks = documentAcknowledgments[doc.id];
-                    if (!docAcks) return null;
-                    const entries = Object.entries(docAcks).filter(([_, level]) => level !== "none");
-                    if (entries.length === 0) return null;
-                    const ACK_LABELS: Record<AcknowledgmentLevel, string> = {
-                      none: "No action required",
-                      must_view: "must view before signing",
-                      must_view_accept: "must view and accept",
-                    };
-                    return entries.map(([pId, level]) => {
-                      const p = participants.find((pp) => pp.id === pId);
-                      if (!p) return null;
-                      return (
-                        <div key={pId} className="flex items-center gap-1.5 ml-6 text-xs text-muted-foreground">
-                          <Eye size={10} />
-                          <span>{p.name} {ACK_LABELS[level]}</span>
-                        </div>
-                      );
-                    });
-                  })()}
                 </div>
               ))}
             </Section>
