@@ -18,7 +18,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Progress } from '@/components/ui/progress';
 import DocumentActionsMenu from './DocumentActionsMenu';
-import FollowUpDialog from './FollowUpDialog';
 import CorrectionDialog from './CorrectionDialog';
 
 /* ── stage badge config ─────────────────────────────────────── */
@@ -247,7 +246,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
-  const [followUpOpen, setFollowUpOpen] = useState(false);
+  
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [docsExpanded, setDocsExpanded] = useState(false);
   const renameRef = useRef<HTMLInputElement>(null);
@@ -696,7 +695,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         </Tabs>
       </SheetContent>
     </Sheet>
-    <FollowUpDialog doc={doc} open={followUpOpen} onOpenChange={setFollowUpOpen} />
+    
     <CorrectionDialog doc={doc} open={correctionOpen} onOpenChange={setCorrectionOpen} />
     </>
   );

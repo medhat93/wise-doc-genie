@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { WorkspaceDocument } from '@/types/workspace';
 import { toast } from 'sonner';
 import {
@@ -15,7 +16,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CorrectionDialog from './CorrectionDialog';
-import FollowUpDialog from './FollowUpDialog';
 
 /* ── helpers ────────────────────────────────────────────────── */
 type StageKey = 'draft' | 'approval_waiting' | 'approval_yours' | 'signing_waiting' | 'signing_yours' | 'completed' | 'declined' | 'voided' | 'expired';
@@ -106,10 +106,10 @@ interface Props {
 }
 
 export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRename }: Props) {
+  const navigate = useNavigate();
   const [trashOpen, setTrashOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
   const [correctionOpen, setCorrectionOpen] = useState(false);
-  const [followUpOpen, setFollowUpOpen] = useState(false);
 
   const stageKey = resolveStageKey(doc);
   const groups = getMenuGroups(stageKey, doc, {
@@ -118,7 +118,7 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
     onParticipants,
     onRename,
     onCorrect: () => setCorrectionOpen(true),
-    onFollowUp: () => setFollowUpOpen(true),
+    onFollowUp: () => navigate(`/create?mode=followup&parentId=${doc.id}&childType=supplement`),
   });
 
   return (
@@ -187,9 +187,6 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
 
       {/* Correction dialog */}
       <CorrectionDialog doc={doc} open={correctionOpen} onOpenChange={setCorrectionOpen} />
-
-      {/* Follow-up dialog */}
-      <FollowUpDialog doc={doc} open={followUpOpen} onOpenChange={setFollowUpOpen} />
     </>
   );
 }
