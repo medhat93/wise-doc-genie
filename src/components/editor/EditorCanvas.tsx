@@ -962,6 +962,21 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     onOpenComments?.();
   }, [setPendingCommentRef, onOpenComments]);
 
+  const handleAddReply = useCallback((commentId: string, text: string) => {
+    setComments(prev => prev.map(c => c.id === commentId ? {
+      ...c,
+      replies: [...c.replies, {
+        id: `r${Date.now()}`,
+        author: "Ahmed Al-Rashid",
+        authorInitials: "AA",
+        authorColor: "#4F46E5",
+        text,
+        timestamp: new Date(),
+      }],
+    } : c));
+    toast.success("Reply added");
+  }, [setComments]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSelectionToolbar(null);
