@@ -7,6 +7,7 @@ import {
   X, Send, Download, Pencil, MoreHorizontal, Clock, FileText, Eye,
   PenTool, Bell, XCircle, Plus, CheckCircle, Circle, GitPullRequest,
   Users, File, AlertTriangle, Ban, Lock, Copy, Check, ChevronDown, ChevronUp, Sparkles, Edit,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -357,6 +358,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate(`/create?mode=followup&parentId=${doc.id}&childType=supplement`)}><LinkIcon size={12} /> Follow-up</Button>
           {moreMenu}
         </>
       );
