@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { UploadedDocument, DocumentType } from "@/types/document";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -16,9 +15,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
@@ -33,10 +37,11 @@ import {
   Edit02Icon,
   SentIcon,
 } from "@hugeicons/core-free-icons";
-import { FileText, FilePlus, Paperclip, RotateCw, Lock } from "lucide-react";
+import { FileText, FilePlus, RotateCw, Lock, MoreVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AiIcon from "@/components/AiIcon";
-import RotatePagesDialog from "@/components/RotatePagesDialog";
+import DocumentPreviewDialog from "@/components/DocumentPreviewDialog";
+import { toast } from "sonner";
 
 import {
   DndContext,
@@ -67,45 +72,6 @@ interface DocumentQueuePanelProps {
   onEditDocuments?: () => void;
   lockedDocuments?: UploadedDocument[];
 }
-
-// ─── Document type config ──────────────────────────────────────────────────
-
-const DOC_TYPE_CONFIG: Record<DocumentType, {
-  label: string;
-  icon: typeof FileText;
-  borderClass: string;
-  badgeBg: string;
-  badgeText: string;
-}> = {
-  primary: {
-    label: "Primary",
-    icon: FileText,
-    borderClass: "border-l-primary",
-    badgeBg: "bg-primary/10",
-    badgeText: "text-primary",
-  },
-  supplement: {
-    label: "Supplement",
-    icon: FilePlus,
-    borderClass: "border-l-amber-500",
-    badgeBg: "bg-amber-500/10",
-    badgeText: "text-amber-600",
-  },
-  attachment: {
-    label: "Attachment",
-    icon: Paperclip,
-    borderClass: "border-l-muted-foreground",
-    badgeBg: "bg-muted",
-    badgeText: "text-muted-foreground",
-  },
-  amendment: {
-    label: "Amendment",
-    icon: FileText,
-    borderClass: "border-l-violet-500",
-    badgeBg: "bg-violet-500/10",
-    badgeText: "text-violet-600",
-  },
-};
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -196,76 +162,27 @@ function VerticalThumbnail({ doc }: { doc: UploadedDocument }) {
   );
 }
 
-// ─── Document type badge with dropdown ──────────────────────────────────────
-
-function DocTypeBadge({
-  doc,
-  onChangeType,
-}: {
-  doc: UploadedDocument;
-  onChangeType: (id: string, type: DocumentType) => void;
-}) {
-  const config = DOC_TYPE_CONFIG[doc.documentType];
-  const Icon = config.icon;
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors hover:opacity-80 ${config.badgeBg} ${config.badgeText}`}
-          onClick={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <Icon size={10} />
-          {config.label}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-[140px] p-1" sideOffset={4}>
-        {(Object.keys(DOC_TYPE_CONFIG) as DocumentType[]).map((dtype) => {
-          const c = DOC_TYPE_CONFIG[dtype];
-          const TypeIcon = c.icon;
-          return (
-            <button
-              key={dtype}
-              onClick={(e) => {
-                e.stopPropagation();
-                onChangeType(doc.id, dtype);
-              }}
-              className={`flex items-center gap-2 w-full px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors ${doc.documentType === dtype ? "font-semibold" : ""}`}
-            >
-              <TypeIcon size={14} className={c.badgeText} />
-              {c.label}
-              {doc.documentType === dtype && (
-                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="ml-auto text-primary" />
-              )}
-            </button>
-          );
-        })}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 // ─── Sortable card ──────────────────────────────────────────────────────────
 
 function SortableDocCard({
   doc,
   onRemove,
   onPreview,
-  onChangeType,
+  onToggleSupplement,
   onRotate,
 }: {
   doc: UploadedDocument;
   onRemove: (id: string) => void;
   onPreview: (doc: UploadedDocument) => void;
-  onChangeType: (id: string, type: DocumentType) => void;
+  onToggleSupplement: (id: string) => void;
   onRotate: (doc: UploadedDocument) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: doc.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   const isUploading = doc.status === "uploading" && !doc.isTemplate && !doc.isAI;
-  const typeConfig = DOC_TYPE_CONFIG[doc.documentType];
+  const isSupplement = doc.documentType === "supplement";
+  const isPdf = doc.type.includes("pdf");
 
   return (
     <Card
@@ -273,7 +190,7 @@ function SortableDocCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`group relative overflow-hidden cursor-grab active:cursor-grabbing border-l-[3px] transition-all duration-300 ${typeConfig.borderClass}`}
+      className="group relative overflow-hidden cursor-grab active:cursor-grabbing transition-all duration-300"
     >
       {/* Drag handle indicator */}
       <div className="absolute top-1.5 left-1.5 z-10 bg-background/80 backdrop-blur-sm rounded p-0.5 pointer-events-none">
@@ -306,8 +223,8 @@ function SortableDocCard({
         </button>
       </div>
 
-      {/* Info + type badge + remove */}
-      <div className="p-2.5 flex flex-col gap-1.5">
+      {/* Info + 3-dot menu */}
+      <div className="p-2.5 flex flex-col gap-1">
         <div className="flex items-start gap-1">
           <div className="flex-1 min-w-0">
             <Tooltip delayDuration={0}>
@@ -342,50 +259,61 @@ function SortableDocCard({
                     : `${doc.pageCount ?? 0} pages`}
               </p>
             )}
+            {/* Supplement badge */}
+            {isSupplement && (
+              <span className="inline-flex items-center gap-0.5 mt-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-600">
+                <FilePlus size={9} />
+                Supplement
+              </span>
+            )}
           </div>
 
-          {/* Rotate button (PDF only) */}
-          {doc.type.includes("pdf") && doc.status === "complete" && (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <button
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent flex-shrink-0"
-                  onClick={(e) => { e.stopPropagation(); onRotate(doc); }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                >
-                  <RotateCw size={14} className="text-muted-foreground" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Rotate pages</TooltipContent>
-            </Tooltip>
-          )}
-
-          {/* Remove button */}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
+          {/* 3-dot menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <button
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 flex-shrink-0"
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent flex-shrink-0"
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
               >
-                <HugeiconsIcon icon={Delete02Icon} size={14} className="text-destructive" />
+                <MoreVertical size={14} className="text-muted-foreground" />
               </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Remove from queue?</AlertDialogTitle>
-                <AlertDialogDescription>"{doc.name}" will be removed from the queue.</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onRemove(doc.id)}>Remove</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[180px]">
+              <DropdownMenuItem
+                onClick={(e) => { e.stopPropagation(); onToggleSupplement(doc.id); }}
+              >
+                {isSupplement ? (
+                  <>
+                    <FileText size={14} className="mr-2 text-primary" />
+                    Set as primary
+                  </>
+                ) : (
+                  <>
+                    <FilePlus size={14} className="mr-2 text-amber-600" />
+                    Set as supplement
+                  </>
+                )}
+              </DropdownMenuItem>
+              {isPdf && doc.status === "complete" && (
+                <DropdownMenuItem
+                  onClick={(e) => { e.stopPropagation(); onRotate(doc); }}
+                >
+                  <RotateCw size={14} className="mr-2" />
+                  Rotate pages
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={(e) => { e.stopPropagation(); onRemove(doc.id); }}
+              >
+                <HugeiconsIcon icon={Delete02Icon} size={14} className="mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-
-        {/* Type badge */}
-        <DocTypeBadge doc={doc} onChangeType={onChangeType} />
       </div>
 
       {/* Upload progress */}
@@ -470,9 +398,6 @@ const DocumentQueuePanel = ({
   const count = allDocs.length;
   const primaryCount = allDocs.filter((d) => d.documentType === "primary").length;
   const supplementCount = allDocs.filter((d) => d.documentType === "supplement").length;
-  const attachmentCount = allDocs.filter((d) => d.documentType === "attachment").length;
-  const amendmentCount = allDocs.filter((d) => d.documentType === "amendment").length;
-  const hasPrimary = primaryCount > 0;
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -489,18 +414,20 @@ const DocumentQueuePanel = ({
     setDocuments((prev) => prev.filter((d) => d.id !== id));
   }
 
-  function handleChangeType(id: string, newType: DocumentType) {
+  function handleToggleSupplement(id: string) {
     setDocuments((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, documentType: newType } : d))
+      prev.map((d) => {
+        if (d.id !== id) return d;
+        const newType: DocumentType = d.documentType === "supplement" ? "primary" : "supplement";
+        return { ...d, documentType: newType };
+      })
     );
   }
 
   // Build footer summary
-  const footerParts: string[] = [];
-  if (primaryCount > 0) footerParts.push(`${primaryCount} primary`);
-  if (supplementCount > 0) footerParts.push(`${supplementCount} supplement`);
-  if (attachmentCount > 0) footerParts.push(`${attachmentCount} attachment`);
-  if (amendmentCount > 0) footerParts.push(`${amendmentCount} amendment`);
+  const footerText = supplementCount > 0
+    ? `${primaryCount} primary · ${supplementCount} supplement`
+    : `${count} document${count !== 1 ? "s" : ""}`;
 
   return (
     <div className={isMobile ? "flex flex-col" : "w-[260px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
@@ -523,15 +450,15 @@ const DocumentQueuePanel = ({
             {hasLocked && (
               <>
                 {lockedDocuments.map((doc) => {
-                  const typeConfig = DOC_TYPE_CONFIG[doc.documentType];
+                  const isSupplement = doc.documentType === "supplement";
                   return (
                     <div key={doc.id} className="relative">
-                      <Card className={`overflow-hidden border-l-[3px] opacity-70 ${typeConfig.borderClass}`}>
+                      <Card className="overflow-hidden opacity-70">
                         <div className="absolute top-1.5 right-1.5 z-10">
                           <Lock size={12} className="text-muted-foreground" />
                         </div>
                         <VerticalThumbnail doc={doc} />
-                        <div className="p-2.5 flex flex-col gap-1.5">
+                        <div className="p-2.5 flex flex-col gap-1">
                           <Tooltip delayDuration={0}>
                             <TooltipTrigger asChild>
                               <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
@@ -540,9 +467,9 @@ const DocumentQueuePanel = ({
                           </Tooltip>
                           <p className="text-[11px] text-muted-foreground">{doc.pageCount ?? 0} pages</p>
                           <div className="flex items-center gap-1.5">
-                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${typeConfig.badgeBg} ${typeConfig.badgeText}`}>
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
                               <Lock size={8} />
-                              {typeConfig.label} · Locked
+                              {isSupplement ? "Supplement" : "Primary"} · Locked
                             </span>
                           </div>
                         </div>
@@ -576,7 +503,7 @@ const DocumentQueuePanel = ({
                         doc={doc}
                         onRemove={handleRemove}
                         onPreview={setPreviewDoc}
-                        onChangeType={handleChangeType}
+                        onToggleSupplement={handleToggleSupplement}
                         onRotate={setRotateDoc}
                       />
                     </motion.div>
@@ -589,17 +516,11 @@ const DocumentQueuePanel = ({
       </div>
 
       <div className="border-t px-3 py-3 flex-shrink-0 space-y-1.5">
-        {/* Warning if no primary */}
-        {!isEmpty && !hasPrimary && (
-          <p className="text-[10px] text-amber-600 font-medium">
-            At least one primary document is required
-          </p>
-        )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <HugeiconsIcon icon={File01Icon} size={13} className="text-muted-foreground" />
             <span className="text-[11px] font-medium text-muted-foreground">
-              {isEmpty ? "Queue empty" : footerParts.join(" · ")}
+              {isEmpty ? "Queue empty" : footerText}
             </span>
           </div>
           {!isEmpty && (
@@ -626,62 +547,19 @@ const DocumentQueuePanel = ({
         </div>
       </div>
 
-      <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <HugeiconsIcon icon={ViewIcon} size={18} />
-              {previewDoc?.name}
-            </DialogTitle>
-          </DialogHeader>
-          {previewDoc && (
-            <div className="space-y-4 py-2">
-              <div className="rounded-lg border bg-muted/50 p-6 flex flex-col items-center min-h-[280px] justify-center">
-                <QueueItemThumbnail doc={previewDoc} />
-                <div className="mt-6 w-[200px] space-y-2.5">
-                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
-                  <div className="h-[5px] bg-muted-foreground/10 rounded w-4/5" />
-                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
-                  <div className="h-[5px] bg-muted-foreground/10 rounded w-3/5" />
-                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
-                  <div className="h-[5px] bg-muted-foreground/10 rounded w-2/3" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground">Type</p>
-                  <p className="font-medium mt-0.5">
-                    {previewDoc.isTemplate
-                      ? "Template"
-                      : previewDoc.isAI
-                        ? "AI Generated"
-                        : previewDoc.type.split("/").pop()?.toUpperCase() || "File"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Pages</p>
-                  <p className="font-medium mt-0.5">{previewDoc.pageCount ?? "—"}</p>
-                </div>
-                {previewDoc.size && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Size</p>
-                    <p className="font-medium mt-0.5">{formatSize(previewDoc.size)}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-xs text-muted-foreground">Classification</p>
-                  <p className="font-medium mt-0.5 capitalize">{previewDoc.documentType}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Preview dialog (simple) */}
+      <DocumentPreviewDialog
+        doc={previewDoc}
+        open={!!previewDoc}
+        onOpenChange={(open) => !open && setPreviewDoc(null)}
+      />
 
-      <RotatePagesDialog
+      {/* Rotation preview dialog */}
+      <DocumentPreviewDialog
         doc={rotateDoc}
         open={!!rotateDoc}
         onOpenChange={(open) => !open && setRotateDoc(null)}
+        rotationMode
       />
     </div>
   );
