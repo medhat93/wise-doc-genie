@@ -234,7 +234,7 @@ const CreateDocument = () => {
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
   const [queueManuallyOpened, setQueueManuallyOpened] = useState(false);
   const hasDocuments = documents.length > 0 || lockedDocs.length > 0;
-  const showQueue = hasDocuments || queueManuallyOpened;
+  const showQueue = hasDocuments || queueManuallyOpened || isFollowUp;
   const [isDragActive, setIsDragActive] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
