@@ -660,7 +660,7 @@ const ThreadPin = ({
             exit={{ opacity: 0, x: 8, scale: 0.98 }}
             transition={{ duration: 0.18 }}
             className={cn(
-              "absolute left-full top-1/2 z-40 ml-3 w-[280px] -translate-y-1/2 overflow-hidden rounded-xl border shadow-xl",
+              "absolute right-full top-1/2 z-40 mr-3 w-[280px] -translate-y-1/2 overflow-hidden rounded-xl border shadow-xl",
               style.borderClass,
               style.bgClass,
             )}
@@ -1124,7 +1124,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
 
       <div
         ref={scrollRef}
-        className={cn("flex-1 overflow-y-auto relative", isEsign ? "bg-muted/40" : "bg-muted/20")}
+        className={cn("flex-1 overflow-y-auto overflow-x-hidden relative", isEsign ? "bg-muted/40" : "bg-muted/20")}
         onScroll={handleScroll}
         onClick={handleCanvasClick}
         onMouseUp={handleMouseUp}
@@ -1201,28 +1201,25 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                     ))}
                   </div>
 
-                  {/* Floating comment bubbles — ALWAYS visible, expandable inline */}
+                  {/* Floating thread pins — positioned at the right edge of the document */}
                   {doc.id === "doc-1" && Object.keys(commentsBySection).length > 0 && (
-                    <div className="absolute top-0 left-full ml-3" style={{ width: 220 }}>
-                      <AnimatePresence>
-                        {Object.entries(commentsBySection).map(([sectionRef, sectionComments]) => {
-                          const yPos = sectionPositions[sectionRef];
-                          if (yPos === undefined) return null;
-                          const first = sectionComments[0];
-                          return (
-                            <div key={sectionRef} style={{ position: "absolute", top: yPos }}>
-                              <ThreadPin
-                                comments={sectionComments}
-                                isOpen={openThreadSection === sectionRef}
-                                onToggle={() => setOpenThreadSection((prev) => (prev === sectionRef ? null : sectionRef))}
-                                onClose={() => setOpenThreadSection(null)}
-                                onAddReply={handleAddReply}
-                              />
-                            </div>
-                          );
-                        })}
-                      </AnimatePresence>
-                    </div>
+                    <>
+                      {Object.entries(commentsBySection).map(([sectionRef, sectionComments]) => {
+                        const yPos = sectionPositions[sectionRef];
+                        if (yPos === undefined) return null;
+                        return (
+                          <div key={sectionRef} className="absolute z-20" style={{ top: yPos, right: -20 }}>
+                            <ThreadPin
+                              comments={sectionComments}
+                              isOpen={openThreadSection === sectionRef}
+                              onToggle={() => setOpenThreadSection((prev) => (prev === sectionRef ? null : sectionRef))}
+                              onClose={() => setOpenThreadSection(null)}
+                              onAddReply={handleAddReply}
+                            />
+                          </div>
+                        );
+                      })}
+                    </>
                   )}
                 </div>
               </div>
