@@ -7,6 +7,7 @@ import {
   WorkflowSquare10Icon,
   CursorAddSelection02Icon,
   TaskDone01Icon,
+  CheckmarkSquare02Icon,
 } from "@hugeicons/core-free-icons";
 import AiIcon from "@/components/AiIcon";
 import { cn } from "@/lib/utils";
@@ -34,22 +35,21 @@ interface PanelItem {
   icon?: any;
   useAiIcon?: boolean;
   clmOnly?: boolean;
-  esignHide?: boolean;
   group: 1 | 2 | 3;
 }
 
 const PANELS: PanelItem[] = [
   // Group 1 — Primary Workflow
-  { id: "annotations", label: "Fields", shortcut: "⌘1", icon: CursorAddSelection02Icon, group: 1 },
-  { id: "fields", label: "Variables", shortcut: "⌘2", icon: TextField, clmOnly: true, group: 1 },
-  { id: "comments", label: "Comments", shortcut: "⌘3", icon: Comment01Icon, group: 1 },
+  { id: "participants", label: "Participants", shortcut: "⌘1", icon: UserMultiple02Icon, group: 1 },
+  { id: "annotations", label: "Fields", shortcut: "⌘2", icon: CursorAddSelection02Icon, group: 1 },
+  { id: "fields", label: "Variables", shortcut: "⌘3", icon: TextField, clmOnly: true, group: 1 },
   // Group 2 — AI
   { id: "ai", label: "AI Assistant ✨", shortcut: "⌘4", useAiIcon: true, clmOnly: true, group: 2 },
-  // Group 3 — Configuration
-  { id: "workflow", label: "Workflow", shortcut: "⌘5", icon: WorkflowSquare10Icon, clmOnly: true, group: 3 },
-  { id: "tasks", label: "Tasks", shortcut: "⌘6", icon: TaskDone01Icon, clmOnly: true, group: 3 },
+  // Group 3 — Management
+  { id: "comments", label: "Comments", shortcut: "⌘5", icon: Comment01Icon, clmOnly: true, group: 3 },
+  { id: "tasks", label: "Tasks", shortcut: "⌘6", icon: CheckmarkSquare02Icon, clmOnly: true, group: 3 },
   { id: "properties", label: "Properties", shortcut: "⌘7", icon: PropertyEditIcon, clmOnly: true, group: 3 },
-  { id: "participants", label: "Participants", shortcut: "⌘8", icon: UserMultiple02Icon, group: 3 },
+  { id: "workflow", label: "Workflow", shortcut: "⌘8", icon: WorkflowSquare10Icon, clmOnly: true, group: 3 },
 ];
 
 interface EditorPanelToolbarProps {
