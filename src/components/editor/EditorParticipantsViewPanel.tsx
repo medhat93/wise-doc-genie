@@ -295,6 +295,52 @@ const EditorParticipantsViewPanel = () => {
         Add new participant
       </Button>
 
+      {/* Document visibility section (only when supplements exist) */}
+      {MOCK_DOCUMENTS.some(d => d.docType === "supplement") && participants.length > 0 && (
+        <>
+          <Separator />
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5">
+              <Eye size={14} className="text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Document visibility</span>
+            </div>
+            {MOCK_DOCUMENTS.map(doc => {
+              const visibleParticipants = participants; // all visible by default in view panel
+              return (
+                <div key={doc.id} className="flex items-center justify-between py-1">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <span className="text-sm truncate">{doc.name}</span>
+                    {doc.docType === "supplement" && (
+                      <Badge variant="outline" className="text-[8px] px-1 py-0 h-3 font-medium text-amber-600 border-amber-500/30">
+                        Supplement
+                      </Badge>
+                    )}
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1 flex-shrink-0">
+                        <Eye size={12} />
+                        <span className="text-muted-foreground">All</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-56 p-2" align="end">
+                      <p className="text-xs font-medium mb-2">Who can see this document</p>
+                      {participants.map(p => (
+                        <label key={p.id} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-accent cursor-pointer">
+                          <Checkbox checked={true} disabled />
+                          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                          <span className="text-xs truncate">{p.name}</span>
+                        </label>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
       {/* Participants Dialog */}
       <ParticipantsDialog
         open={participantsDialogOpen}
