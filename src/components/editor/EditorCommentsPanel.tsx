@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, CheckCircle2, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Send, CheckCircle2, X, ChevronDown, ChevronUp, Pencil, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useEditorContext, type Comment } from "./EditorContext";
+import { useEditorContext, type Comment, type AnnotationType } from "./EditorContext";
 
 /* ── Helpers ── */
 const timeAgo = (d: Date) => {
@@ -26,6 +26,12 @@ const Avatar = ({ initials, color, size = 28 }: { initials: string; color: strin
   </div>
 );
 
+const ANNOTATION_STYLES: Record<AnnotationType, { borderClass: string; bgClass: string; label?: string; labelClass?: string }> = {
+  comment: { borderClass: "border-l-border", bgClass: "bg-muted/50" },
+  suggestion: { borderClass: "border-l-amber-400", bgClass: "bg-amber-50 dark:bg-amber-900/20", label: "Suggestion", labelClass: "text-amber-600" },
+  ai_suggestion: { borderClass: "border-l-violet-400", bgClass: "bg-violet-50 dark:bg-violet-900/20", label: "AI Suggestion", labelClass: "text-violet-600" },
+};
+
 /* ── Inline comment card ── */
 const InlineCommentCard = ({
   comment,
@@ -38,16 +44,25 @@ const InlineCommentCard = ({
 }) => {
   const [showReplies, setShowReplies] = useState(comment.replies.length > 0);
   const isResolved = comment.status === "resolved";
+  const aStyle = ANNOTATION_STYLES[comment.annotationType];
 
   return (
     <div
       className={cn(
         "rounded-lg p-3 border-l-[3px]",
-        isResolved
-          ? "bg-muted/30 opacity-60 border-l-emerald-500"
-          : "bg-muted/50 border-l-amber-500"
+        isResolved ? "opacity-60 border-l-emerald-500 bg-muted/30" : aStyle.borderClass,
+        !isResolved && aStyle.bgClass
       )}
     >
+      {/* Annotation type label */}
+      {aStyle.label && !isResolved && (
+        <div className="flex items-center gap-1 mb-1.5">
+          {comment.annotationType === "ai_suggestion" && <Sparkles size={10} className="text-violet-600" />}
+          {comment.annotationType === "suggestion" && <Pencil size={10} className="text-amber-600" />}
+          <span className={cn("text-[9px] font-medium uppercase", aStyle.labelClass)}>{aStyle.label}</span>
+        </div>
+      )}
+
       <p className={cn("text-[11px] font-medium mb-2 text-muted-foreground", isResolved && "line-through")}>
         {comment.sectionRef}
       </p>
@@ -55,10 +70,24 @@ const InlineCommentCard = ({
       <div className="flex items-center gap-2 mb-1.5">
         <Avatar initials={comment.authorInitials} color={comment.authorColor} size={28} />
         <span className="text-sm font-medium text-foreground">{comment.author}</span>
+        {comment.annotationType === "ai_suggestion" && <Sparkles size={10} className="text-violet-600" />}
+        {comment.annotationType === "suggestion" && <Pencil size={10} className="text-amber-600" />}
         <span className="text-[11px] text-muted-foreground ml-auto">{timeAgo(comment.timestamp)}</span>
       </div>
 
       <p className="text-sm text-foreground/90 mb-2">{comment.text}</p>
+
+      {/* Show suggested text if present */}
+      {comment.suggestedText && (
+        <div className={cn(
+          "rounded-md px-2.5 py-1.5 text-xs mb-2 border-l-2",
+          comment.annotationType === "ai_suggestion"
+            ? "bg-violet-100/50 border-l-violet-400 text-violet-900 dark:bg-violet-900/30 dark:text-violet-200"
+            : "bg-amber-100/50 border-l-amber-400 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200"
+        )}>
+          {comment.suggestedText}
+        </div>
+      )}
 
       <div className="flex items-center gap-2">
         <Badge
@@ -109,17 +138,26 @@ const InlineCommentCard = ({
   );
 };
 
+/* ── Filter pills ── */
+type FilterType = "all" | "comment" | "suggestion" | "ai_suggestion";
+const FILTER_OPTIONS: { value: FilterType; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "comment", label: "Comments" },
+  { value: "suggestion", label: "Suggestions" },
+  { value: "ai_suggestion", label: "AI" },
+];
+
 /* ══════════ MAIN ══════════ */
 const EditorCommentsPanel = () => {
   const { comments, setComments, pendingCommentRef, setPendingCommentRef } = useEditorContext();
   const [tab, setTab] = useState<"inline" | "general">("inline");
+  const [filter, setFilter] = useState<FilterType>("all");
   const [inputValue, setInputValue] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const generalEndRef = useRef<HTMLDivElement>(null);
 
-  // When pendingCommentRef arrives, switch to inline tab and focus input
   useEffect(() => {
     if (pendingCommentRef) {
       setTab("inline");
@@ -131,10 +169,13 @@ const EditorCommentsPanel = () => {
   const inlineComments = comments.filter((c) => c.type === "inline");
   const generalMessages = comments.filter((c) => c.type === "general");
 
-  const openComments = inlineComments.filter((c) => c.status === "open").sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-  const resolvedComments = inlineComments.filter((c) => c.status === "resolved").sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  const filteredInline = filter === "all"
+    ? inlineComments
+    : inlineComments.filter((c) => c.annotationType === filter);
 
-  // Auto-scroll general tab
+  const openComments = filteredInline.filter((c) => c.status === "open").sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  const resolvedComments = filteredInline.filter((c) => c.status === "resolved").sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
   useEffect(() => {
     if (tab === "general") generalEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [generalMessages.length, tab]);
@@ -176,6 +217,7 @@ const EditorCommentsPanel = () => {
           status: "open",
           replies: [],
           type: "inline",
+          annotationType: "comment",
         };
         setComments((prev) => [newComment, ...prev]);
         setPendingCommentRef(null);
@@ -192,6 +234,7 @@ const EditorCommentsPanel = () => {
         status: "open",
         replies: [],
         type: "general",
+        annotationType: "comment",
       };
       setComments((prev) => [...prev, msg]);
     }
@@ -207,6 +250,9 @@ const EditorCommentsPanel = () => {
   };
 
   const replyingComment = replyingTo ? comments.find((c) => c.id === replyingTo) : null;
+
+  // Count annotations by type for filter badge
+  const countByType = (type: AnnotationType) => inlineComments.filter(c => c.annotationType === type).length;
 
   return (
     <div className="flex flex-col h-full -m-4">
@@ -226,11 +272,33 @@ const EditorCommentsPanel = () => {
         ))}
       </div>
 
+      {/* Filter pills (inline tab only) */}
+      {tab === "inline" && (
+        <div className="flex gap-1 px-4 pt-2 pb-1 flex-shrink-0">
+          {FILTER_OPTIONS.map((opt) => {
+            const count = opt.value === "all" ? inlineComments.length : countByType(opt.value as AnnotationType);
+            return (
+              <button
+                key={opt.value}
+                onClick={() => setFilter(opt.value)}
+                className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors",
+                  filter === opt.value
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "bg-muted/50 border-border text-muted-foreground hover:bg-muted"
+                )}
+              >
+                {opt.label} {count > 0 && <span className="ml-0.5">{count}</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {tab === "inline" ? (
           <>
-            {/* Show/hide resolved toggle */}
             {resolvedComments.length > 0 && (
               <button
                 onClick={() => setShowResolved(!showResolved)}
@@ -272,7 +340,6 @@ const EditorCommentsPanel = () => {
 
       {/* Input area */}
       <div className="border-t p-3 flex-shrink-0 space-y-1.5">
-        {/* Pending comment ref preview */}
         {tab === "inline" && pendingCommentRef && (
           <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border-l-2 border-amber-400 rounded-r-md px-2.5 py-1.5">
             <p className="text-xs text-muted-foreground italic flex-1 line-clamp-2">"{pendingCommentRef}"</p>
@@ -282,7 +349,6 @@ const EditorCommentsPanel = () => {
           </div>
         )}
 
-        {/* Replying indicator */}
         {replyingComment && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1">
             <span>Replying to <strong>{replyingComment.author}</strong></span>
