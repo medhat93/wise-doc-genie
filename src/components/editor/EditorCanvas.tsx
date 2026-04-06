@@ -1144,7 +1144,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
 
                   {/* Floating comment bubbles — ALWAYS visible, expandable inline */}
                   {doc.id === "doc-1" && Object.keys(commentsBySection).length > 0 && (
-                    <div className="absolute top-0 -right-[220px] hidden lg:-right-[230px] lg:block" style={{ width: 220 }}>
+                    <div className="absolute top-0 left-full ml-3" style={{ width: 220 }}>
                       <AnimatePresence>
                         {Object.entries(commentsBySection).map(([sectionRef, sectionComments]) => {
                           const yPos = sectionPositions[sectionRef];
