@@ -67,6 +67,7 @@ import CategoryFilter from "@/components/CategoryFilter";
 import DriveConnectDialog from "@/components/DriveConnectDialog";
 import DriveBrowserView from "@/components/DriveBrowserView";
 import AiIcon from "@/components/AiIcon";
+import ParticipantsDialog from "@/components/ParticipantsDialog";
 import signitLogo from "@/assets/signit-logo.png";
 import { GoogleDriveLogo, DropboxLogo, OneDriveLogo } from "@/components/DriveLogos";
 
@@ -258,6 +259,7 @@ const CreateDocument = () => {
   const [esignDropHover, setEsignDropHover] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [wordEditDialog, setWordEditDialog] = useState<{ file: File; doc: UploadedDocument } | null>(null);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
 
   // Drive state
   const [driveConnectOpen, setDriveConnectOpen] = useState(false);
