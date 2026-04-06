@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { WorkspaceDocument } from '@/types/workspace';
 import { toast } from 'sonner';
 import {
@@ -15,7 +16,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CorrectionDialog from './CorrectionDialog';
-import FollowUpDialog from './FollowUpDialog';
 
 /* ── helpers ────────────────────────────────────────────────── */
 type StageKey = 'draft' | 'approval_waiting' | 'approval_yours' | 'signing_waiting' | 'signing_yours' | 'completed' | 'declined' | 'voided' | 'expired';
