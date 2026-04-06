@@ -499,11 +499,11 @@ const SelectionToolbar = ({
   );
 };
 
-/* ── Floating comment bubble (always visible) ── */
+/* ── Floating comment bubble (always visible, expandable inline) ── */
 const BUBBLE_STYLES: Record<AnnotationType, { borderClass: string; bgClass: string }> = {
   comment: { borderClass: "border-border", bgClass: "bg-card" },
-  suggestion: { borderClass: "border-amber-200", bgClass: "bg-amber-50" },
-  ai_suggestion: { borderClass: "border-violet-200", bgClass: "bg-violet-50" },
+  suggestion: { borderClass: "border-amber-200", bgClass: "bg-amber-50 dark:bg-amber-950/40" },
+  ai_suggestion: { borderClass: "border-violet-200", bgClass: "bg-violet-50 dark:bg-violet-950/40" },
 };
 
 const timeAgo = (d: Date) => {
@@ -514,10 +514,36 @@ const timeAgo = (d: Date) => {
   return `${Math.floor(s / 86400)}d`;
 };
 
-const CommentBubble = ({ comment, count, onClick }: { comment: Comment; count: number; onClick: () => void }) => {
+const CommentBubble = ({
+  comment,
+  count,
+  allComments,
+  onAddReply,
+}: {
+  comment: Comment;
+  count: number;
+  allComments: Comment[];
+  onAddReply: (commentId: string, text: string) => void;
+}) => {
   const [expanded, setExpanded] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const replyRef = useRef<HTMLInputElement>(null);
   const style = BUBBLE_STYLES[comment.annotationType];
   const isResolved = comment.status === "resolved";
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpanded((prev) => !prev);
+    if (!expanded) {
+      setTimeout(() => replyRef.current?.focus(), 100);
+    }
+  };
+
+  const handleReply = () => {
+    if (!replyText.trim()) return;
+    onAddReply(comment.id, replyText.trim());
+    setReplyText("");
+  };
 
   return (
     <motion.div
@@ -525,24 +551,22 @@ const CommentBubble = ({ comment, count, onClick }: { comment: Comment; count: n
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 8 }}
       transition={{ duration: 0.2 }}
-      onClick={onClick}
-      onMouseEnter={() => setExpanded(true)}
-      onMouseLeave={() => setExpanded(false)}
+      onClick={handleToggle}
       className={cn(
         "cursor-pointer transition-all rounded-lg border shadow-sm overflow-hidden",
         style.borderClass, style.bgClass,
         isResolved && "opacity-40 border-l-emerald-500",
         !isResolved && "border-l-[3px]",
-        comment.annotationType === "comment" && !isResolved && `border-l-[${comment.authorColor}]`,
         comment.annotationType === "suggestion" && !isResolved && "border-l-amber-400",
         comment.annotationType === "ai_suggestion" && !isResolved && "border-l-violet-400",
+        expanded && "shadow-md z-30"
       )}
       style={{
-        maxWidth: 200,
+        maxWidth: expanded ? 280 : 200,
         ...(comment.annotationType === "comment" && !isResolved ? { borderLeftColor: comment.authorColor } : {}),
       }}
     >
-      <div className="px-2 py-1.5">
+      <div className="px-2.5 py-2">
         {/* Type label */}
         {comment.annotationType !== "comment" && (
           <div className="flex items-center gap-1 mb-0.5">
@@ -577,12 +601,72 @@ const CommentBubble = ({ comment, count, onClick }: { comment: Comment; count: n
           {comment.text}
         </p>
 
-        {/* Reply count */}
-        {comment.replies.length > 0 && (
-          <p className="text-[10px] text-muted-foreground mt-0.5">{comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}</p>
+        {/* Collapsed state: reply count / more count */}
+        {!expanded && (
+          <>
+            {comment.replies.length > 0 && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">+{comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}</p>
+            )}
+            {count > 1 && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">+{count - 1} more</p>
+            )}
+          </>
         )}
-        {count > 1 && (
-          <p className="text-[10px] text-muted-foreground mt-0.5">+{count - 1} more</p>
+
+        {/* Expanded state: replies + reply input */}
+        {expanded && (
+          <div className="mt-2 space-y-2" onClick={(e) => e.stopPropagation()}>
+            {/* Show all comments in this section if count > 1 */}
+            {count > 1 && allComments.slice(1).map((c) => (
+              <div key={c.id} className="border-t border-border/50 pt-2">
+                <div className="flex items-center gap-1">
+                  <div className="h-3.5 w-3.5 rounded-full flex items-center justify-center text-white text-[6px] font-semibold flex-shrink-0" style={{ backgroundColor: c.authorColor }}>
+                    {c.authorInitials}
+                  </div>
+                  <span className="text-[10px] font-medium text-foreground">{c.author.split(" ")[0]}</span>
+                  <span className="text-[10px] text-muted-foreground ml-auto">{timeAgo(c.timestamp)}</span>
+                </div>
+                <p className="text-[11px] text-foreground/80 mt-0.5">{c.text}</p>
+              </div>
+            ))}
+
+            {/* Replies */}
+            {comment.replies.length > 0 && (
+              <div className="border-t border-border/50 pt-2 space-y-1.5">
+                {comment.replies.map((r) => (
+                  <div key={r.id}>
+                    <div className="flex items-center gap-1">
+                      <div className="h-3.5 w-3.5 rounded-full flex items-center justify-center text-white text-[6px] font-semibold flex-shrink-0" style={{ backgroundColor: r.authorColor }}>
+                        {r.authorInitials}
+                      </div>
+                      <span className="text-[10px] font-medium text-foreground">{r.author.split(" ")[0]}</span>
+                      <span className="text-[10px] text-muted-foreground ml-auto">{timeAgo(r.timestamp)}</span>
+                    </div>
+                    <p className="text-[11px] text-foreground/80 mt-0.5 pl-5">{r.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Reply input */}
+            <div className="flex items-center gap-1 pt-1">
+              <input
+                ref={replyRef}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleReply(); }}
+                placeholder="Reply..."
+                className="flex-1 text-[11px] bg-background/80 border rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
+              />
+              <button
+                onClick={handleReply}
+                disabled={!replyText.trim()}
+                className="h-6 w-6 flex items-center justify-center rounded-md text-primary hover:bg-primary/10 disabled:opacity-30"
+              >
+                <ArrowRight size={12} />
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </motion.div>
