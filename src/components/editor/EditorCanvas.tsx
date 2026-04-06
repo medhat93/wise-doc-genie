@@ -892,6 +892,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
   const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, setComments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues, aiSuggestions, setAiSuggestions } = useEditorContext();
 
   const [selectionToolbar, setSelectionToolbar] = useState<{ x: number; y: number; text: string } | null>(null);
+  const [openThreadSection, setOpenThreadSection] = useState<string | null>(null);
 
   const pendingSuggestions = aiSuggestions.filter(s => s.status === "pending");
 
@@ -975,6 +976,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
       setSelectedFieldId(null);
       onFieldSelect?.(null);
     }
+    setOpenThreadSection(null);
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed) {
       setSelectionToolbar(null);
