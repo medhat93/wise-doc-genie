@@ -660,7 +660,7 @@ const ThreadPin = ({
             exit={{ opacity: 0, x: 8, scale: 0.98 }}
             transition={{ duration: 0.18 }}
             className={cn(
-              "absolute left-full top-1/2 z-40 ml-3 w-[280px] -translate-y-1/2 overflow-hidden rounded-xl border shadow-xl",
+              "absolute right-full top-1/2 z-40 mr-3 w-[280px] -translate-y-1/2 overflow-hidden rounded-xl border shadow-xl",
               style.borderClass,
               style.bgClass,
             )}
