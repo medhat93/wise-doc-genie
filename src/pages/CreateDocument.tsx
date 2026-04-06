@@ -1194,6 +1194,8 @@ const CreateDocument = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ParticipantsDialog open={participantsOpen} onOpenChange={setParticipantsOpen} />
     </div>
   );
 };

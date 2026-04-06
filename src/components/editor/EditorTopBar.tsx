@@ -567,29 +567,8 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
           )}
         </div>
 
-        {/* Center — Step indicator */}
-        <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-          <div className="flex items-center gap-1.5">
-            <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-              <HugeiconsIcon icon={Tick01Icon} size={12} className="text-primary-foreground" />
-            </div>
-            <span className="text-xs text-muted-foreground">Add Documents</span>
-          </div>
-          <div className="w-6 h-px bg-border" />
-          <div className="flex items-center gap-1.5">
-            <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-              <HugeiconsIcon icon={Tick01Icon} size={12} className="text-primary-foreground" />
-            </div>
-            <span className="text-xs text-muted-foreground">Add Participants</span>
-          </div>
-          <div className="w-6 h-px bg-border" />
-          <div className="flex items-center gap-1.5">
-            <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-[10px] font-bold text-primary-foreground">3</span>
-            </div>
-            <span className="text-xs font-medium text-foreground">Prepare & Send</span>
-          </div>
-        </div>
+
+
 
         {/* Right */}
         <div className="flex items-center gap-1.5 flex-1 justify-end">
