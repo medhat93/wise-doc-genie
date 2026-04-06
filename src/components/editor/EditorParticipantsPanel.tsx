@@ -831,7 +831,7 @@ const EditorParticipantsPanel = () => {
                 </button>
               </div>
             )}
-            {MOCK_DOCUMENTS.length > 0 && (() => {
+            {MOCK_DOCUMENTS.some(d => d.docType === "supplement") && (() => {
               const docsVisible = MOCK_DOCUMENTS.filter(d => (visibility[d.id] || []).includes(p.id)).length;
               const allVisible = docsVisible === MOCK_DOCUMENTS.length;
               return (
