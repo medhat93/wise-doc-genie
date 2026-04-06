@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare, Sparkles, ArrowRight, Check, Pencil } from "lucide-react";
+import { ZoomBar, SearchBar } from "./EditorZoomSearch";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
@@ -893,6 +894,8 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
 
   const [selectionToolbar, setSelectionToolbar] = useState<{ x: number; y: number; text: string } | null>(null);
   const [openThreadSection, setOpenThreadSection] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(100);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const pendingSuggestions = aiSuggestions.filter(s => s.status === "pending");
 
@@ -1039,6 +1042,22 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSelectionToolbar(null);
+      if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === "=" || e.key === "+")) {
+        e.preventDefault();
+        setZoom(prev => Math.min(200, prev + 10));
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "-") {
+        e.preventDefault();
+        setZoom(prev => Math.max(50, prev - 10));
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "0") {
+        e.preventDefault();
+        setZoom(100);
+      }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
@@ -1128,8 +1147,15 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
         onScroll={handleScroll}
         onClick={handleCanvasClick}
         onMouseUp={handleMouseUp}
+        data-editor-canvas
       >
         <ScrollIndicator doc={showIndicator ? activeDoc : null} />
+
+        <AnimatePresence>
+          {searchOpen && (
+            <SearchBar open={searchOpen} onClose={() => setSearchOpen(false)} />
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {selectionToolbar && (
@@ -1142,7 +1168,13 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
           )}
         </AnimatePresence>
 
-        <div className="p-6 md:p-10 space-y-0">
+        <div
+          className="p-6 md:p-10 space-y-0"
+          style={{
+            transform: `scale(${zoom / 100})`,
+            transformOrigin: "top center",
+          }}
+        >
           {MOCK_DOCUMENTS.map((doc, idx) => {
             const docFields = placedFields.filter((f) => f.page === idx + 1);
             return (
@@ -1241,6 +1273,13 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
 
           <div className="h-20" />
         </div>
+
+        <ZoomBar
+          zoom={zoom}
+          onZoomChange={setZoom}
+          searchOpen={searchOpen}
+          onSearchToggle={() => setSearchOpen(prev => !prev)}
+        />
       </div>
     </div>
   );
