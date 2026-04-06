@@ -1147,8 +1147,15 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
         onScroll={handleScroll}
         onClick={handleCanvasClick}
         onMouseUp={handleMouseUp}
+        data-editor-canvas
       >
         <ScrollIndicator doc={showIndicator ? activeDoc : null} />
+
+        <AnimatePresence>
+          {searchOpen && (
+            <SearchBar open={searchOpen} onClose={() => setSearchOpen(false)} />
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {selectionToolbar && (
@@ -1161,7 +1168,13 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
           )}
         </AnimatePresence>
 
-        <div className="p-6 md:p-10 space-y-0">
+        <div
+          className="p-6 md:p-10 space-y-0"
+          style={{
+            transform: `scale(${zoom / 100})`,
+            transformOrigin: "top center",
+          }}
+        >
           {MOCK_DOCUMENTS.map((doc, idx) => {
             const docFields = placedFields.filter((f) => f.page === idx + 1);
             return (
