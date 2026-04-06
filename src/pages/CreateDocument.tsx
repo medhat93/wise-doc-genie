@@ -685,23 +685,8 @@ const CreateDocument = () => {
             </nav>
           </div>
 
-          {/* Step indicator */}
-          <div className="hidden sm:flex items-center gap-3 absolute left-1/2 -translate-x-1/2">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">1</div>
-              <span className="text-xs font-medium text-foreground">{isCorrection ? "Documents" : "Add Documents"}</span>
-            </div>
-            <div className="w-6 h-px bg-border" />
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-xs font-semibold">2</div>
-              <span className="text-xs text-muted-foreground/50">{isCorrection ? "Participants" : isFollowUp ? "Participants" : "Add Participants"}</span>
-            </div>
-            <div className="w-6 h-px bg-border" />
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-xs font-semibold">3</div>
-              <span className="text-xs text-muted-foreground/50">{isCorrection ? "Review & Save" : "Prepare & Send"}</span>
-            </div>
-          </div>
+
+
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             {hasDocuments && isMobile && (
@@ -710,28 +695,17 @@ const CreateDocument = () => {
                 Queue ({count})
               </Button>
             )}
-            {(() => {
-              const modeParams = new URLSearchParams();
-              if (flowMode) modeParams.set("mode", flowMode);
-              if (correctionDocId) modeParams.set("id", correctionDocId);
-              if (followUpParentId) modeParams.set("parentId", followUpParentId);
-              if (followUpChildType && isFollowUp) modeParams.set("childType", followUpChildType);
-              if (relatedTo) modeParams.set("relatedTo", relatedTo);
-              const navTarget = `/participants${modeParams.toString() ? `?${modeParams.toString()}` : ""}`;
-              return (
-                <Button
-                  variant="default"
-                  size="sm"
-                  disabled={isEmpty || !allComplete}
-                  className={isEmpty || !allComplete ? "opacity-50" : ""}
-                  onClick={() => navigate(navTarget, { state: { documents, mode } })}
-                >
-                  <span className="hidden sm:inline">Next: {isCorrection ? "Participants" : "Add Participants"}</span>
-                  <span className="sm:hidden">Next</span>
-                  <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
-                </Button>
-              );
-            })()}
+            <Button
+              variant="default"
+              size="sm"
+              disabled={isEmpty || !allComplete}
+              className={isEmpty || !allComplete ? "opacity-50" : ""}
+              onClick={() => setParticipantsOpen(true)}
+            >
+              <span className="hidden sm:inline">Next: Add Participants</span>
+              <span className="sm:hidden">Next</span>
+              <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
+            </Button>
           </div>
         </div>
       </header>
