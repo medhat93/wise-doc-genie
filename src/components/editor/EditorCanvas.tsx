@@ -832,7 +832,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
   const [showIndicator, setShowIndicator] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues, aiSuggestions, setAiSuggestions } = useEditorContext();
+  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, setComments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues, aiSuggestions, setAiSuggestions } = useEditorContext();
 
   const [selectionToolbar, setSelectionToolbar] = useState<{ x: number; y: number; text: string } | null>(null);
 
