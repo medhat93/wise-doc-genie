@@ -499,7 +499,7 @@ const SelectionToolbar = ({
   );
 };
 
-/* ── Floating comment bubble (always visible, expandable inline) ── */
+/* ── Floating thread pins + inline thread bubble ── */
 const BUBBLE_STYLES: Record<AnnotationType, { borderClass: string; bgClass: string }> = {
   comment: { borderClass: "border-border", bgClass: "bg-card" },
   suggestion: { borderClass: "border-amber-200", bgClass: "bg-amber-50 dark:bg-amber-950/40" },
@@ -514,162 +514,219 @@ const timeAgo = (d: Date) => {
   return `${Math.floor(s / 86400)}d`;
 };
 
-const CommentBubble = ({
-  comment,
-  count,
-  allComments,
+const AnnotationPill = ({ annotationType }: { annotationType: AnnotationType }) => {
+  if (annotationType === "comment") return null;
+
+  const isAi = annotationType === "ai_suggestion";
+  const Icon = isAi ? Sparkles : Pencil;
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide",
+        isAi
+          ? "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300"
+          : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
+      )}
+    >
+      <Icon size={9} />
+      {isAi ? "AI" : "Suggestion"}
+    </span>
+  );
+};
+
+const ThreadCommentItem = ({ comment }: { comment: Comment }) => (
+  <div className="rounded-lg border border-border/60 bg-background/80 p-3">
+    <div className="flex items-start gap-2">
+      <div
+        className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[8px] font-semibold text-white"
+        style={{ backgroundColor: comment.authorColor }}
+      >
+        {comment.authorInitials}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-xs font-medium text-foreground">{comment.author}</span>
+          <AnnotationPill annotationType={comment.annotationType} />
+          <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{timeAgo(comment.timestamp)}</span>
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-foreground/80">{comment.text}</p>
+      </div>
+    </div>
+
+    {comment.replies.length > 0 && (
+      <div className="mt-2 space-y-2 border-t border-border/50 pt-2 pl-7">
+        {comment.replies.map((reply) => (
+          <div key={reply.id}>
+            <div className="flex items-center gap-2">
+              <div
+                className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[7px] font-semibold text-white"
+                style={{ backgroundColor: reply.authorColor }}
+              >
+                {reply.authorInitials}
+              </div>
+              <span className="truncate text-[11px] font-medium text-foreground">{reply.author}</span>
+              <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{timeAgo(reply.timestamp)}</span>
+            </div>
+            <p className="pl-6 pt-0.5 text-[11px] leading-relaxed text-foreground/80">{reply.text}</p>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+const ThreadPin = ({
+  comments,
+  isOpen,
+  onToggle,
+  onClose,
   onAddReply,
 }: {
-  comment: Comment;
-  count: number;
-  allComments: Comment[];
+  comments: Comment[];
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
   onAddReply: (commentId: string, text: string) => void;
 }) => {
-  const [expanded, setExpanded] = useState(false);
   const [replyText, setReplyText] = useState("");
   const replyRef = useRef<HTMLInputElement>(null);
-  const style = BUBBLE_STYLES[comment.annotationType];
-  const isResolved = comment.status === "resolved";
+  const primaryComment = comments[0];
+  const style = BUBBLE_STYLES[primaryComment.annotationType];
+  const isAi = primaryComment.annotationType === "ai_suggestion";
+  const isSuggestion = primaryComment.annotationType === "suggestion";
 
-  const handleToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpanded((prev) => !prev);
-    if (!expanded) {
-      setTimeout(() => replyRef.current?.focus(), 100);
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => replyRef.current?.focus(), 80);
+    } else {
+      setReplyText("");
     }
-  };
+  }, [isOpen]);
 
   const handleReply = () => {
     if (!replyText.trim()) return;
-    onAddReply(comment.id, replyText.trim());
+    onAddReply(primaryComment.id, replyText.trim());
     setReplyText("");
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 8 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 8 }}
-      transition={{ duration: 0.2 }}
-      onClick={handleToggle}
-      className={cn(
-        "cursor-pointer transition-all rounded-lg border shadow-sm overflow-hidden",
-        style.borderClass, style.bgClass,
-        isResolved && "opacity-40 border-l-emerald-500",
-        !isResolved && "border-l-[3px]",
-        comment.annotationType === "suggestion" && !isResolved && "border-l-amber-400",
-        comment.annotationType === "ai_suggestion" && !isResolved && "border-l-violet-400",
-        expanded && "shadow-md z-30"
-      )}
-      style={{
-        maxWidth: expanded ? 280 : 200,
-        ...(comment.annotationType === "comment" && !isResolved ? { borderLeftColor: comment.authorColor } : {}),
-      }}
+    <div
+      className="relative"
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
     >
-      <div className="px-2.5 py-2">
-        {/* Type label */}
-        {comment.annotationType !== "comment" && (
-          <div className="flex items-center gap-1 mb-0.5">
-            {comment.annotationType === "ai_suggestion" && <Sparkles size={9} className="text-violet-600" />}
-            {comment.annotationType === "suggestion" && <Pencil size={9} className="text-amber-600" />}
-            <span className={cn(
-              "text-[8px] font-medium uppercase",
-              comment.annotationType === "ai_suggestion" ? "text-violet-600" : "text-amber-600"
-            )}>
-              {comment.annotationType === "ai_suggestion" ? "AI" : "Suggestion"}
-            </span>
-          </div>
-        )}
+      <div
+        className="absolute left-0 top-1/2 h-px w-4 -translate-x-full -translate-y-1/2"
+        style={{ backgroundColor: primaryComment.authorColor }}
+      />
 
-        {/* Author + time */}
-        <div className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        className={cn(
+          "relative flex h-8 w-8 items-center justify-center rounded-full border bg-background shadow-sm transition-all hover:scale-105",
+          style.borderClass,
+          isOpen && "scale-105 shadow-md",
+        )}
+        aria-label="Open thread"
+      >
+        {isAi ? (
+          <Sparkles size={14} className="text-violet-600" />
+        ) : isSuggestion ? (
+          <Pencil size={14} className="text-amber-600" />
+        ) : (
           <div
-            className="h-4 w-4 rounded-full flex items-center justify-center text-white text-[7px] font-semibold flex-shrink-0"
-            style={{ backgroundColor: comment.authorColor }}
+            className="flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-semibold text-white"
+            style={{ backgroundColor: primaryComment.authorColor }}
           >
-            {comment.authorInitials}
+            {primaryComment.authorInitials}
           </div>
-          <span className="text-[10px] font-medium text-foreground truncate">{comment.author.split(" ")[0]}</span>
-          <span className="text-[10px] text-muted-foreground ml-auto">{timeAgo(comment.timestamp)}</span>
-        </div>
-
-        {/* Comment text */}
-        <p className={cn(
-          "text-[11px] text-foreground/80 mt-0.5 transition-all duration-200",
-          expanded ? "" : "line-clamp-2"
-        )}>
-          {comment.text}
-        </p>
-
-        {/* Collapsed state: reply count / more count */}
-        {!expanded && (
-          <>
-            {comment.replies.length > 0 && (
-              <p className="text-[10px] text-muted-foreground mt-0.5">+{comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}</p>
-            )}
-            {count > 1 && (
-              <p className="text-[10px] text-muted-foreground mt-0.5">+{count - 1} more</p>
-            )}
-          </>
         )}
 
-        {/* Expanded state: replies + reply input */}
-        {expanded && (
-          <div className="mt-2 space-y-2" onClick={(e) => e.stopPropagation()}>
-            {/* Show all comments in this section if count > 1 */}
-            {count > 1 && allComments.slice(1).map((c) => (
-              <div key={c.id} className="border-t border-border/50 pt-2">
-                <div className="flex items-center gap-1">
-                  <div className="h-3.5 w-3.5 rounded-full flex items-center justify-center text-white text-[6px] font-semibold flex-shrink-0" style={{ backgroundColor: c.authorColor }}>
-                    {c.authorInitials}
-                  </div>
-                  <span className="text-[10px] font-medium text-foreground">{c.author.split(" ")[0]}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto">{timeAgo(c.timestamp)}</span>
-                </div>
-                <p className="text-[11px] text-foreground/80 mt-0.5">{c.text}</p>
-              </div>
-            ))}
+        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground px-1 text-[9px] font-semibold text-background">
+          {comments.length}
+        </span>
+      </button>
 
-            {/* Replies */}
-            {comment.replies.length > 0 && (
-              <div className="border-t border-border/50 pt-2 space-y-1.5">
-                {comment.replies.map((r) => (
-                  <div key={r.id}>
-                    <div className="flex items-center gap-1">
-                      <div className="h-3.5 w-3.5 rounded-full flex items-center justify-center text-white text-[6px] font-semibold flex-shrink-0" style={{ backgroundColor: r.authorColor }}>
-                        {r.authorInitials}
-                      </div>
-                      <span className="text-[10px] font-medium text-foreground">{r.author.split(" ")[0]}</span>
-                      <span className="text-[10px] text-muted-foreground ml-auto">{timeAgo(r.timestamp)}</span>
-                    </div>
-                    <p className="text-[11px] text-foreground/80 mt-0.5 pl-5">{r.text}</p>
-                  </div>
-                ))}
-              </div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: 8, scale: 0.98 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 8, scale: 0.98 }}
+            transition={{ duration: 0.18 }}
+            className={cn(
+              "absolute left-full top-1/2 z-40 ml-3 w-[280px] -translate-y-1/2 overflow-hidden rounded-xl border shadow-xl",
+              style.borderClass,
+              style.bgClass,
             )}
-
-            {/* Reply input */}
-            <div className="flex items-center gap-1 pt-1">
-              <input
-                ref={replyRef}
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleReply(); }}
-                placeholder="Reply..."
-                className="flex-1 text-[11px] bg-background/80 border rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
-              />
+          >
+            <div className="flex items-center justify-between border-b border-border/60 bg-background/90 px-3 py-2 backdrop-blur">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-foreground">Thread</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {comments.length} item{comments.length !== 1 ? "s" : ""}
+                </span>
+              </div>
               <button
-                onClick={handleReply}
-                disabled={!replyText.trim()}
-                className="h-6 w-6 flex items-center justify-center rounded-md text-primary hover:bg-primary/10 disabled:opacity-30"
+                type="button"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                }}
+                aria-label="Close thread"
               >
-                <ArrowRight size={12} />
+                <X size={12} />
               </button>
             </div>
-          </div>
+
+            <div className="max-h-[320px] space-y-2 overflow-y-auto px-3 py-3">
+              {comments.map((comment) => (
+                <ThreadCommentItem key={comment.id} comment={comment} />
+              ))}
+            </div>
+
+            <div className="border-t border-border/60 bg-background/85 px-3 py-3 backdrop-blur">
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-2 py-1.5 shadow-sm">
+                <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[8px] font-semibold text-primary-foreground">
+                  AA
+                </div>
+                <input
+                  ref={replyRef}
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleReply();
+                    }
+                  }}
+                  placeholder="Reply to thread..."
+                  className="flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReply();
+                  }}
+                  disabled={!replyText.trim()}
+                  className="flex h-6 w-6 items-center justify-center rounded-md text-primary transition-colors hover:bg-accent disabled:opacity-30"
+                  aria-label="Send reply"
+                >
+                  <ArrowRight size={12} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
         )}
-      </div>
-    </motion.div>
+      </AnimatePresence>
+    </div>
   );
 };
 
