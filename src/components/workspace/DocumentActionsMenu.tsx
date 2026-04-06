@@ -79,11 +79,11 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
     case 'draft':
       return [[download, rename, share], mgmt, [trash]];
     case 'approval_waiting':
-      return [[edit, correct, rename, share], [updateExp, markComplete], mgmt, [trash]];
+      return [[correct, rename, share], [updateExp, markComplete], mgmt, [trash]];
     case 'approval_yours':
       return [[download, correct, rename, share], [updateExp, markComplete], mgmt, [trash]];
     case 'signing_waiting':
-      return [[edit, correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]];
+      return [[correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]];
     case 'signing_yours':
       return [[rename, share], [correct, updateExp, markComplete, voidDoc], mgmt, [audit], [trash]];
     case 'completed':
