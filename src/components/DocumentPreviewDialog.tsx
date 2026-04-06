@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { UploadedDocument } from "@/types/document";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { RotateCw, RotateCcw, undo2Icon } from "lucide-react";
+import { RotateCw } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
