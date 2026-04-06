@@ -1,5 +1,5 @@
-export type DocType = 'primary' | 'supplement' | 'attachment';
-export type AckType = 'sign' | 'must_view_accept' | 'none';
+export type DocType = 'primary' | 'supplement';
+export type AckType = 'sign' | 'none';
 
 export interface SigningDocument {
   id: string;
@@ -24,19 +24,12 @@ export const SIGNING_DOCUMENTS: SigningDocument[] = [
     name: 'Schedule A — Pricing & Fee Structure',
     type: 'supplement',
     pages: 2,
-    ack: 'must_view_accept',
+    ack: 'none',
   },
   {
     id: 'confidential-terms',
     name: 'Confidential Terms Addendum',
     type: 'supplement',
-    pages: 1,
-    ack: 'must_view_accept',
-  },
-  {
-    id: 'insurance',
-    name: 'Insurance Certificate',
-    type: 'attachment',
     pages: 1,
     ack: 'none',
   },

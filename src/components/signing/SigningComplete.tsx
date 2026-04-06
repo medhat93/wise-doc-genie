@@ -5,11 +5,10 @@ import { SIGNING_DOCUMENTS } from './signingDocuments';
 
 interface Props {
   onGoBack: () => void;
-  acceptedDocs: Set<string>;
   signed: boolean;
 }
 
-export default function SigningComplete({ onGoBack, acceptedDocs, signed }: Props) {
+export default function SigningComplete({ onGoBack, signed }: Props) {
   useEffect(() => {
     const t = setTimeout(onGoBack, 5000);
     return () => clearTimeout(t);
@@ -17,7 +16,6 @@ export default function SigningComplete({ onGoBack, acceptedDocs, signed }: Prop
 
   const getStatusLabel = (doc: typeof SIGNING_DOCUMENTS[0]) => {
     if (doc.ack === 'sign') return signed ? 'Signed' : 'Pending';
-    if (doc.ack === 'must_view_accept') return acceptedDocs.has(doc.id) ? 'Accepted' : 'Pending';
     return 'No action needed';
   };
 

@@ -8,33 +8,26 @@ interface Props {
   documents: SigningDocument[];
   activeDocId: string;
   onSelectDoc: (id: string) => void;
-  acceptedDocs: Set<string>;
   signedFieldCount: number;
 }
 
 const typeBadgeClass: Record<string, string> = {
   primary: 'bg-indigo-100 text-indigo-700',
   supplement: 'bg-amber-100 text-amber-700',
-  attachment: 'bg-muted text-muted-foreground',
 };
 
-export default function DocumentNavigator({ documents, activeDocId, onSelectDoc, acceptedDocs, signedFieldCount }: Props) {
+export default function DocumentNavigator({ documents, activeDocId, onSelectDoc, signedFieldCount }: Props) {
   const getStatusInfo = (doc: SigningDocument) => {
     if (doc.ack === 'sign') {
       const total = doc.fieldCount || 0;
       if (signedFieldCount >= total) return { icon: <CheckCircle2 size={10} className="text-green-600" />, text: 'Signed', color: 'text-green-600' };
       return { icon: <PenTool size={10} className="text-primary" />, text: `${total} fields to complete`, color: 'text-primary' };
     }
-    if (doc.ack === 'must_view_accept') {
-      if (acceptedDocs.has(doc.id)) return { icon: <CheckCircle2 size={10} className="text-green-600" />, text: 'Accepted', color: 'text-green-600' };
-      return { icon: <Circle size={10} className="text-muted-foreground" />, text: 'To review', color: 'text-muted-foreground' };
-    }
     return { icon: <CheckCircle2 size={10} className="text-muted-foreground/60" />, text: 'No action needed', color: 'text-muted-foreground/60' };
   };
 
   const reviewedCount = documents.filter(d => {
     if (d.ack === 'sign') return signedFieldCount >= (d.fieldCount || 0);
-    if (d.ack === 'must_view_accept') return acceptedDocs.has(d.id);
     return true;
   }).length;
 

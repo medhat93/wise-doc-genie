@@ -30,24 +30,12 @@ export default function SigningPage() {
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
   const [activeDocId, setActiveDocId] = useState(SIGNING_DOCUMENTS[0].id);
-  const [acceptedDocs, setAcceptedDocs] = useState<Set<string>>(new Set());
   const [reqDialogOpen, setReqDialogOpen] = useState(false);
   const [docTransition, setDocTransition] = useState(true);
   const documentRef = useRef<HTMLDivElement>(null);
 
   const activeDoc = SIGNING_DOCUMENTS.find(d => d.id === activeDocId)!;
   const signedFieldCount = signed ? 4 : 0;
-
-  // Check all requirements met
-  const allAccepted = SIGNING_DOCUMENTS.filter(d => d.ack === 'must_view_accept').every(d => acceptedDocs.has(d.id));
-  const allRequirementsMet = allAccepted && signed;
-  const canSign = allAccepted; // can open signing modal once supplements are accepted
-
-  // Requirements not met items for tooltip
-  const pendingItems = SIGNING_DOCUMENTS.filter(d => d.ack !== 'none').map(doc => {
-    if (doc.ack === 'sign') return { label: `Complete 4 signature fields on ${doc.name}`, done: signed };
-    return { label: `Accept ${doc.name}`, done: acceptedDocs.has(doc.id) };
-  });
 
   // Show nudge after 1.5s
   useEffect(() => {
@@ -64,7 +52,6 @@ export default function SigningPage() {
   };
 
   const handleCitation = useCallback((section: string) => {
-    // Switch to MSA if needed
     if (activeDocId !== 'msa') {
       setActiveDocId('msa');
     }
@@ -75,10 +62,6 @@ export default function SigningPage() {
   }, [activeDocId]);
 
   const handleSign = () => {
-    if (!allAccepted) {
-      setReqDialogOpen(true);
-      return;
-    }
     setSigningModalOpen(true);
   };
 
@@ -91,10 +74,6 @@ export default function SigningPage() {
 
   const handleFieldClick = () => {
     if (!signed) {
-      if (!allAccepted) {
-        setReqDialogOpen(true);
-        return;
-      }
       setSigningModalOpen(true);
     }
   };
@@ -107,20 +86,6 @@ export default function SigningPage() {
       setDocTransition(true);
     }, 50);
   };
-
-  const handleAcceptDoc = (docId: string) => {
-    setAcceptedDocs(prev => new Set([...prev, docId]));
-    toast.success(`${SIGNING_DOCUMENTS.find(d => d.id === docId)?.name} accepted`);
-    // Auto-advance to next doc after 1s
-    setTimeout(() => {
-      const idx = SIGNING_DOCUMENTS.findIndex(d => d.id === docId);
-      if (idx < SIGNING_DOCUMENTS.length - 1) {
-        handleSelectDoc(SIGNING_DOCUMENTS[idx + 1].id);
-      }
-    }, 1000);
-  };
-
-  const requiresReviewCount = SIGNING_DOCUMENTS.filter(d => d.ack === 'must_view_accept').length;
 
   return (
     <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
@@ -142,37 +107,17 @@ export default function SigningPage() {
 
         <div className="text-center hidden md:block">
           <p className="text-sm font-medium">Mutual NDA — Meridian Data Systems</p>
-          <p className="text-xs text-muted-foreground">{SIGNING_DOCUMENTS.length} documents · {requiresReviewCount} require your review</p>
+          <p className="text-xs text-muted-foreground">{SIGNING_DOCUMENTS.length} documents</p>
         </div>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <Button
-                onClick={handleSign}
-                className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-semibold gap-2"
-                disabled={signed}
-              >
-                <PenTool size={14} />
-                {signed ? 'Signed ✓' : 'Sign Document'}
-              </Button>
-            </div>
-          </TooltipTrigger>
-          {!signed && (
-            <TooltipContent side="bottom" className="max-w-[280px]">
-              {allAccepted ? (
-                <p className="text-xs">Ready to sign!</p>
-              ) : (
-                <div className="space-y-1">
-                  <p className="text-xs font-medium">Complete these items to sign:</p>
-                  {pendingItems.map((item, i) => (
-                    <p key={i} className="text-xs">{item.done ? '✓' : '☐'} {item.label}</p>
-                  ))}
-                </div>
-              )}
-            </TooltipContent>
-          )}
-        </Tooltip>
+        <Button
+          onClick={handleSign}
+          className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-semibold gap-2"
+          disabled={signed}
+        >
+          <PenTool size={14} />
+          {signed ? 'Signed ✓' : 'Sign Document'}
+        </Button>
       </div>
 
       {/* Main area */}
@@ -183,7 +128,6 @@ export default function SigningPage() {
             documents={SIGNING_DOCUMENTS}
             activeDocId={activeDocId}
             onSelectDoc={handleSelectDoc}
-            acceptedDocs={acceptedDocs}
             signedFieldCount={signedFieldCount}
           />
         )}
@@ -195,7 +139,7 @@ export default function SigningPage() {
             <div className="flex gap-2 px-3 py-2 overflow-x-auto border-b border-border bg-card shrink-0">
               {SIGNING_DOCUMENTS.map(doc => {
                 const isActive = doc.id === activeDocId;
-                const isDone = doc.ack === 'none' || acceptedDocs.has(doc.id) || (doc.ack === 'sign' && signed);
+                const isDone = doc.ack === 'none' || (doc.ack === 'sign' && signed);
                 return (
                   <button
                     key={doc.id}
@@ -222,8 +166,7 @@ export default function SigningPage() {
             <span className={cn(
               'text-[9px] px-1.5 rounded font-medium',
               activeDoc.type === 'primary' ? 'bg-indigo-100 text-indigo-700' :
-              activeDoc.type === 'supplement' ? 'bg-amber-100 text-amber-700' :
-              'bg-muted text-muted-foreground'
+              'bg-amber-100 text-amber-700'
             )}>
               {activeDoc.type.charAt(0).toUpperCase() + activeDoc.type.slice(1)}
             </span>
@@ -246,18 +189,17 @@ export default function SigningPage() {
                 onFieldClick={handleFieldClick}
               />
             )}
-            {activeDoc.ack === 'must_view_accept' && (
+            {activeDoc.ack === 'none' && activeDoc.type === 'supplement' && (
               <SupplementDocument
                 key={activeDoc.id}
                 doc={activeDoc}
-                accepted={acceptedDocs.has(activeDoc.id)}
-                onAccept={handleAcceptDoc}
+                accepted={true}
+                onAccept={() => {}}
               />
             )}
-            {activeDoc.ack === 'none' && <AttachmentDocument />}
+            {activeDoc.ack === 'none' && activeDoc.type !== 'supplement' && <AttachmentDocument />}
           </div>
         </div>
-
 
         {/* Vertical Toolbar */}
         <div className="w-12 border-l border-border bg-card flex flex-col items-center py-3 gap-2 shrink-0">
@@ -332,14 +274,12 @@ export default function SigningPage() {
         open={reqDialogOpen}
         onClose={() => setReqDialogOpen(false)}
         onGoToDoc={(docId) => handleSelectDoc(docId)}
-        acceptedDocs={acceptedDocs}
         signed={signed}
       />
 
       {/* Completion overlay */}
       {showComplete && (
         <SigningComplete
-          acceptedDocs={acceptedDocs}
           signed={signed}
           onGoBack={() => navigate('/?signed=true')}
         />

@@ -70,7 +70,7 @@ export const COMMENT_SECTIONS: Record<string, { docIndex: number; selector: stri
   "Section 5: Termination": { docIndex: 0, selector: "5. Term and Termination" },
 };
 
-export type AcknowledgmentLevel = 'none' | 'must_view' | 'must_view_accept';
+export type AcknowledgmentLevel = 'none';
 
 interface EditorContextType {
   participants: Participant[];

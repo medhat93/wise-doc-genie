@@ -2,23 +2,21 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Circle } from 'lucide-react';
-import { SigningDocument, SIGNING_DOCUMENTS } from './signingDocuments';
+import { SIGNING_DOCUMENTS } from './signingDocuments';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onGoToDoc: (id: string) => void;
-  acceptedDocs: Set<string>;
   signed: boolean;
 }
 
-export default function SigningRequirementsDialog({ open, onClose, onGoToDoc, acceptedDocs, signed }: Props) {
-  const items = SIGNING_DOCUMENTS.filter(d => d.ack !== 'none').map(doc => {
-    if (doc.ack === 'sign') {
-      return { doc, done: signed, label: `Complete signature fields on ${doc.name}` };
-    }
-    return { doc, done: acceptedDocs.has(doc.id), label: `Accept ${doc.name}` };
-  });
+export default function SigningRequirementsDialog({ open, onClose, onGoToDoc, signed }: Props) {
+  const items = SIGNING_DOCUMENTS.filter(d => d.ack === 'sign').map(doc => ({
+    doc,
+    done: signed,
+    label: `Complete signature fields on ${doc.name}`,
+  }));
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
