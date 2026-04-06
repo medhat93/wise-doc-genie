@@ -697,6 +697,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       </SheetContent>
     </Sheet>
     <FollowUpDialog doc={doc} open={followUpOpen} onOpenChange={setFollowUpOpen} />
+    <CorrectionDialog doc={doc} open={correctionOpen} onOpenChange={setCorrectionOpen} />
     </>
   );
 }
