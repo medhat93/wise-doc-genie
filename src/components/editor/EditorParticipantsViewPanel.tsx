@@ -187,6 +187,51 @@ const EditorParticipantsViewPanel = () => {
                 </button>
               </div>
             )}
+            {hasSupplements && (() => {
+              const { visible, total } = getVisibleSupplementCount(p.id);
+              const allVisible = visible === total;
+              return (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-6 px-2 text-[10px] gap-1 flex-shrink-0">
+                      <Eye size={12} />
+                      {allVisible ? "All" : `${visible + MOCK_DOCUMENTS.filter(d => d.docType === "primary").length}/${MOCK_DOCUMENTS.length}`}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-2" align="end">
+                    <p className="text-xs font-medium mb-2">Documents visible to {p.name.split(" ")[0]}</p>
+                    {MOCK_DOCUMENTS.map(doc => {
+                      const isPrimary = doc.docType === "primary";
+                      const supplements = MOCK_DOCUMENTS.filter(d => d.docType === "supplement");
+                      const vis = docVisibility[p.id] || new Set(supplements.map(d => d.id));
+                      const isChecked = isPrimary ? true : vis.has(doc.id);
+                      return (
+                        <label
+                          key={doc.id}
+                          className={cn(
+                            "flex items-center gap-2 px-1 py-1 rounded hover:bg-accent cursor-pointer",
+                            isPrimary && "opacity-60 cursor-not-allowed"
+                          )}
+                        >
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={() => !isPrimary && toggleSupplementVisibility(p.id, doc.id)}
+                            disabled={isPrimary}
+                          />
+                          <span className="text-xs truncate flex-1">{doc.name}</span>
+                          {doc.docType === "supplement" && (
+                            <Badge variant="outline" className="text-[8px] px-1 py-0 h-3 font-medium text-amber-600">
+                              Supplement
+                            </Badge>
+                          )}
+                        </label>
+                      );
+                    })}
+                    <p className="text-[10px] text-muted-foreground mt-2">Primary documents are always visible</p>
+                  </PopoverContent>
+                </Popover>
+              );
+            })()}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
