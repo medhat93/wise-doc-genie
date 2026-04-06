@@ -1209,15 +1209,11 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                           const first = sectionComments[0];
                           return (
                             <div key={sectionRef} style={{ position: "absolute", top: yPos }}>
-                              {/* Connector line */}
-                              <div
-                                className="absolute top-3 -left-3 w-3 h-px"
-                                style={{ backgroundColor: first.authorColor }}
-                              />
-                              <CommentBubble
-                                comment={first}
-                                count={sectionComments.length}
-                                allComments={sectionComments}
+                              <ThreadPin
+                                comments={sectionComments}
+                                isOpen={openThreadSection === sectionRef}
+                                onToggle={() => setOpenThreadSection((prev) => (prev === sectionRef ? null : sectionRef))}
+                                onClose={() => setOpenThreadSection(null)}
                                 onAddReply={handleAddReply}
                               />
                             </div>
