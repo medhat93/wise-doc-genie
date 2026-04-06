@@ -655,7 +655,24 @@ const CreateDocument = () => {
         <div className="bg-blue-50 dark:bg-blue-950/30 border-b border-blue-300 dark:border-blue-800 px-4 py-2 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 text-sm font-medium text-blue-800 dark:text-blue-300">
             <LinkIcon size={16} />
-            Follow-up to: Annual Review — Acme Corp
+            Follow-up to: {followUpParentName}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="ml-1 text-blue-500 hover:text-blue-700 transition-colors">
+                  <AlertTriangle size={0} className="hidden" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[280px] p-3 space-y-1.5" align="start">
+                <p className="text-xs font-medium text-foreground">What happens next</p>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
+                  <li>Add your new {followUpChildType} documents to the queue.</li>
+                  <li>Participants from the original contract will be pre-loaded.</li>
+                  <li>The original contract's signing order will be preserved.</li>
+                  <li>The follow-up will appear as a child in the original contract's document list.</li>
+                </ul>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { sonnerToast("Follow-up cancelled"); navigate("/"); }}>Cancel follow-up</Button>

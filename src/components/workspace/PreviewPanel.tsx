@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Progress } from '@/components/ui/progress';
 import DocumentActionsMenu from './DocumentActionsMenu';
-import FollowUpDialog from './FollowUpDialog';
+import CorrectionDialog from './CorrectionDialog';
 import CorrectionDialog from './CorrectionDialog';
 
 /* ── stage badge config ─────────────────────────────────────── */
