@@ -217,9 +217,9 @@ const CreateDocument = () => {
   const lockedDocs: UploadedDocument[] = useMemo(() => {
     if (isCorrection) {
       return [
-        { id: "locked-merged", name: "Original Documents (Merged)", type: "application/pdf", progress: 100, status: "complete", pageCount: 8, documentType: "primary", isLocked: true },
+        { id: "locked-msa", name: "Master Services Agreement", type: "application/pdf", progress: 100, status: "complete", pageCount: 5, documentType: "primary", isLocked: true },
+        { id: "locked-employment", name: "Employment Agreement", type: "application/pdf", progress: 100, status: "complete", pageCount: 3, documentType: "primary", isLocked: true },
         { id: "locked-schedule", name: "Schedule A — Pricing", type: "application/pdf", progress: 100, status: "complete", pageCount: 2, documentType: "supplement", isLocked: true },
-        { id: "locked-insurance", name: "Insurance Certificate", type: "application/pdf", progress: 100, status: "complete", pageCount: 1, documentType: "attachment", isLocked: true },
       ];
     }
     if (isFollowUp) {
@@ -289,7 +289,7 @@ const CreateDocument = () => {
   const isEmpty = allDocs.length === 0;
   const allComplete = allDocs.length > 0 && allDocs.every((d) => d.status === "complete");
   const count = allDocs.length;
-  const hasPrimary = allDocs.some((d) => d.documentType === "primary");
+  const hasDocuments_ = allDocs.length > 0;
 
   const connectedDriveIds = Object.entries(connectedProviders)
     .filter(([, v]) => v)
@@ -722,8 +722,8 @@ const CreateDocument = () => {
                 <Button
                   variant="default"
                   size="sm"
-                  disabled={isEmpty || !allComplete || !hasPrimary}
-                  className={isEmpty || !allComplete || !hasPrimary ? "opacity-50" : ""}
+                  disabled={isEmpty || !allComplete}
+                  className={isEmpty || !allComplete ? "opacity-50" : ""}
                   onClick={() => navigate(navTarget, { state: { documents, mode } })}
                 >
                   <span className="hidden sm:inline">Next: {isCorrection ? "Participants" : "Add Participants"}</span>
