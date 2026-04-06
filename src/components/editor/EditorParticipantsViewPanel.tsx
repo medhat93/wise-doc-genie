@@ -83,6 +83,37 @@ const EditorParticipantsViewPanel = () => {
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 
+  const hasSupplements = MOCK_DOCUMENTS.some(d => d.docType === "supplement");
+
+  // Track which supplement docs each participant can see (all by default)
+  const [docVisibility, setDocVisibility] = useState<Record<string, Set<string>>>(() => {
+    const supplementIds = MOCK_DOCUMENTS.filter(d => d.docType === "supplement").map(d => d.id);
+    const vis: Record<string, Set<string>> = {};
+    participants.forEach(p => { vis[p.id] = new Set(supplementIds); });
+    return vis;
+  });
+
+  const getVisibleSupplementCount = (participantId: string) => {
+    const supplements = MOCK_DOCUMENTS.filter(d => d.docType === "supplement");
+    if (supplements.length === 0) return { visible: 0, total: 0 };
+    const vis = docVisibility[participantId] || new Set(supplements.map(d => d.id));
+    return { visible: vis.size, total: supplements.length };
+  };
+
+  const toggleSupplementVisibility = (participantId: string, docId: string) => {
+    setDocVisibility(prev => {
+      const supplements = MOCK_DOCUMENTS.filter(d => d.docType === "supplement");
+      const current = prev[participantId] || new Set(supplements.map(d => d.id));
+      const next = new Set(current);
+      if (next.has(docId)) {
+        next.delete(docId);
+      } else {
+        next.add(docId);
+      }
+      return { ...prev, [participantId]: next };
+    });
+  };
+
   const signers = participants.filter(p => p.role === "signer").sort((a, b) => a.order - b.order);
   const approvers = participants.filter(p => p.role === "approver");
   const viewers = participants.filter(p => p.role === "viewer" || p.role === "cc");
