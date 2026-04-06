@@ -247,7 +247,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
-  const [followUpOpen, setFollowUpOpen] = useState(false);
+  
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [docsExpanded, setDocsExpanded] = useState(false);
   const renameRef = useRef<HTMLInputElement>(null);
@@ -696,7 +696,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         </Tabs>
       </SheetContent>
     </Sheet>
-    <FollowUpDialog doc={doc} open={followUpOpen} onOpenChange={setFollowUpOpen} />
+    
     <CorrectionDialog doc={doc} open={correctionOpen} onOpenChange={setCorrectionOpen} />
     </>
   );

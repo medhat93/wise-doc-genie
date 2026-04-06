@@ -106,10 +106,10 @@ interface Props {
 }
 
 export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRename }: Props) {
+  const navigate = useNavigate();
   const [trashOpen, setTrashOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
   const [correctionOpen, setCorrectionOpen] = useState(false);
-  const [followUpOpen, setFollowUpOpen] = useState(false);
 
   const stageKey = resolveStageKey(doc);
   const groups = getMenuGroups(stageKey, doc, {
@@ -118,7 +118,7 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
     onParticipants,
     onRename,
     onCorrect: () => setCorrectionOpen(true),
-    onFollowUp: () => setFollowUpOpen(true),
+    onFollowUp: () => navigate(`/create?mode=followup&parentId=${doc.id}&childType=supplement`),
   });
 
   return (
@@ -187,9 +187,6 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
 
       {/* Correction dialog */}
       <CorrectionDialog doc={doc} open={correctionOpen} onOpenChange={setCorrectionOpen} />
-
-      {/* Follow-up dialog */}
-      <FollowUpDialog doc={doc} open={followUpOpen} onOpenChange={setFollowUpOpen} />
     </>
   );
 }
