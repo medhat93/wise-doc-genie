@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Link as LinkIcon, X } from "lucide-react";
 import { UploadedDocument, DocumentType } from "@/types/document";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,8 @@ interface DocumentQueuePanelProps {
   isMobile?: boolean;
   onEditDocuments?: () => void;
   lockedDocuments?: UploadedDocument[];
+  followUpParentName?: string;
+  followUpChildType?: string;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -374,6 +377,8 @@ const DocumentQueuePanel = ({
   isMobile = false,
   onEditDocuments,
   lockedDocuments = [],
+  followUpParentName,
+  followUpChildType,
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
   const [rotateDoc, setRotateDoc] = useState<UploadedDocument | null>(null);
