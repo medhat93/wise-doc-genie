@@ -58,7 +58,7 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
   const rename: MenuItem = { label: 'Rename', icon: Pencil, onClick: onRename || (() => toast.success('Document renamed')) };
   const share: MenuItem = { label: 'Share', icon: Share2, onClick: () => toast.success('Share link copied') };
   const download: MenuItem = { label: 'Download', icon: Download, onClick: () => toast.success('Download started') };
-  const edit: MenuItem = { label: 'Edit', icon: Pencil, onClick: () => toast.info('Opening editor...') };
+  
   const correct: MenuItem = { label: 'Correct', icon: Edit, onClick: onCorrect };
   const updateExp: MenuItem = { label: 'Update expiration', icon: CalendarDays, onClick: () => toast.success('Expiration updated') };
   const markComplete: MenuItem = { label: 'Mark as complete', icon: CheckCircle, onClick: () => toast.success('Document marked as complete') };
@@ -79,11 +79,11 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
     case 'draft':
       return [[download, rename, share], mgmt, [trash]];
     case 'approval_waiting':
-      return [[edit, correct, rename, share], [updateExp, markComplete], mgmt, [trash]];
+      return [[correct, rename, share], [updateExp, markComplete], mgmt, [trash]];
     case 'approval_yours':
       return [[download, correct, rename, share], [updateExp, markComplete], mgmt, [trash]];
     case 'signing_waiting':
-      return [[edit, correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]];
+      return [[correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]];
     case 'signing_yours':
       return [[rename, share], [correct, updateExp, markComplete, voidDoc], mgmt, [audit], [trash]];
     case 'completed':

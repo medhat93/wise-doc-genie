@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   X, Send, Download, Pencil, MoreHorizontal, Clock, FileText, Eye,
   PenTool, Bell, XCircle, Plus, CheckCircle, Circle, GitPullRequest,
-  Users, File, AlertTriangle, Ban, Lock, Copy, Check, ChevronDown, ChevronUp, Sparkles,
+  Users, File, AlertTriangle, Ban, Lock, Copy, Check, ChevronDown, ChevronUp, Sparkles, Edit,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Progress } from '@/components/ui/progress';
 import DocumentActionsMenu from './DocumentActionsMenu';
 import FollowUpDialog from './FollowUpDialog';
+import CorrectionDialog from './CorrectionDialog';
 
 /* ── stage badge config ─────────────────────────────────────── */
 const stageConfig: Record<string, { label: string; className: string; icon: React.ElementType }> = {
@@ -247,6 +248,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   const [renameValue, setRenameValue] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
   const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const [docsExpanded, setDocsExpanded] = useState(false);
   const renameRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -338,6 +340,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => navigate(`/signing/${doc.id}`)}><PenTool size={12} /> Sign</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>
           {moreMenu}
         </>
       );
@@ -346,6 +349,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Reminder sent')}><Bell size={12} /> Remind</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>
           {moreMenu}
         </>
       );
@@ -693,6 +697,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       </SheetContent>
     </Sheet>
     <FollowUpDialog doc={doc} open={followUpOpen} onOpenChange={setFollowUpOpen} />
+    <CorrectionDialog doc={doc} open={correctionOpen} onOpenChange={setCorrectionOpen} />
     </>
   );
 }
