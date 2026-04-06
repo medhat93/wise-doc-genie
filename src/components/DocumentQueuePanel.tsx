@@ -271,6 +271,12 @@ function SortableDocCard({
                 Supplement
               </span>
             )}
+            {/* Follow-up note */}
+            {followUpParentName && (
+              <p className="text-[10px] text-muted-foreground italic mt-1 truncate">
+                🔗 {isSupplement ? "Supplement" : "Follow-up"} to {followUpParentName}
+              </p>
+            )}
           </div>
 
           {/* 3-dot menu */}
