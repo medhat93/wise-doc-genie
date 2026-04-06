@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { EditorProvider } from "@/components/editor/EditorContext";
 import { AnimatePresence } from "framer-motion";
 import CreateDocument from "./pages/CreateDocument";
-import ParticipantsPage from "./pages/ParticipantsPage";
+
 import EditorPage from "./pages/EditorPage";
 import WorkspacePage from "./pages/WorkspacePage";
 import SigningPage from "./pages/SigningPage";
@@ -21,7 +21,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<WorkspacePage />} />
             <Route path="/create" element={<CreateDocument />} />
-            <Route path="/participants" element={<ParticipantsPage />} />
+            
             <Route path="/editor" element={<EditorPage />} />
             <Route path="/workspace" element={<Navigate to="/" replace />} />
             <Route path="/signing/:id" element={<SigningPage />} />

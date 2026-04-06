@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ParticipantsDialog from "@/components/ParticipantsDialog";
 import { useEditorContext } from "./EditorContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -233,8 +234,20 @@ const EditorParticipantsViewPanel = () => {
     );
   };
 
+  const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
+
   return (
     <div className="flex flex-col gap-4 pb-6">
+      {/* Manage participants button */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 text-xs w-full"
+        onClick={() => setParticipantsDialogOpen(true)}
+      >
+        Manage participants
+      </Button>
+
       {/* Sequential signing toggle */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
@@ -268,11 +281,18 @@ const EditorParticipantsViewPanel = () => {
         variant="outline"
         size="sm"
         className="h-8 text-xs gap-1.5 w-full"
-        onClick={() => setAddDialogOpen(true)}
+        onClick={() => setParticipantsDialogOpen(true)}
       >
         <Plus size={14} />
         Add new participant
       </Button>
+
+      {/* Participants Dialog */}
+      <ParticipantsDialog
+        open={participantsDialogOpen}
+        onOpenChange={setParticipantsDialogOpen}
+        fromEditor
+      />
 
       {/* Dialogs */}
       <AddParticipantDialog
