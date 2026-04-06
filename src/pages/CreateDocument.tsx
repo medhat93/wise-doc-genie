@@ -289,7 +289,7 @@ const CreateDocument = () => {
   const isEmpty = allDocs.length === 0;
   const allComplete = allDocs.length > 0 && allDocs.every((d) => d.status === "complete");
   const count = allDocs.length;
-  const hasDocuments_ = allDocs.length > 0;
+  
 
   const connectedDriveIds = Object.entries(connectedProviders)
     .filter(([, v]) => v)
