@@ -6,12 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   MoreHorizontal,
   Plus,
@@ -25,9 +31,11 @@ import {
   Users,
   Shield,
   GripVertical,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Participant, ParticipantRole, SendingMethod } from "./EditorParticipantsPanel";
+import { MOCK_DOCUMENTS } from "./EditorCanvas";
 import AddParticipantDialog from "./AddParticipantDialog";
 
 const ROLE_STYLES: Record<ParticipantRole, { label: string; className: string }> = {
