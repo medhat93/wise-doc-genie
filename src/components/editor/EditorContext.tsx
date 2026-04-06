@@ -3,6 +3,8 @@ import type { Participant } from "./EditorParticipantsPanel";
 import type { PlacedField } from "./EditorFieldsPanel";
 
 /* ── Comment types ── */
+export type AnnotationType = "comment" | "suggestion" | "ai_suggestion";
+
 export interface CommentReply {
   id: string;
   author: string;
@@ -23,6 +25,20 @@ export interface Comment {
   status: "open" | "resolved";
   replies: CommentReply[];
   type: "inline" | "general";
+  annotationType: AnnotationType;
+  suggestedText?: string;
+}
+
+/* ── AI Suggestion types ── */
+export type AiSuggestionType = "addition" | "deletion" | "replacement";
+
+export interface AiSuggestion {
+  id: string;
+  type: AiSuggestionType;
+  sectionRef: string;
+  oldText?: string;
+  newText?: string;
+  status: "pending" | "accepted" | "rejected";
 }
 
 const MOCK_COMMENTS: Comment[] = [
