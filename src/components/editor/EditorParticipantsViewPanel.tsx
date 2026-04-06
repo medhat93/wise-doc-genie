@@ -83,6 +83,37 @@ const EditorParticipantsViewPanel = () => {
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 
+  const hasSupplements = MOCK_DOCUMENTS.some(d => d.docType === "supplement");
+
+  // Track which supplement docs each participant can see (all by default)
+  const [docVisibility, setDocVisibility] = useState<Record<string, Set<string>>>(() => {
+    const supplementIds = MOCK_DOCUMENTS.filter(d => d.docType === "supplement").map(d => d.id);
+    const vis: Record<string, Set<string>> = {};
+    participants.forEach(p => { vis[p.id] = new Set(supplementIds); });
+    return vis;
+  });
+
+  const getVisibleSupplementCount = (participantId: string) => {
+    const supplements = MOCK_DOCUMENTS.filter(d => d.docType === "supplement");
+    if (supplements.length === 0) return { visible: 0, total: 0 };
+    const vis = docVisibility[participantId] || new Set(supplements.map(d => d.id));
+    return { visible: vis.size, total: supplements.length };
+  };
+
+  const toggleSupplementVisibility = (participantId: string, docId: string) => {
+    setDocVisibility(prev => {
+      const supplements = MOCK_DOCUMENTS.filter(d => d.docType === "supplement");
+      const current = prev[participantId] || new Set(supplements.map(d => d.id));
+      const next = new Set(current);
+      if (next.has(docId)) {
+        next.delete(docId);
+      } else {
+        next.add(docId);
+      }
+      return { ...prev, [participantId]: next };
+    });
+  };
+
   const signers = participants.filter(p => p.role === "signer").sort((a, b) => a.order - b.order);
   const approvers = participants.filter(p => p.role === "approver");
   const viewers = participants.filter(p => p.role === "viewer" || p.role === "cc");
@@ -156,6 +187,51 @@ const EditorParticipantsViewPanel = () => {
                 </button>
               </div>
             )}
+            {hasSupplements && (() => {
+              const { visible, total } = getVisibleSupplementCount(p.id);
+              const allVisible = visible === total;
+              return (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-6 px-2 text-[10px] gap-1 flex-shrink-0">
+                      <Eye size={12} />
+                      {allVisible ? "All" : `${visible + MOCK_DOCUMENTS.filter(d => d.docType === "primary").length}/${MOCK_DOCUMENTS.length}`}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-2" align="end">
+                    <p className="text-xs font-medium mb-2">Documents visible to {p.name.split(" ")[0]}</p>
+                    {MOCK_DOCUMENTS.map(doc => {
+                      const isPrimary = doc.docType === "primary";
+                      const supplements = MOCK_DOCUMENTS.filter(d => d.docType === "supplement");
+                      const vis = docVisibility[p.id] || new Set(supplements.map(d => d.id));
+                      const isChecked = isPrimary ? true : vis.has(doc.id);
+                      return (
+                        <label
+                          key={doc.id}
+                          className={cn(
+                            "flex items-center gap-2 px-1 py-1 rounded hover:bg-accent cursor-pointer",
+                            isPrimary && "opacity-60 cursor-not-allowed"
+                          )}
+                        >
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={() => !isPrimary && toggleSupplementVisibility(p.id, doc.id)}
+                            disabled={isPrimary}
+                          />
+                          <span className="text-xs truncate flex-1">{doc.name}</span>
+                          {doc.docType === "supplement" && (
+                            <Badge variant="outline" className="text-[8px] px-1 py-0 h-3 font-medium text-amber-600">
+                              Supplement
+                            </Badge>
+                          )}
+                        </label>
+                      );
+                    })}
+                    <p className="text-[10px] text-muted-foreground mt-2">Primary documents are always visible</p>
+                  </PopoverContent>
+                </Popover>
+              );
+            })()}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
@@ -295,51 +371,6 @@ const EditorParticipantsViewPanel = () => {
         Add new participant
       </Button>
 
-      {/* Document visibility section (only when supplements exist) */}
-      {MOCK_DOCUMENTS.some(d => d.docType === "supplement") && participants.length > 0 && (
-        <>
-          <Separator />
-          <div className="space-y-2">
-            <div className="flex items-center gap-1.5">
-              <Eye size={14} className="text-muted-foreground" />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Document visibility</span>
-            </div>
-            {MOCK_DOCUMENTS.map(doc => {
-              const visibleParticipants = participants; // all visible by default in view panel
-              return (
-                <div key={doc.id} className="flex items-center justify-between py-1">
-                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                    <span className="text-sm truncate">{doc.name}</span>
-                    {doc.docType === "supplement" && (
-                      <Badge variant="outline" className="text-[8px] px-1 py-0 h-3 font-medium text-amber-600 border-amber-500/30">
-                        Supplement
-                      </Badge>
-                    )}
-                  </div>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1 flex-shrink-0">
-                        <Eye size={12} />
-                        <span className="text-muted-foreground">All</span>
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-56 p-2" align="end">
-                      <p className="text-xs font-medium mb-2">Who can see this document</p>
-                      {participants.map(p => (
-                        <label key={p.id} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-accent cursor-pointer">
-                          <Checkbox checked={true} disabled />
-                          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                          <span className="text-xs truncate">{p.name}</span>
-                        </label>
-                      ))}
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
 
       {/* Participants Dialog */}
       <ParticipantsDialog
