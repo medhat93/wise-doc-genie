@@ -469,7 +469,7 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
       const signerIssues: DocumentIssue[] = [];
       const signerFields = placedFields.filter((f) => f.participantId === signer.id);
 
-      // Check primary docs
+      // Only check primary docs for missing fields
       const primaryDocs = MOCK_DOCS.filter((d) => d.documentType === "primary");
       for (const doc of primaryDocs) {
         if (signerFields.length === 0) {
@@ -480,17 +480,6 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
             issueType: "no_fields_primary",
           });
         }
-      }
-
-      // Check supplement/attachment docs
-      const suppDocs = MOCK_DOCS.filter((d) => d.documentType !== "primary");
-      for (const doc of suppDocs) {
-        signerIssues.push({
-          documentId: doc.id,
-          documentName: doc.name,
-          documentType: doc.documentType,
-          issueType: "no_fields_supplement",
-        });
       }
 
       if (signerIssues.length > 0) {

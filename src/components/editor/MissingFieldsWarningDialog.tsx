@@ -1,8 +1,5 @@
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
@@ -12,9 +9,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, FileText, Paperclip, Info } from "lucide-react";
+import { AlertTriangle, FileText, Info } from "lucide-react";
 import type { Participant } from "./EditorParticipantsPanel";
-import type { AcknowledgmentLevel } from "./EditorContext";
 
 const ROLE_STYLES: Record<string, string> = {
   signer: "bg-[hsl(var(--brand-indigo))]/15 text-[hsl(var(--brand-indigo))] border-[hsl(var(--brand-indigo))]/30",
@@ -25,8 +21,8 @@ const ROLE_STYLES: Record<string, string> = {
 export interface DocumentIssue {
   documentId: string;
   documentName: string;
-  documentType: "primary" | "supplement" | "attachment";
-  issueType: "no_fields_primary" | "no_fields_supplement";
+  documentType: "primary" | "supplement";
+  issueType: "no_fields_primary";
 }
 
 export interface ParticipantIssue {
@@ -53,17 +49,12 @@ const MiniFieldIllustration = () => (
   </div>
 );
 
-const ACK_OPTIONS: { value: AcknowledgmentLevel; label: string; desc: string }[] = [
-  { value: "none", label: "No action needed", desc: "Document is available for reference only" },
-];
-
 interface MissingFieldsWarningDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   participantIssues: ParticipantIssue[];
   onGoBack: () => void;
-  onAddFields: (participantId: string) => void;
-  onContinue: (acknowledgments: Record<string, Record<string, AcknowledgmentLevel>>) => void;
+  onContinue: () => void;
 }
 
 const MissingFieldsWarningDialog = ({
@@ -71,26 +62,8 @@ const MissingFieldsWarningDialog = ({
   onOpenChange,
   participantIssues,
   onGoBack,
-  onAddFields,
   onContinue,
 }: MissingFieldsWarningDialogProps) => {
-  // Local ack state: docId -> participantId -> level
-  const [ackState, setAckState] = useState<Record<string, Record<string, AcknowledgmentLevel>>>({});
-
-  const getAck = (docId: string, pId: string): AcknowledgmentLevel =>
-    ackState[docId]?.[pId] ?? "none";
-
-  const setAck = (docId: string, pId: string, level: AcknowledgmentLevel) => {
-    setAckState((prev) => ({
-      ...prev,
-      [docId]: { ...prev[docId], [pId]: level },
-    }));
-  };
-
-  const handleContinue = () => {
-    onContinue(ackState);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[540px] max-h-[80vh] flex flex-col p-0 gap-0">
@@ -104,7 +77,7 @@ const MissingFieldsWarningDialog = ({
               <p className="text-xs text-muted-foreground mt-0.5">Some participants need your attention</p>
             </div>
           </div>
-          <DialogDescription className="sr-only">Review participant field assignments and document acknowledgments</DialogDescription>
+          <DialogDescription className="sr-only">Review participant field assignments before sending</DialogDescription>
         </DialogHeader>
 
         {/* Scrollable body */}
@@ -120,60 +93,22 @@ const MissingFieldsWarningDialog = ({
                 </Badge>
               </div>
 
-              {/* Issues */}
+              {/* Issues — only primary no-fields */}
               <div className="p-4 space-y-0">
                 {issues.map((issue, idx) => (
                   <div key={`${issue.documentId}-${issue.issueType}`}>
                     {idx > 0 && <Separator className="my-3 border-dashed" />}
-
-                    {issue.issueType === "no_fields_primary" ? (
-                      /* Case A: No fields on primary */
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm">
-                          <FileText size={14} className="text-muted-foreground" />
-                          <span className="font-medium">{issue.documentName}</span>
-                          <Badge variant="outline" className="text-[9px] px-1.5 h-4 bg-primary/10 text-primary border-primary/20">Primary</Badge>
-                        </div>
-                        <MiniFieldIllustration />
-                        <p className="text-xs text-muted-foreground">
-                          No fields placed. This signer will place their own signature and fields during the signing session.
-                        </p>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FileText size={14} className="text-muted-foreground" />
+                        <span className="font-medium">{issue.documentName}</span>
+                        <Badge variant="outline" className="text-[9px] px-1.5 h-4 bg-primary/10 text-primary border-primary/20">Primary</Badge>
                       </div>
-                    ) : (
-                      /* Case B: Visible to supplement/attachment with no fields */
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Paperclip size={14} className="text-muted-foreground" />
-                          <span className="font-medium">{issue.documentName}</span>
-                          <Badge variant="outline" className={cn(
-                            "text-[9px] px-1.5 h-4",
-                            issue.documentType === "supplement"
-                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
-                              : "bg-muted text-muted-foreground border-border"
-                          )}>
-                            {issue.documentType === "supplement" ? "Supplement" : "Attachment"}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          What should {p.name.split(" ")[0]} do with this document?
-                        </p>
-                        <RadioGroup
-                          value={getAck(issue.documentId, p.id)}
-                          onValueChange={(v) => setAck(issue.documentId, p.id, v as AcknowledgmentLevel)}
-                          className="space-y-2"
-                        >
-                          {ACK_OPTIONS.map((opt) => (
-                            <div key={opt.value} className="flex items-start gap-2.5">
-                              <RadioGroupItem value={opt.value} id={`${issue.documentId}-${p.id}-${opt.value}`} className="mt-0.5" />
-                              <Label htmlFor={`${issue.documentId}-${p.id}-${opt.value}`} className="cursor-pointer">
-                                <span className="text-sm font-medium">{opt.label}</span>
-                                <p className="text-[11px] text-muted-foreground mt-0.5">{opt.desc}</p>
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </div>
-                    )}
+                      <MiniFieldIllustration />
+                      <p className="text-xs text-muted-foreground">
+                        No fields placed. This signer will place their own signature and fields during the signing session.
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -192,7 +127,7 @@ const MissingFieldsWarningDialog = ({
         {/* Footer */}
         <div className="border-t p-4 flex items-center justify-between flex-shrink-0">
           <Button variant="outline" size="sm" onClick={onGoBack}>Go back</Button>
-          <Button size="sm" onClick={handleContinue}>Continue to send</Button>
+          <Button size="sm" onClick={onContinue}>Continue to send</Button>
         </div>
       </DialogContent>
     </Dialog>
