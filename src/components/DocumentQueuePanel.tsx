@@ -173,12 +173,14 @@ function SortableDocCard({
   onPreview,
   onToggleSupplement,
   onRotate,
+  followUpParentName,
 }: {
   doc: UploadedDocument;
   onRemove: (id: string) => void;
   onPreview: (doc: UploadedDocument) => void;
   onToggleSupplement: (id: string) => void;
   onRotate: (doc: UploadedDocument) => void;
+  followUpParentName?: string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: doc.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
