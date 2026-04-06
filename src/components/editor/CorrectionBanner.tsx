@@ -22,16 +22,16 @@ export default function CorrectionBanner({ mode, parentName, childType }: Props)
     return (
       <div className="bg-blue-50 dark:bg-blue-950/30 border-b border-blue-300 dark:border-blue-800 px-4 py-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 text-sm font-medium text-blue-800 dark:text-blue-300">
-          <span>📎</span>
-          Adding {childType || 'document'} to {parentName || 'parent document'}
+          <span>🔗</span>
+          Follow-up to:{' '}
+          <button
+            className="text-primary hover:underline"
+            onClick={() => toast.info(`Opening ${parentName || 'parent document'}...`)}
+          >
+            {parentName || 'parent document'}
+          </button>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" className="h-7 text-xs" onClick={() => {
-            toast.success('Follow-up saved and sent');
-            navigate('/');
-          }}>
-            Save & send
-          </Button>
           <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => {
             navigate('/');
             toast('Follow-up cancelled');
