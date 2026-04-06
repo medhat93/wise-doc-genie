@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare, Sparkles, ArrowRight } from "lucide-react";
+import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare, Sparkles, ArrowRight, Check, Pencil } from "lucide-react";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
-import { useEditorContext, COMMENT_SECTIONS, type Comment } from "./EditorContext";
+import { useEditorContext, COMMENT_SECTIONS, type Comment, type AiSuggestion, type AnnotationType } from "./EditorContext";
 import { toast } from "sonner";
 
 /* ── Mock documents ── */
@@ -54,8 +55,17 @@ const CommentHighlight = ({
   const sectionComments = comments.filter((c) => c.type === "inline" && c.sectionRef === sectionRef);
   if (sectionComments.length === 0) return <>{children}</>;
 
+  const hasAi = sectionComments.some(c => c.annotationType === "ai_suggestion");
+  const hasSuggestion = sectionComments.some(c => c.annotationType === "suggestion");
   const hasOpen = sectionComments.some((c) => c.status === "open");
-  const bgClass = hasOpen ? "bg-amber-100/50 dark:bg-amber-900/20" : "bg-emerald-100/30 dark:bg-emerald-900/15";
+  
+  const bgClass = hasAi
+    ? "bg-violet-100/50 dark:bg-violet-900/20"
+    : hasSuggestion
+    ? "bg-amber-100/70 dark:bg-amber-900/30"
+    : hasOpen
+    ? "bg-amber-100/50 dark:bg-amber-900/20"
+    : "bg-emerald-100/30 dark:bg-emerald-900/15";
 
   return (
     <Tooltip>
@@ -71,7 +81,7 @@ const CommentHighlight = ({
       <TooltipContent side="top" className="text-xs max-w-[200px]">
         {sectionComments.length === 1
           ? `${sectionComments[0].author}: "${sectionComments[0].text.slice(0, 60)}..."`
-          : `${sectionComments.length} comments on this section`}
+          : `${sectionComments.length} annotations on this section`}
       </TooltipContent>
     </Tooltip>
   );
@@ -170,7 +180,6 @@ const Doc1Content = ({ comments, onClickHighlight, variableValues }: { comments:
       This Agreement shall be governed by and construed in accordance with the laws of the State
       of Delaware, without regard to its conflict of laws provisions.
     </p>
-    {/* Signature area */}
     <div className="mt-12 pt-6 border-t">
       <p className="text-sm font-semibold text-foreground mb-4">Authorized Signatures</p>
       <div className="grid grid-cols-2 gap-8">
@@ -276,6 +285,90 @@ const Doc3Content = () => (
     </p>
   </>
 );
+
+/* ── AI Suggestion Block ── */
+const AiSuggestionBlock = ({
+  suggestion,
+  onAccept,
+  onReject,
+}: {
+  suggestion: AiSuggestion;
+  onAccept: (id: string) => void;
+  onReject: (id: string) => void;
+}) => {
+  if (suggestion.status !== "pending") return null;
+
+  return (
+    <div data-suggestion-id={suggestion.id} className="my-3 animate-in slide-in-from-top-2 duration-300">
+      {/* Deletion / old text */}
+      {suggestion.type === "replacement" && suggestion.oldText && (
+        <div className="bg-red-50 dark:bg-red-900/20 rounded-md px-3 py-2 mb-1">
+          <div className="flex items-center gap-1 mb-1">
+            <Sparkles size={10} className="text-red-500" />
+            <span className="text-[10px] text-red-600 font-medium">Remove</span>
+          </div>
+          <p className="text-sm text-red-700 dark:text-red-300 line-through">{suggestion.oldText}</p>
+        </div>
+      )}
+
+      {/* Addition / new text */}
+      {(suggestion.type === "addition" || suggestion.type === "replacement") && suggestion.newText && (
+        <div className="bg-violet-50 dark:bg-violet-900/20 border-l-[3px] border-l-violet-400 rounded-r-md px-3 py-2">
+          <div className="flex items-center gap-1 mb-1">
+            <Sparkles size={10} className="text-violet-600" />
+            <span className="text-[10px] text-violet-600 font-medium">AI Suggestion</span>
+          </div>
+          <p className="text-sm text-violet-900 dark:text-violet-200">{suggestion.newText}</p>
+          <div className="flex items-center justify-end gap-1.5 mt-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-[10px] px-2 gap-1 text-destructive hover:text-destructive"
+              onClick={() => onReject(suggestion.id)}
+            >
+              <X size={10} /> Reject
+            </Button>
+            <Button
+              size="sm"
+              className="h-6 text-[10px] px-2 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={() => onAccept(suggestion.id)}
+            >
+              <Check size={10} /> Accept
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Deletion only */}
+      {suggestion.type === "deletion" && suggestion.oldText && (
+        <div className="bg-red-50 dark:bg-red-900/20 border-l-[3px] border-l-red-400 rounded-r-md px-3 py-2">
+          <div className="flex items-center gap-1 mb-1">
+            <Sparkles size={10} className="text-red-500" />
+            <span className="text-[10px] text-red-600 font-medium">AI Suggestion — Remove</span>
+          </div>
+          <p className="text-sm text-red-700 dark:text-red-300 line-through">{suggestion.oldText}</p>
+          <div className="flex items-center justify-end gap-1.5 mt-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-[10px] px-2 gap-1 text-destructive hover:text-destructive"
+              onClick={() => onReject(suggestion.id)}
+            >
+              <X size={10} /> Reject
+            </Button>
+            <Button
+              size="sm"
+              className="h-6 text-[10px] px-2 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={() => onAccept(suggestion.id)}
+            >
+              <Check size={10} /> Accept
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 /* ── Divider ── */
 const DocumentDivider = ({ doc }: { doc: EditorDocument }) => {
@@ -406,36 +499,95 @@ const SelectionToolbar = ({
   );
 };
 
-/* ── Floating comment bubble ── */
-const CommentBubble = ({ comment, count, onClick }: { comment: Comment; count: number; onClick: () => void }) => (
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        transition={{ duration: 0.15 }}
-        onClick={onClick}
-        className={cn(
-          "relative h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shadow-sm hover:shadow-md hover:scale-110 transition-all cursor-pointer",
-          comment.status === "resolved" && "opacity-40"
+/* ── Floating comment bubble (always visible) ── */
+const BUBBLE_STYLES: Record<AnnotationType, { borderClass: string; bgClass: string }> = {
+  comment: { borderClass: "border-border", bgClass: "bg-card" },
+  suggestion: { borderClass: "border-amber-200", bgClass: "bg-amber-50" },
+  ai_suggestion: { borderClass: "border-violet-200", bgClass: "bg-violet-50" },
+};
+
+const timeAgo = (d: Date) => {
+  const s = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (s < 60) return "now";
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
+};
+
+const CommentBubble = ({ comment, count, onClick }: { comment: Comment; count: number; onClick: () => void }) => {
+  const [expanded, setExpanded] = useState(false);
+  const style = BUBBLE_STYLES[comment.annotationType];
+  const isResolved = comment.status === "resolved";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 8 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 8 }}
+      transition={{ duration: 0.2 }}
+      onClick={onClick}
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
+      className={cn(
+        "cursor-pointer transition-all rounded-lg border shadow-sm overflow-hidden",
+        style.borderClass, style.bgClass,
+        isResolved && "opacity-40 border-l-emerald-500",
+        !isResolved && "border-l-[3px]",
+        comment.annotationType === "comment" && !isResolved && `border-l-[${comment.authorColor}]`,
+        comment.annotationType === "suggestion" && !isResolved && "border-l-amber-400",
+        comment.annotationType === "ai_suggestion" && !isResolved && "border-l-violet-400",
+      )}
+      style={{
+        maxWidth: 200,
+        ...(comment.annotationType === "comment" && !isResolved ? { borderLeftColor: comment.authorColor } : {}),
+      }}
+    >
+      <div className="px-2 py-1.5">
+        {/* Type label */}
+        {comment.annotationType !== "comment" && (
+          <div className="flex items-center gap-1 mb-0.5">
+            {comment.annotationType === "ai_suggestion" && <Sparkles size={9} className="text-violet-600" />}
+            {comment.annotationType === "suggestion" && <Pencil size={9} className="text-amber-600" />}
+            <span className={cn(
+              "text-[8px] font-medium uppercase",
+              comment.annotationType === "ai_suggestion" ? "text-violet-600" : "text-amber-600"
+            )}>
+              {comment.annotationType === "ai_suggestion" ? "AI" : "Suggestion"}
+            </span>
+          </div>
         )}
-        style={{ backgroundColor: comment.authorColor }}
-      >
-        {comment.authorInitials}
+
+        {/* Author + time */}
+        <div className="flex items-center gap-1">
+          <div
+            className="h-4 w-4 rounded-full flex items-center justify-center text-white text-[7px] font-semibold flex-shrink-0"
+            style={{ backgroundColor: comment.authorColor }}
+          >
+            {comment.authorInitials}
+          </div>
+          <span className="text-[10px] font-medium text-foreground truncate">{comment.author.split(" ")[0]}</span>
+          <span className="text-[10px] text-muted-foreground ml-auto">{timeAgo(comment.timestamp)}</span>
+        </div>
+
+        {/* Comment text */}
+        <p className={cn(
+          "text-[11px] text-foreground/80 mt-0.5 transition-all duration-200",
+          expanded ? "" : "line-clamp-2"
+        )}>
+          {comment.text}
+        </p>
+
+        {/* Reply count */}
+        {comment.replies.length > 0 && (
+          <p className="text-[10px] text-muted-foreground mt-0.5">{comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}</p>
+        )}
         {count > 1 && (
-          <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-foreground text-background text-[8px] flex items-center justify-center font-bold">
-            {count}
-          </span>
+          <p className="text-[10px] text-muted-foreground mt-0.5">+{count - 1} more</p>
         )}
-      </motion.button>
-    </TooltipTrigger>
-    <TooltipContent side="left" className="text-xs max-w-[200px]">
-      <p className="font-medium">{comment.author}</p>
-      <p className="text-muted-foreground line-clamp-2">{comment.text}</p>
-    </TooltipContent>
-  </Tooltip>
-);
+      </div>
+    </motion.div>
+  );
+};
 
 /* ── Field overlay component ── */
 const FieldOverlay = ({
@@ -596,10 +748,29 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
   const [showIndicator, setShowIndicator] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues } = useEditorContext();
+  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues, aiSuggestions, setAiSuggestions } = useEditorContext();
 
-  // Text selection toolbar state
   const [selectionToolbar, setSelectionToolbar] = useState<{ x: number; y: number; text: string } | null>(null);
+
+  const pendingSuggestions = aiSuggestions.filter(s => s.status === "pending");
+
+  const handleAcceptSuggestion = useCallback((id: string) => {
+    setAiSuggestions(prev => prev.map(s => s.id === id ? { ...s, status: "accepted" as const } : s));
+    toast.success("Suggestion accepted");
+  }, [setAiSuggestions]);
+
+  const handleRejectSuggestion = useCallback((id: string) => {
+    setAiSuggestions(prev => prev.map(s => s.id === id ? { ...s, status: "rejected" as const } : s));
+    toast.success("Suggestion rejected");
+  }, [setAiSuggestions]);
+
+  const scrollToNextSuggestion = useCallback(() => {
+    const pending = aiSuggestions.find(s => s.status === "pending");
+    if (pending) {
+      const el = document.querySelector(`[data-suggestion-id="${pending.id}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [aiSuggestions]);
 
   const removePlacedField = useCallback((id: string) => {
     setPlacedFields((prev) => prev.filter((f) => f.id !== id));
@@ -663,14 +834,12 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
       setSelectedFieldId(null);
       onFieldSelect?.(null);
     }
-    // Don't clear selection toolbar if there's an active text selection
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed) {
       setSelectionToolbar(null);
     }
   }, [selectedFieldId, setSelectedFieldId, onFieldSelect]);
 
-  // Text selection handler
   const handleMouseUp = useCallback(() => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed || !selection.toString().trim()) {
@@ -688,7 +857,6 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     }
   }, []);
 
-  // Handle comment from selection toolbar
   const handleSelectionComment = useCallback(() => {
     if (!selectionToolbar) return;
     setPendingCommentRef(selectionToolbar.text);
@@ -697,7 +865,6 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     onOpenComments?.();
   }, [selectionToolbar, setPendingCommentRef, onOpenComments]);
 
-  // Handle Ask AI from selection toolbar
   const handleSelectionAskAi = useCallback((question: string) => {
     if (!selectionToolbar) return;
     setPendingAiQuestion({ question, selectedText: selectionToolbar.text });
@@ -706,13 +873,11 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     onOpenAi?.();
   }, [selectionToolbar, setPendingAiQuestion, onOpenAi]);
 
-  // Handle clicking comment highlights in document
   const handleClickHighlight = useCallback((sectionRef: string) => {
     setPendingCommentRef(null);
     onOpenComments?.();
   }, [setPendingCommentRef, onOpenComments]);
 
-  // Dismiss selection toolbar on scroll/escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSelectionToolbar(null);
@@ -753,16 +918,13 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
 
   const activeDoc = MOCK_DOCUMENTS.find((d) => d.id === activeDocId) ?? null;
 
-  // Inline comments for margin display (only when comments panel is closed)
+  // Comments for margin bubbles (ALWAYS visible now)
   const inlineComments = comments.filter((c) => c.type === "inline");
-
-  // Group comments by sectionRef for bubble display
   const commentsBySection = inlineComments.reduce<Record<string, Comment[]>>((acc, c) => {
     (acc[c.sectionRef] = acc[c.sectionRef] || []).push(c);
     return acc;
   }, {});
 
-  // Measure positions of comment sections relative to document container
   const [sectionPositions, setSectionPositions] = useState<Record<string, number>>({});
   const doc1Ref = useRef<HTMLDivElement>(null);
 
@@ -786,6 +948,12 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     return () => clearInterval(timer);
   }, [comments]);
 
+  // Get AI suggestions per section for doc-1
+  const suggestionsBySection = aiSuggestions.reduce<Record<string, AiSuggestion[]>>((acc, s) => {
+    (acc[s.sectionRef] = acc[s.sectionRef] || []).push(s);
+    return acc;
+  }, {});
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {showToolbar && (
@@ -805,7 +973,6 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
       >
         <ScrollIndicator doc={showIndicator ? activeDoc : null} />
 
-        {/* Selection toolbar */}
         <AnimatePresence>
           {selectionToolbar && (
             <SelectionToolbar
@@ -836,7 +1003,27 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                   >
                     <div ref={doc.id === "doc-1" ? doc1Ref : undefined}>
                       {doc.id === "doc-1" ? (
-                        <Doc1Content comments={comments} onClickHighlight={handleClickHighlight} variableValues={variableValues} />
+                        <>
+                          <Doc1Content comments={comments} onClickHighlight={handleClickHighlight} variableValues={variableValues} />
+                          {/* AI Suggestion blocks after Section 2 */}
+                          {(suggestionsBySection["Section 2: Scope of Services"] || []).map(s => (
+                            <AiSuggestionBlock
+                              key={s.id}
+                              suggestion={s}
+                              onAccept={handleAcceptSuggestion}
+                              onReject={handleRejectSuggestion}
+                            />
+                          ))}
+                          {/* AI Suggestion blocks after Section 5 */}
+                          {(suggestionsBySection["Section 5: Termination"] || []).map(s => (
+                            <AiSuggestionBlock
+                              key={s.id}
+                              suggestion={s}
+                              onAccept={handleAcceptSuggestion}
+                              onReject={handleRejectSuggestion}
+                            />
+                          ))}
+                        </>
                       ) : doc.id === "doc-2" ? (
                         <Doc2Content />
                       ) : (
@@ -856,16 +1043,21 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                     ))}
                   </div>
 
-                  {/* Floating comment bubbles — aligned to actual text */}
-                  {doc.id === "doc-1" && !commentsPanelOpen && (
-                    <div className="absolute top-0 right-0 translate-x-[calc(100%+8px)] hidden xl:block" style={{ width: 36 }}>
+                  {/* Floating comment bubbles — ALWAYS visible */}
+                  {doc.id === "doc-1" && (
+                    <div className="absolute top-0 right-0 translate-x-[calc(100%+12px)] hidden xl:block" style={{ width: 210 }}>
                       <AnimatePresence>
                         {Object.entries(commentsBySection).map(([sectionRef, sectionComments]) => {
                           const yPos = sectionPositions[sectionRef];
                           if (yPos === undefined) return null;
                           const first = sectionComments[0];
                           return (
-                            <div key={sectionRef} style={{ position: "absolute", top: yPos }} className="flex items-center">
+                            <div key={sectionRef} style={{ position: "absolute", top: yPos }}>
+                              {/* Connector line */}
+                              <div
+                                className="absolute top-3 -left-3 w-3 h-px"
+                                style={{ backgroundColor: first.authorColor }}
+                              />
                               <CommentBubble
                                 comment={first}
                                 count={sectionComments.length}
@@ -881,6 +1073,20 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
               </div>
             );
           })}
+
+          {/* Pending suggestions counter */}
+          {pendingSuggestions.length > 0 && (
+            <div className="sticky bottom-4 flex justify-center pointer-events-none z-20">
+              <button
+                onClick={scrollToNextSuggestion}
+                className="pointer-events-auto bg-violet-100 text-violet-700 border border-violet-200 text-xs font-medium rounded-full px-3 py-1 shadow-sm hover:bg-violet-200 transition-colors flex items-center gap-1.5"
+              >
+                <Sparkles size={12} />
+                {pendingSuggestions.length} pending suggestion{pendingSuggestions.length !== 1 ? "s" : ""}
+              </button>
+            </div>
+          )}
+
           <div className="h-20" />
         </div>
       </div>
