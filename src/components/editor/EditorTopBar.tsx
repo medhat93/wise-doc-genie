@@ -9,7 +9,7 @@ import {
   UserAdd01Icon,
   Settings02Icon,
   MoreHorizontalIcon,
-  Tick01Icon,
+  
   SentIcon,
   PencilEdit01Icon,
 } from "@hugeicons/core-free-icons";
