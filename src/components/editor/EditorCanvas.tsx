@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare, Sparkles, ArrowRight, Check, Pencil } from "lucide-react";
+import { ZoomBar, SearchBar } from "./EditorZoomSearch";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
