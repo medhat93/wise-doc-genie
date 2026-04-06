@@ -214,7 +214,10 @@ const CreateDocument = () => {
   const isFollowUp = flowMode === "followup";
   const isRelated = !!relatedTo && !flowMode;
 
-  // Mock data for correction/followup locked documents
+  // Follow-up parent name
+  const followUpParentName = "Annual Review — Acme Corp";
+
+  // Mock data for correction locked documents (follow-up no longer uses locked docs)
   const lockedDocs: UploadedDocument[] = useMemo(() => {
     if (isCorrection) {
       return [
@@ -223,13 +226,8 @@ const CreateDocument = () => {
         { id: "locked-schedule", name: "Schedule A — Pricing", type: "application/pdf", progress: 100, status: "complete", pageCount: 2, documentType: "supplement", isLocked: true },
       ];
     }
-    if (isFollowUp) {
-      return [
-        { id: "locked-parent", name: "Annual Review — Acme Corp", type: "application/pdf", progress: 100, status: "complete", pageCount: 5, documentType: "primary", isLocked: true },
-      ];
-    }
     return [];
-  }, [isCorrection, isFollowUp]);
+  }, [isCorrection]);
 
   const [mobileQueueOpen, setMobileQueueOpen] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
@@ -311,7 +309,7 @@ const CreateDocument = () => {
       progress: 0,
       status: "uploading" as const,
       pageCount: Math.floor(Math.random() * 20) + 1,
-      documentType: "primary" as const,
+      documentType: isFollowUp ? ("supplement" as const) : ("primary" as const),
     }));
     setDocuments((prev) => [...prev, ...newDocs]);
     setQueueManuallyOpened(true);
@@ -974,6 +972,8 @@ const CreateDocument = () => {
                   mode={mode}
                   onEditDocuments={count > 0 ? () => navigate("/editor") : undefined}
                   lockedDocuments={lockedDocs}
+                  followUpParentName={isFollowUp ? followUpParentName : undefined}
+                  followUpChildType={isFollowUp ? followUpChildType : undefined}
                 />
               </motion.div>
             )}
@@ -992,6 +992,8 @@ const CreateDocument = () => {
                 isMobile
                 onEditDocuments={count > 0 ? () => navigate("/editor") : undefined}
                 lockedDocuments={lockedDocs}
+                followUpParentName={isFollowUp ? followUpParentName : undefined}
+                followUpChildType={isFollowUp ? followUpChildType : undefined}
               />
             </DrawerContent>
           </Drawer>

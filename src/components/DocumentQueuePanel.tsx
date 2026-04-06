@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Link as LinkIcon, X } from "lucide-react";
 import { UploadedDocument, DocumentType } from "@/types/document";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,8 @@ interface DocumentQueuePanelProps {
   isMobile?: boolean;
   onEditDocuments?: () => void;
   lockedDocuments?: UploadedDocument[];
+  followUpParentName?: string;
+  followUpChildType?: string;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -170,12 +173,14 @@ function SortableDocCard({
   onPreview,
   onToggleSupplement,
   onRotate,
+  followUpParentName,
 }: {
   doc: UploadedDocument;
   onRemove: (id: string) => void;
   onPreview: (doc: UploadedDocument) => void;
   onToggleSupplement: (id: string) => void;
   onRotate: (doc: UploadedDocument) => void;
+  followUpParentName?: string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: doc.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -265,6 +270,12 @@ function SortableDocCard({
                 <FilePlus size={9} />
                 Supplement
               </span>
+            )}
+            {/* Follow-up note */}
+            {followUpParentName && (
+              <p className="text-[10px] text-muted-foreground italic mt-1 truncate">
+                🔗 {isSupplement ? "Supplement" : "Follow-up"} to {followUpParentName}
+              </p>
             )}
           </div>
 
@@ -374,6 +385,8 @@ const DocumentQueuePanel = ({
   isMobile = false,
   onEditDocuments,
   lockedDocuments = [],
+  followUpParentName,
+  followUpChildType,
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
   const [rotateDoc, setRotateDoc] = useState<UploadedDocument | null>(null);
@@ -432,6 +445,24 @@ const DocumentQueuePanel = ({
   return (
     <div className={isMobile ? "flex flex-col" : "w-[260px] h-[calc(100vh-4rem)] flex flex-col border-l bg-sidebar"}>
       <div ref={scrollRef} className={`flex-1 overflow-y-auto p-3 scrollbar-thin ${isMobile ? "max-h-[50vh]" : ""}`}>
+        {/* Follow-up info banner */}
+        {followUpParentName && (
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-start gap-2 mb-3">
+            <LinkIcon size={16} className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                Follow-up to:{" "}
+                <button
+                  className="text-primary hover:underline"
+                  onClick={() => toast.info(`Opening ${followUpParentName}...`)}
+                >
+                  {followUpParentName}
+                </button>
+              </p>
+            </div>
+          </div>
+        )}
+
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-2">
             <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-6 flex flex-col items-center w-full">
@@ -505,6 +536,7 @@ const DocumentQueuePanel = ({
                         onPreview={setPreviewDoc}
                         onToggleSupplement={handleToggleSupplement}
                         onRotate={setRotateDoc}
+                        followUpParentName={followUpParentName}
                       />
                     </motion.div>
                   ))}
