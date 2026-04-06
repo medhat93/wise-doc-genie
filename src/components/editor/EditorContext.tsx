@@ -46,7 +46,7 @@ const MOCK_COMMENTS: Comment[] = [
     id: "c1", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5",
     text: "We need to revise the scope to include the additional deliverables discussed in yesterday's call",
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), sectionRef: "Section 2: Scope of Services",
-    status: "open", type: "inline",
+    status: "open", type: "inline", annotationType: "comment",
     replies: [{
       id: "r1", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626",
       text: "Agreed. I'll update the deliverables list.",
@@ -57,25 +57,33 @@ const MOCK_COMMENTS: Comment[] = [
     id: "c2", author: "Mohammed Al-Faisal", authorInitials: "MA", authorColor: "#059669",
     text: "Payment terms should be NET-30, not NET-60",
     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), sectionRef: "Section 3: Payment Terms",
-    status: "resolved", type: "inline", replies: [],
+    status: "resolved", type: "inline", annotationType: "comment", replies: [],
   },
   {
     id: "c3", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5",
     text: "Legal team to review this clause",
     timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), sectionRef: "Section 5: Termination",
-    status: "open", type: "inline", replies: [],
+    status: "open", type: "inline", annotationType: "comment", replies: [],
+  },
+  {
+    id: "s1", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626",
+    text: "Suggest changing 'thirty (30) days' to 'fifteen (15) days' for faster payment cycle",
+    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), sectionRef: "Section 3: Payment Terms",
+    status: "open", type: "inline", annotationType: "suggestion",
+    suggestedText: "Client shall pay within fifteen (15) days of the invoice date.",
+    replies: [],
   },
   {
     id: "g1", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5",
     text: "Let's finalize this before EOD Thursday",
     timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), sectionRef: "",
-    status: "open", type: "general", replies: [],
+    status: "open", type: "general", annotationType: "comment", replies: [],
   },
   {
     id: "g2", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626",
     text: "On it! Just waiting for legal's feedback on Section 5",
     timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), sectionRef: "",
-    status: "open", type: "general", replies: [],
+    status: "open", type: "general", annotationType: "comment", replies: [],
   },
 ];
 
