@@ -58,7 +58,7 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
   const rename: MenuItem = { label: 'Rename', icon: Pencil, onClick: onRename || (() => toast.success('Document renamed')) };
   const share: MenuItem = { label: 'Share', icon: Share2, onClick: () => toast.success('Share link copied') };
   const download: MenuItem = { label: 'Download', icon: Download, onClick: () => toast.success('Download started') };
-  const edit: MenuItem = { label: 'Edit', icon: Pencil, onClick: () => toast.info('Opening editor...') };
+  
   const correct: MenuItem = { label: 'Correct', icon: Edit, onClick: onCorrect };
   const updateExp: MenuItem = { label: 'Update expiration', icon: CalendarDays, onClick: () => toast.success('Expiration updated') };
   const markComplete: MenuItem = { label: 'Mark as complete', icon: CheckCircle, onClick: () => toast.success('Document marked as complete') };

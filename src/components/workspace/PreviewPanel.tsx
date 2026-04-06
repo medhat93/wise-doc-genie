@@ -338,6 +338,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => navigate(`/signing/${doc.id}`)}><PenTool size={12} /> Sign</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>
           {moreMenu}
         </>
       );
@@ -346,6 +347,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Reminder sent')}><Bell size={12} /> Remind</Button>
+          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>
           {moreMenu}
         </>
       );
