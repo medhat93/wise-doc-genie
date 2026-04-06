@@ -615,12 +615,7 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
         onOpenChange={setWarningOpen}
         participantIssues={participantIssues}
         onGoBack={() => setWarningOpen(false)}
-        onAddFields={(participantId) => {
-          setWarningOpen(false);
-          if (onOpenFieldsPanel) onOpenFieldsPanel(participantId);
-        }}
-        onContinue={(acks) => {
-          setDocumentAcknowledgments(acks);
+        onContinue={() => {
           setWarningOpen(false);
           setSendOpen(true);
         }}
