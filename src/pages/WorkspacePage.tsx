@@ -308,12 +308,8 @@ function WorkflowFilterPill() {
     </Popover>
   );
 }
-      { label: 'Legal Review', steps: ['Drafting', 'Paralegal Review', 'Senior Legal Review', 'Legal Director Approval'] },
-    ],
-  },
-  {
-    label: 'External Approval',
-    children: [
+
+
       { label: 'Executive Approval', steps: ['Drafting', 'Department Review', 'VP Approval', 'Legal Review', 'Executive Sign-off'] },
       { label: 'Procurement Approval', steps: ['Drafting', 'Budget Review', 'Procurement Review', 'CFO Approval'] },
     ],
