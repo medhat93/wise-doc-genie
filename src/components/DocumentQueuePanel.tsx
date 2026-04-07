@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Link as LinkIcon, X, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { UploadedDocument, DocumentType } from "@/types/document";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
