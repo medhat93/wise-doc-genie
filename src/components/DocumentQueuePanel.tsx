@@ -665,7 +665,7 @@ const DocumentQueuePanel = ({
                         onPreview={setPreviewDoc}
                         onToggleSupplement={handleToggleSupplement}
                         onRotate={setRotateDoc}
-                        followUpParentName={followUpParentName}
+                        followUpParentName={followUpParentName || (linkedDoc && doc.documentType === 'supplement' ? linkedDoc.name : undefined)}
                       />
                     </motion.div>
                   ))}
