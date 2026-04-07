@@ -310,24 +310,6 @@ function WorkflowFilterPill() {
 }
 
 
-      { label: 'Executive Approval', steps: ['Drafting', 'Department Review', 'VP Approval', 'Legal Review', 'Executive Sign-off'] },
-      { label: 'Procurement Approval', steps: ['Drafting', 'Budget Review', 'Procurement Review', 'CFO Approval'] },
-    ],
-  },
-];
-
-function WorkflowFilterPill() {
-  const [selected, setSelected] = useState<string[]>([]);
-  const [expandedWorkflow, setExpandedWorkflow] = useState<string | null>(null);
-
-  const toggleWorkflow = (label: string) => {
-    setSelected(prev => prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]);
-  };
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button className={cn(
           'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors',
           selected.length > 0
             ? 'border-primary text-primary bg-primary/5'
