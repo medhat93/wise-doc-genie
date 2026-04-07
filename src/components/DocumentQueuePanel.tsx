@@ -393,8 +393,20 @@ const DocumentQueuePanel = ({
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
   const [rotateDoc, setRotateDoc] = useState<UploadedDocument | null>(null);
+  const [linkSearch, setLinkSearch] = useState("");
+  const [linkedDoc, setLinkedDoc] = useState<{ name: string; status: string } | null>(null);
+  const [linkDismissed, setLinkDismissed] = useState(false);
+  const [showPrimaryConflict, setShowPrimaryConflict] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(documents.length);
+
+  const MOCK_PRIMARY_DOCS = [
+    { name: 'Master Services Agreement — Acme Corp', status: 'Completed', date: 'Mar 15, 2026' },
+    { name: 'Enterprise License Agreement — CloudVault', status: 'In Signing', date: 'Mar 28, 2026' },
+    { name: 'Annual Review — Acme Corp', status: 'Completed', date: 'Feb 10, 2026' },
+    { name: 'Consulting Agreement — Strategy Partners', status: 'Draft', date: 'Apr 1, 2026' },
+    { name: 'NDA — Stark Industries', status: 'In Signing', date: 'Mar 30, 2026' },
+  ];
 
   useEffect(() => {
     if (documents.length > prevCountRef.current && scrollRef.current) {
@@ -414,6 +426,15 @@ const DocumentQueuePanel = ({
   const count = allDocs.length;
   const primaryCount = allDocs.filter((d) => d.documentType === "primary").length;
   const supplementCount = allDocs.filter((d) => d.documentType === "supplement").length;
+  const allSupplementsOnly = documents.length > 0 && primaryCount === 0 && !followUpParentName;
+
+  const searchResults = useMemo(() => {
+    if (!linkSearch.trim()) return [];
+    const q = linkSearch.toLowerCase();
+    return MOCK_PRIMARY_DOCS.filter(d =>
+      d.name.toLowerCase().includes(q) && d.status !== 'Draft'
+    ).slice(0, 5);
+  }, [linkSearch]);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
