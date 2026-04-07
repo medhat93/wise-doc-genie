@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from "react";
-import { Link as LinkIcon, X } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Link as LinkIcon, X, Search } from "lucide-react";
 import { UploadedDocument, DocumentType } from "@/types/document";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +39,7 @@ import {
   CloudIcon,
   Edit02Icon,
   SentIcon,
+  Search01Icon,
 } from "@hugeicons/core-free-icons";
 import { FileText, FilePlus, RotateCw, Lock, MoreVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
