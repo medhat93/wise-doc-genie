@@ -469,6 +469,7 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
   const { participants, placedFields, setDocumentAcknowledgments } = useEditorContext();
   const isMobile = useIsMobile();
   const isSmall = typeof window !== "undefined" && window.innerWidth < 1024;
+  const [editingMode, setEditingMode] = useState<"editing" | "suggesting" | "viewing">("editing");
 
   const [title, setTitle] = useState("Untitled Document");
   const [editTitle, setEditTitle] = useState("");
