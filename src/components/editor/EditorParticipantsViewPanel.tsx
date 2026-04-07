@@ -32,6 +32,7 @@ import {
   Shield,
   GripVertical,
   Eye,
+  Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Participant, ParticipantRole, SendingMethod } from "./EditorParticipantsPanel";
@@ -153,7 +154,7 @@ const EditorParticipantsViewPanel = () => {
     const isApprover = p.role === "approver";
 
     return (
-      <div key={p.id} className="border rounded-lg p-2.5 space-y-1.5 hover:bg-muted/30 transition-colors">
+      <div key={p.id} className="border rounded-lg p-2.5 space-y-1.5 hover:bg-muted/30 transition-colors group/card">
         {/* Row 1: Name + order controls + actions */}
         <div className="flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
@@ -232,6 +233,21 @@ const EditorParticipantsViewPanel = () => {
                 </Popover>
               );
             })()}
+            {(isSigner || isApprover) && (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity text-muted-foreground hover:text-amber-600"
+                    onClick={() => toast.success(`Reminder sent to ${p.name}`)}
+                  >
+                    <Bell size={13} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">Send reminder</TooltipContent>
+              </Tooltip>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
