@@ -14,6 +14,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Tooltip,
@@ -59,9 +69,10 @@ import {
   Hash,
   TableOfContents,
   PanelTop,
-  Footprints,
   Omega,
-  ChevronDown,
+  MoreHorizontal,
+  MessageSquare,
+  GitCompareArrows,
 } from "lucide-react";
 import EditorDocumentsPopover, { type EditorDocument } from "./EditorDocumentsPopover";
 
@@ -259,40 +270,6 @@ const LinkInsertBtn = () => (
   </Popover>
 );
 
-/* ── Clause numbering popover ── */
-const ClauseNumberingBtn = () => {
-  const [style, setStyle] = useState<string | null>(null);
-  const options = [
-    { id: "decimal", label: "1. / 1.1 / 1.1.1", description: "Decimal hierarchical" },
-    { id: "roman", label: "I. / A. / 1.", description: "Roman + Alpha + Numeric" },
-    { id: "legal", label: "Article I / Section 1 / (a)", description: "Formal legal style" },
-    { id: "none", label: "None", description: "Remove numbering" },
-  ];
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <span><TBtn icon={ListTree} label="Clause numbering" active={!!style && style !== "none"} /></span>
-      </PopoverTrigger>
-      <PopoverContent className="w-56 p-1" align="start">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-1 pb-1">Numbering style</p>
-        {options.map(o => (
-          <button
-            key={o.id}
-            className={cn(
-              "w-full text-left px-3 py-2 rounded hover:bg-accent transition-colors",
-              style === o.id && "bg-primary/10 text-primary"
-            )}
-            onClick={() => { setStyle(o.id); toast(`Applied: ${o.label}`); }}
-          >
-            <span className="text-sm font-medium block">{o.label}</span>
-            <span className="text-[10px] text-muted-foreground">{o.description}</span>
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
-  );
-};
-
 /* ── Content Library popover ── */
 const CONTENT_BLOCKS = [
   { id: "1", title: "Standard Confidentiality Clause", category: "Standard clauses", preview: "The receiving party agrees to maintain strict confidentiality of all proprietary information..." },
@@ -313,7 +290,7 @@ const ContentLibraryBtn = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <span><TBtn icon={BookOpen} label="Insert from content library" /></span>
+        <span><TBtn icon={BookOpen} label="Content library" /></span>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0" align="start" side="bottom">
         <div className="p-2 border-b">
@@ -351,102 +328,13 @@ const ContentLibraryBtn = () => {
 
 /* ── Special Characters popover ── */
 const SPECIAL_CHARS = [
-  { char: "§", name: "Section" },
-  { char: "¶", name: "Paragraph" },
-  { char: "©", name: "Copyright" },
-  { char: "®", name: "Registered" },
-  { char: "™", name: "Trademark" },
-  { char: "†", name: "Dagger" },
-  { char: "‡", name: "Double dagger" },
-  { char: "•", name: "Bullet" },
-  { char: "—", name: "Em dash" },
-  { char: "–", name: "En dash" },
-  { char: "…", name: "Ellipsis" },
-  { char: "«»", name: "Guillemets" },
+  { char: "§", name: "Section" }, { char: "¶", name: "Paragraph" },
+  { char: "©", name: "Copyright" }, { char: "®", name: "Registered" },
+  { char: "™", name: "Trademark" }, { char: "†", name: "Dagger" },
+  { char: "‡", name: "Double dagger" }, { char: "•", name: "Bullet" },
+  { char: "—", name: "Em dash" }, { char: "–", name: "En dash" },
+  { char: "…", name: "Ellipsis" }, { char: "«»", name: "Guillemets" },
 ];
-
-const SpecialCharsBtn = () => (
-  <Popover>
-    <PopoverTrigger asChild>
-      <span><TBtn icon={Omega} label="Insert special character" /></span>
-    </PopoverTrigger>
-    <PopoverContent className="w-auto p-2" align="start">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Special characters</p>
-      <div className="grid grid-cols-6 gap-1">
-        {SPECIAL_CHARS.map(sc => (
-          <Tooltip key={sc.char} delayDuration={200}>
-            <TooltipTrigger asChild>
-              <button
-                className="h-8 w-8 flex items-center justify-center rounded border text-sm hover:bg-muted transition-colors font-mono"
-                onClick={() => toast(`Inserted ${sc.name}: ${sc.char}`)}
-              >
-                {sc.char}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">{sc.name}</TooltipContent>
-          </Tooltip>
-        ))}
-      </div>
-    </PopoverContent>
-  </Popover>
-);
-
-/* ── Word count popover ── */
-const WordCountBtn = () => (
-  <Popover>
-    <PopoverTrigger asChild>
-      <span><TBtn icon={Hash} label="Word count" /></span>
-    </PopoverTrigger>
-    <PopoverContent className="w-52 p-3" align="start">
-      <p className="text-xs font-semibold mb-2">Word count</p>
-      <div className="space-y-1.5">
-        {[
-          { label: "Words", value: "2,847" },
-          { label: "Characters", value: "16,203" },
-          { label: "Characters (no spaces)", value: "13,891" },
-          { label: "Paragraphs", value: "42" },
-          { label: "Pages", value: "~5" },
-        ].map(row => (
-          <div key={row.label} className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">{row.label}</span>
-            <span className="font-medium font-mono">{row.value}</span>
-          </div>
-        ))}
-      </div>
-    </PopoverContent>
-  </Popover>
-);
-
-/* ── Header/Footer popover ── */
-const HeaderFooterBtn = () => (
-  <Popover>
-    <PopoverTrigger asChild>
-      <span><TBtn icon={PanelTop} label="Headers & footers" /></span>
-    </PopoverTrigger>
-    <PopoverContent className="w-52 p-1" align="start">
-      <button className="w-full text-left text-sm px-3 py-2 rounded hover:bg-accent" onClick={() => toast("Edit header — scroll to top")}>
-        Edit header
-      </button>
-      <button className="w-full text-left text-sm px-3 py-2 rounded hover:bg-accent" onClick={() => toast("Edit footer — scroll to bottom")}>
-        Edit footer
-      </button>
-      <Separator className="my-1" />
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-1 pb-1">Page numbers</p>
-      {["Top right", "Bottom center", "Bottom right"].map(pos => (
-        <button key={pos} className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent text-muted-foreground" onClick={() => toast(`Page numbers: ${pos}`)}>
-          {pos}
-        </button>
-      ))}
-      <Separator className="my-1" />
-      <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent text-muted-foreground" onClick={() => toast("Document ID added to footer")}>
-        Document ID in footer
-      </button>
-      <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent text-muted-foreground" onClick={() => toast("Different first page enabled")}>
-        Different first page
-      </button>
-    </PopoverContent>
-  </Popover>
-);
 
 /* ── Find & Replace bar ── */
 const FindReplaceBar = ({
@@ -479,16 +367,15 @@ interface EditorToolbarProps {
   documents: EditorDocument[];
   activeDocId: string | null;
   onScrollToDoc: (id: string) => void;
+  onOpenComments?: () => void;
 }
 
-const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarProps) => {
+const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments }: EditorToolbarProps) => {
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     bold: false,
     italic: false,
     underline: false,
     strikethrough: false,
-    subscript: false,
-    superscript: false,
     bulletList: false,
     numberedList: false,
     checklist: false,
@@ -499,7 +386,7 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
     spellCheck: false,
     ltr: true,
     rtl: false,
-    paintFormat: false,
+    trackChanges: false,
   });
 
   const [font, setFont] = useState("Inter");
@@ -527,13 +414,6 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
       rtl: key === "rtl",
     }));
 
-  const handlePaintFormat = () => {
-    toggle("paintFormat");
-    if (!toggles.paintFormat) {
-      toast("Paint format: click text to apply formatting");
-    }
-  };
-
   return (
     <div className="relative flex-shrink-0">
       <div
@@ -548,19 +428,12 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
         />
         <Sep />
 
-        {/* G1: History & Clipboard */}
+        {/* G1: Undo / Redo */}
         <TBtn icon={Undo2} label="Undo (⌘Z)" />
         <TBtn icon={Redo2} label="Redo (⌘⇧Z)" />
-        <TBtn
-          icon={Paintbrush}
-          label="Paint format"
-          active={toggles.paintFormat}
-          onClick={handlePaintFormat}
-          onDoubleClick={() => { setToggles(p => ({ ...p, paintFormat: true })); toast("Paint format locked — press Escape to exit"); }}
-        />
         <Sep />
 
-        {/* G2: Text Style */}
+        {/* G2: Font */}
         <Select value={font} onValueChange={setFont}>
           <SelectTrigger className="h-7 w-[120px] text-xs border-input flex-shrink-0">
             <SelectValue />
@@ -587,14 +460,11 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
         <TBtn icon={Plus} label="Increase font size" onClick={() => setFontSize((p) => String(Math.min(72, Number(p) + 1)))} />
         <Sep />
 
-        {/* G3: Formatting */}
+        {/* G3: Core formatting */}
         <TBtn icon={Bold} label="Bold (⌘B)" active={toggles.bold} onClick={() => toggle("bold")} />
         <TBtn icon={Italic} label="Italic (⌘I)" active={toggles.italic} onClick={() => toggle("italic")} />
         <TBtn icon={Underline} label="Underline (⌘U)" active={toggles.underline} onClick={() => toggle("underline")} />
         <TBtn icon={Strikethrough} label="Strikethrough (⌘⇧X)" active={toggles.strikethrough} onClick={() => toggle("strikethrough")} />
-        <TBtn icon={Subscript} label="Subscript" active={toggles.subscript} onClick={() => toggle("subscript")} />
-        <TBtn icon={Superscript} label="Superscript" active={toggles.superscript} onClick={() => toggle("superscript")} />
-        <TBtn icon={Eraser} label="Clear formatting (⌘\)" onClick={() => toast("Formatting cleared")} />
         <Sep />
 
         {/* G4: Color */}
@@ -602,7 +472,7 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
         <ColorPickerBtn icon={Highlighter} label="Highlight color" defaultColor="#FFFF00" />
         <Sep />
 
-        {/* G5: Paragraph */}
+        {/* G5: Paragraph style & lists */}
         <Select value={heading} onValueChange={setHeading}>
           <SelectTrigger className="h-7 w-[96px] text-xs border-input flex-shrink-0">
             <SelectValue />
@@ -624,8 +494,6 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
 
         <TBtn icon={List} label="Bullet list (⌘⇧8)" active={toggles.bulletList} onClick={() => toggle("bulletList")} />
         <TBtn icon={ListOrdered} label="Numbered list (⌘⇧7)" active={toggles.numberedList} onClick={() => toggle("numberedList")} />
-        <TBtn icon={ListChecks} label="Checklist" active={toggles.checklist} onClick={() => toggle("checklist")} />
-        <ClauseNumberingBtn />
         <TBtn icon={IndentDecrease} label="Decrease indent (⌘[)" />
         <TBtn icon={IndentIncrease} label="Increase indent (⌘])" />
         <Sep />
@@ -637,27 +505,28 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
         <TBtn icon={AlignJustify} label="Justify (⌘⇧J)" active={toggles.justify} onClick={() => setAlignment("justify")} />
         <Sep />
 
-        {/* G7: Line spacing */}
-        <LineSpacingBtn />
-        <Sep />
-
-        {/* G8: Insert */}
+        {/* G7: Insert essentials */}
         <TableGridSelector />
         <TBtn icon={Image} label="Insert image" onClick={() => toast("Select an image to insert")} />
         <LinkInsertBtn />
-        <TBtn icon={MinusSquare} label="Horizontal rule" onClick={() => toast("Horizontal rule inserted")} />
-        <TBtn icon={SeparatorHorizontal} label="Page break" onClick={() => toast("Page break inserted")} />
-        <TBtn icon={TableOfContents} label="Insert table of contents" onClick={() => toast("Table of contents inserted")} />
-        <HeaderFooterBtn />
-        <TBtn icon={Superscript} label="Insert footnote (⌘⌥F)" onClick={() => toast("Footnote inserted")} className="text-[10px]" />
         <ContentLibraryBtn />
-        <SpecialCharsBtn />
         <Sep />
 
-        {/* G9: Tools */}
+        {/* G8: Comment & Track Changes */}
+        <TBtn icon={MessageSquare} label="Add comment" onClick={() => { onOpenComments?.(); toast("Click on text to add a comment"); }} />
+        <TBtn
+          icon={GitCompareArrows}
+          label="Track changes"
+          active={toggles.trackChanges}
+          onClick={() => {
+            toggle("trackChanges");
+            toast(toggles.trackChanges ? "Track changes off" : "Track changes on — edits will be tracked");
+          }}
+        />
+        <Sep />
+
+        {/* G9: Find */}
         <TBtn icon={Search} label="Find & Replace (⌘F)" active={findOpen} onClick={() => setFindOpen(!findOpen)} />
-        <TBtn icon={SpellCheck} label="Spell check" active={toggles.spellCheck} onClick={() => toggle("spellCheck")} />
-        <WordCountBtn />
         <Sep />
 
         {/* G10: Direction */}
@@ -689,6 +558,172 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Right to left</TooltipContent>
         </Tooltip>
+        <Sep />
+
+        {/* G11: More tools (overflow menu) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="h-7 w-7 flex items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0">
+              <MoreHorizontal size={14} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {/* Formatting extras */}
+            <DropdownMenuItem onClick={() => toast("Formatting cleared")}>
+              <Eraser size={14} className="mr-2" />
+              Clear formatting
+              <span className="ml-auto text-[10px] text-muted-foreground">⌘\</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toast("Subscript toggled")}>
+              <Subscript size={14} className="mr-2" />
+              Subscript
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toast("Superscript toggled")}>
+              <Superscript size={14} className="mr-2" />
+              Superscript
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toast("Paint format: click text to apply")}>
+              <Paintbrush size={14} className="mr-2" />
+              Paint format
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+
+            {/* List extras */}
+            <DropdownMenuItem onClick={() => toggle("checklist")}>
+              <ListChecks size={14} className="mr-2" />
+              Checklist
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <ListTree size={14} className="mr-2" />
+                Clause numbering
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-52">
+                <DropdownMenuItem onClick={() => toast("Applied: 1. / 1.1 / 1.1.1")}>
+                  <span className="text-xs">1. / 1.1 / 1.1.1 — Decimal</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast("Applied: I. / A. / 1.")}>
+                  <span className="text-xs">I. / A. / 1. — Roman</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast("Applied: Article I / Section 1")}>
+                  <span className="text-xs">Article I / Section 1 / (a) — Legal</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => toast("Numbering removed")}>
+                  <span className="text-xs">None</span>
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+
+            {/* Insert extras */}
+            <DropdownMenuItem onClick={() => toast("Horizontal rule inserted")}>
+              <MinusSquare size={14} className="mr-2" />
+              Horizontal rule
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toast("Page break inserted")}>
+              <SeparatorHorizontal size={14} className="mr-2" />
+              Page break
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toast("Table of contents inserted")}>
+              <TableOfContents size={14} className="mr-2" />
+              Table of contents
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toast("Footnote inserted")}>
+              <Superscript size={14} className="mr-2" />
+              Footnote
+              <span className="ml-auto text-[10px] text-muted-foreground">⌘⌥F</span>
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <PanelTop size={14} className="mr-2" />
+                Headers & footers
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-48">
+                <DropdownMenuItem onClick={() => toast("Edit header")}>Edit header</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast("Edit footer")}>Edit footer</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => toast("Page numbers: Top right")}>Page numbers — Top right</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast("Page numbers: Bottom center")}>Page numbers — Bottom center</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast("Page numbers: Bottom right")}>Page numbers — Bottom right</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => toast("Document ID in footer")}>Document ID in footer</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Omega size={14} className="mr-2" />
+                Special characters
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-auto p-2">
+                <div className="grid grid-cols-6 gap-1">
+                  {SPECIAL_CHARS.map(sc => (
+                    <button
+                      key={sc.char}
+                      className="h-8 w-8 flex items-center justify-center rounded border text-sm hover:bg-muted transition-colors font-mono"
+                      onClick={() => toast(`Inserted: ${sc.char}`)}
+                      title={sc.name}
+                    >
+                      {sc.char}
+                    </button>
+                  ))}
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+
+            {/* Tools */}
+            <DropdownMenuItem onClick={() => toggle("spellCheck")}>
+              <SpellCheck size={14} className="mr-2" />
+              Spell check
+              {toggles.spellCheck && <span className="ml-auto text-primary text-xs">✓</span>}
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Hash size={14} className="mr-2" />
+                Word count
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-48 p-3">
+                <div className="space-y-1.5">
+                  {[
+                    { label: "Words", value: "2,847" },
+                    { label: "Characters", value: "16,203" },
+                    { label: "Paragraphs", value: "42" },
+                    { label: "Pages", value: "~5" },
+                  ].map(row => (
+                    <div key={row.label} className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">{row.label}</span>
+                      <span className="font-medium font-mono">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+
+            {/* Spacing */}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Pilcrow size={14} className="mr-2" />
+                Line & paragraph spacing
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-48 p-1">
+                {["1.0", "1.15", "1.5", "2.0"].map(s => (
+                  <DropdownMenuItem key={s} onClick={() => toast(`Line spacing: ${s}`)}>
+                    <span className="text-xs">{s}</span>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => toast("Space before paragraph toggled")}>
+                  <span className="text-xs">Add space before paragraph</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast("Space after paragraph toggled")}>
+                  <span className="text-xs">Add space after paragraph</span>
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <FindReplaceBar open={findOpen} onClose={() => setFindOpen(false)} />
