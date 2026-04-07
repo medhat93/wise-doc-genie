@@ -25,7 +25,7 @@ interface EditorZoomSearchProps {
 
 /* ── Zoom bar (bottom-right floating) ── */
 export const ZoomBar = ({ zoom, onZoomChange, onSearchToggle }: EditorZoomSearchProps) => (
-  <div className="absolute bottom-4 right-4 z-30 flex items-center gap-1 bg-card border rounded-lg shadow-sm px-2 py-1">
+  <div className="absolute bottom-4 left-4 z-30 flex items-center gap-1 bg-card border rounded-lg shadow-sm px-2 py-1">
     <Tooltip>
       <TooltipTrigger asChild>
         <button
