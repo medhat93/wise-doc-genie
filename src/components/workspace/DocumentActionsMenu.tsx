@@ -12,7 +12,7 @@ import {
 import {
   Download, Pencil, Share2, Tag, Copy, Users,
   Bell, CalendarDays, CheckCircle, Edit, XCircle, ArrowRight, Lock,
-  FileSearch, Trash2, MoreHorizontal, Link as LinkIcon,
+  FileSearch, Trash2, MoreVertical, Link as LinkIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CorrectionDialog from './CorrectionDialog';
@@ -127,7 +127,7 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
         <DropdownMenuTrigger asChild>
           {trigger || (
             <Button variant="ghost" className="h-7 w-7 p-0">
-              <MoreHorizontal size={14} />
+              <MoreVertical size={14} />
             </Button>
           )}
         </DropdownMenuTrigger>

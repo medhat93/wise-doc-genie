@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import {
-  LayoutGrid, Share2, Send, Trash2, Clock, Plus, ChevronDown, MoreHorizontal
+  LayoutGrid, Share2, Send, Trash2, Clock, Plus, ChevronDown, MoreVertical
 } from 'lucide-react';
 import { SidebarView, QuickLink } from '@/types/workspace';
 
@@ -125,7 +125,7 @@ export default function DocumentSidebar({
           <div className="space-y-0.5">
             <div className="flex items-center justify-between w-full rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-muted group cursor-pointer">
               <span>Custom demo</span>
-              <MoreHorizontal size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+              <MoreVertical size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
             </div>
           </div>
         </div>
