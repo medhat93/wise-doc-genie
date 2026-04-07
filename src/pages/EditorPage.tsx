@@ -140,7 +140,7 @@ const EditorPageInner = () => {
         />
       )}
 
-      <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} />
+      <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} onOpenVersionHistory={() => setVersionHistoryOpen(true)} />
 
       <div className="flex flex-1 overflow-hidden">
 
@@ -150,8 +150,14 @@ const EditorPageInner = () => {
           onFieldSelect={handleFieldSelect}
           onOpenComments={handleOpenComments}
           onOpenAi={handleOpenAi}
+          onOpenVersionHistory={() => setVersionHistoryOpen(true)}
           isEsign={isEsign}
         />
+
+      <VersionHistoryOverlay
+        open={versionHistoryOpen}
+        onClose={() => setVersionHistoryOpen(false)}
+      />
 
         {/* Desktop panel */}
         {!isMobile && (
