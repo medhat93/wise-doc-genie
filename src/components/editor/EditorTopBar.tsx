@@ -8,7 +8,7 @@ import {
   Cancel01Icon,
   UserAdd01Icon,
   Settings02Icon,
-  MoreHorizontalIcon,
+  MoreVerticalIcon,
   SentIcon,
   PencilEdit01Icon,
   Share01Icon,
@@ -652,7 +652,7 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
-                <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
+                <HugeiconsIcon icon={MoreVerticalIcon} size={16} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
