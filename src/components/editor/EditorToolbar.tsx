@@ -560,171 +560,131 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments }
         </Tooltip>
         <Sep />
 
-        {/* G11: More tools (overflow menu) */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="h-7 w-7 flex items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0">
-              <MoreHorizontal size={14} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            {/* Formatting extras */}
-            <DropdownMenuItem onClick={() => toast("Formatting cleared")}>
-              <Eraser size={14} className="mr-2" />
-              Clear formatting
-              <span className="ml-auto text-[10px] text-muted-foreground">⌘\</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toast("Subscript toggled")}>
-              <Subscript size={14} className="mr-2" />
-              Subscript
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toast("Superscript toggled")}>
-              <Superscript size={14} className="mr-2" />
-              Superscript
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toast("Paint format: click text to apply")}>
-              <Paintbrush size={14} className="mr-2" />
-              Paint format
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-
-            {/* List extras */}
-            <DropdownMenuItem onClick={() => toggle("checklist")}>
-              <ListChecks size={14} className="mr-2" />
-              Checklist
-            </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <ListTree size={14} className="mr-2" />
-                Clause numbering
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-52">
-                <DropdownMenuItem onClick={() => toast("Applied: 1. / 1.1 / 1.1.1")}>
-                  <span className="text-xs">1. / 1.1 / 1.1.1 — Decimal</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast("Applied: I. / A. / 1.")}>
-                  <span className="text-xs">I. / A. / 1. — Roman</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast("Applied: Article I / Section 1")}>
-                  <span className="text-xs">Article I / Section 1 / (a) — Legal</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => toast("Numbering removed")}>
-                  <span className="text-xs">None</span>
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSeparator />
-
-            {/* Insert extras */}
-            <DropdownMenuItem onClick={() => toast("Horizontal rule inserted")}>
-              <MinusSquare size={14} className="mr-2" />
-              Horizontal rule
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toast("Page break inserted")}>
-              <SeparatorHorizontal size={14} className="mr-2" />
-              Page break
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toast("Table of contents inserted")}>
-              <TableOfContents size={14} className="mr-2" />
-              Table of contents
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toast("Footnote inserted")}>
-              <Superscript size={14} className="mr-2" />
-              Footnote
-              <span className="ml-auto text-[10px] text-muted-foreground">⌘⌥F</span>
-            </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <PanelTop size={14} className="mr-2" />
-                Headers & footers
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-48">
-                <DropdownMenuItem onClick={() => toast("Edit header")}>Edit header</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast("Edit footer")}>Edit footer</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => toast("Page numbers: Top right")}>Page numbers — Top right</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast("Page numbers: Bottom center")}>Page numbers — Bottom center</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast("Page numbers: Bottom right")}>Page numbers — Bottom right</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => toast("Document ID in footer")}>Document ID in footer</DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Omega size={14} className="mr-2" />
-                Special characters
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-auto p-2">
-                <div className="grid grid-cols-6 gap-1">
-                  {SPECIAL_CHARS.map(sc => (
-                    <button
-                      key={sc.char}
-                      className="h-8 w-8 flex items-center justify-center rounded border text-sm hover:bg-muted transition-colors font-mono"
-                      onClick={() => toast(`Inserted: ${sc.char}`)}
-                      title={sc.name}
-                    >
-                      {sc.char}
-                    </button>
-                  ))}
-                </div>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSeparator />
-
-            {/* Tools */}
-            <DropdownMenuItem onClick={() => toggle("spellCheck")}>
-              <SpellCheck size={14} className="mr-2" />
-              Spell check
-              {toggles.spellCheck && <span className="ml-auto text-primary text-xs">✓</span>}
-            </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Hash size={14} className="mr-2" />
-                Word count
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-48 p-3">
-                <div className="space-y-1.5">
-                  {[
-                    { label: "Words", value: "2,847" },
-                    { label: "Characters", value: "16,203" },
-                    { label: "Paragraphs", value: "42" },
-                    { label: "Pages", value: "~5" },
-                  ].map(row => (
-                    <div key={row.label} className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">{row.label}</span>
-                      <span className="font-medium font-mono">{row.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSeparator />
-
-            {/* Spacing */}
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Pilcrow size={14} className="mr-2" />
-                Line & paragraph spacing
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-48 p-1">
-                {["1.0", "1.15", "1.5", "2.0"].map(s => (
-                  <DropdownMenuItem key={s} onClick={() => toast(`Line spacing: ${s}`)}>
-                    <span className="text-xs">{s}</span>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => toast("Space before paragraph toggled")}>
-                  <span className="text-xs">Add space before paragraph</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast("Space after paragraph toggled")}>
-                  <span className="text-xs">Add space after paragraph</span>
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* G11: More tools toggle */}
+        <TBtn
+          icon={MoreHorizontal}
+          label="More tools"
+          active={moreOpen}
+          onClick={() => setMoreOpen(prev => !prev)}
+        />
       </div>
+
+      {/* Secondary toolbar row (Google Docs style) */}
+      <AnimatePresence>
+        {moreOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden border-b bg-card"
+          >
+            <div className="h-10 flex items-center px-3 gap-0.5 overflow-x-auto scrollbar-none">
+              {/* Formatting extras */}
+              <TBtn icon={Eraser} label="Clear formatting (⌘\)" onClick={() => toast("Formatting cleared")} />
+              <TBtn icon={Subscript} label="Subscript" onClick={() => toast("Subscript toggled")} />
+              <TBtn icon={Superscript} label="Superscript" onClick={() => toast("Superscript toggled")} />
+              <TBtn icon={Paintbrush} label="Paint format" onClick={() => toast("Paint format: click text to apply")} />
+              <Sep />
+
+              {/* Lists */}
+              <TBtn icon={ListChecks} label="Checklist" active={toggles.checklist} onClick={() => toggle("checklist")} />
+
+              {/* Clause numbering */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <span><TBtn icon={ListTree} label="Clause numbering" /></span>
+                </PopoverTrigger>
+                <PopoverContent className="w-52 p-1" align="start">
+                  <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent" onClick={() => toast("Applied: 1. / 1.1 / 1.1.1")}>1. / 1.1 / 1.1.1 — Decimal</button>
+                  <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent" onClick={() => toast("Applied: I. / A. / 1.")}>I. / A. / 1. — Roman</button>
+                  <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent" onClick={() => toast("Applied: Article I / Section 1")}>Article I / Section 1 / (a) — Legal</button>
+                  <Separator className="my-1" />
+                  <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent text-muted-foreground" onClick={() => toast("Numbering removed")}>None</button>
+                </PopoverContent>
+              </Popover>
+              <Sep />
+
+              {/* Insert */}
+              <TBtn icon={MinusSquare} label="Horizontal rule" onClick={() => toast("Horizontal rule inserted")} />
+              <TBtn icon={SeparatorHorizontal} label="Page break" onClick={() => toast("Page break inserted")} />
+              <TBtn icon={TableOfContents} label="Table of contents" onClick={() => toast("Table of contents inserted")} />
+
+              {/* Footnote */}
+              <TBtn icon={Superscript} label="Footnote (⌘⌥F)" onClick={() => toast("Footnote inserted")} />
+
+              {/* Headers & footers */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <span><TBtn icon={PanelTop} label="Headers & footers" /></span>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-1" align="start">
+                  <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent" onClick={() => toast("Edit header")}>Edit header</button>
+                  <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent" onClick={() => toast("Edit footer")}>Edit footer</button>
+                  <Separator className="my-1" />
+                  <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent" onClick={() => toast("Page numbers: Top right")}>Page numbers — Top right</button>
+                  <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent" onClick={() => toast("Page numbers: Bottom center")}>Page numbers — Bottom center</button>
+                  <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent" onClick={() => toast("Page numbers: Bottom right")}>Page numbers — Bottom right</button>
+                  <Separator className="my-1" />
+                  <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent" onClick={() => toast("Document ID in footer")}>Document ID in footer</button>
+                </PopoverContent>
+              </Popover>
+
+              {/* Special characters */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <span><TBtn icon={Omega} label="Special characters" /></span>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2" align="start">
+                  <div className="grid grid-cols-6 gap-1">
+                    {SPECIAL_CHARS.map(sc => (
+                      <button
+                        key={sc.char}
+                        className="h-8 w-8 flex items-center justify-center rounded border border-border text-sm hover:bg-muted transition-colors font-mono"
+                        onClick={() => toast(`Inserted: ${sc.char}`)}
+                        title={sc.name}
+                      >
+                        {sc.char}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Sep />
+
+              {/* Tools */}
+              <TBtn icon={SpellCheck} label="Spell check" active={toggles.spellCheck} onClick={() => toggle("spellCheck")} />
+
+              {/* Word count */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <span><TBtn icon={Hash} label="Word count" /></span>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-3" align="start">
+                  <div className="space-y-1.5">
+                    {[
+                      { label: "Words", value: "2,847" },
+                      { label: "Characters", value: "16,203" },
+                      { label: "Paragraphs", value: "42" },
+                      { label: "Pages", value: "~5" },
+                    ].map(row => (
+                      <div key={row.label} className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{row.label}</span>
+                        <span className="font-medium font-mono">{row.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <LineSpacingBtn />
+              <Sep />
+
+              <TBtn icon={Pilcrow} label="Show formatting marks" onClick={() => toast("Formatting marks toggled")} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <FindReplaceBar open={findOpen} onClose={() => setFindOpen(false)} />
     </div>
