@@ -150,7 +150,7 @@ const FILTER_OPTIONS: { value: FilterType; label: string }[] = [
 /* ══════════ MAIN ══════════ */
 const EditorCommentsPanel = () => {
   const { comments, setComments, pendingCommentRef, setPendingCommentRef } = useEditorContext();
-  const [tab, setTab] = useState<"inline" | "general">("inline");
+  const [tab, setTab] = useState<"inline" | "general">("general");
   const [filter, setFilter] = useState<FilterType>("all");
   const [inputValue, setInputValue] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -258,16 +258,16 @@ const EditorCommentsPanel = () => {
     <div className="flex flex-col h-full -m-4">
       {/* Tabs */}
       <div className="flex border-b px-4 flex-shrink-0">
-        {(["inline", "general"] as const).map((t) => (
+        {(["general", "inline"] as const).map((t) => (
           <button
             key={t}
             onClick={() => { setTab(t); setReplyingTo(null); setPendingCommentRef(null); }}
             className={cn(
-              "px-3 py-2 text-sm font-medium border-b-2 transition-colors capitalize",
+              "px-3 py-2 text-sm font-medium border-b-2 transition-colors",
               tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            {t === "inline" ? "Inline" : "General"}
+            {t === "general" ? "Chat" : "Comments"}
           </button>
         ))}
       </div>

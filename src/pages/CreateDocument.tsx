@@ -719,7 +719,7 @@ const CreateDocument = () => {
               className={isEmpty || !allComplete ? "opacity-50" : ""}
               onClick={() => setParticipantsOpen(true)}
             >
-              <span className="hidden sm:inline">Next: Add Participants</span>
+              <span className="hidden sm:inline">Next: Prepare document →</span>
               <span className="sm:hidden">Next</span>
               <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="ml-1" />
             </Button>

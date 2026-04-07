@@ -18,7 +18,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon } from "@hugeicons/core-free-icons";
+import { SentIcon, Settings02Icon } from "@hugeicons/core-free-icons";
 import {
   ChevronDown,
   FileText,
@@ -291,9 +291,15 @@ const ReviewSendDialog = ({
 
           {/* ── Footer ── */}
           <div className="border-t p-4 flex items-center justify-between flex-shrink-0">
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              Back
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => onOpenChange(false)}>
+                Back
+              </Button>
+              <Button variant="ghost" size="sm" className="text-xs gap-1 text-muted-foreground" onClick={() => toast("Settings dialog coming soon")}>
+                <HugeiconsIcon icon={Settings02Icon} size={12} />
+                Advanced settings
+              </Button>
+            </div>
             <Button
               className="gap-1.5"
               disabled={participants.length === 0 || sending}

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { UserAdd01Icon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import {
   Select,
   SelectContent,
@@ -23,9 +25,11 @@ import {
   Plus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { useEditorContext } from "./EditorContext";
 import type { Participant } from "./EditorParticipantsPanel";
 import AddParticipantDialog from "./AddParticipantDialog";
+import ParticipantsDialog from "@/components/ParticipantsDialog";
 
 export interface SidebarFieldType {
   id: string;
@@ -74,6 +78,7 @@ const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
   const { participants } = useEditorContext();
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
 
   const hasParticipants = participants.length > 0;
   const activeParticipant = participants.find((p) => p.id === selectedParticipantId) || participants[0];
@@ -115,7 +120,7 @@ const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
     }
   };
 
-  const participantSelector = (
+  const participantSelector = hasParticipants ? (
     <>
       <Select
         value={activeParticipant?.id || ""}
@@ -150,11 +155,31 @@ const EditorFieldsSidebar = ({ asPanel = false }: { asPanel?: boolean }) => {
           </div>
         </SelectContent>
       </Select>
+      <button
+        onClick={() => setParticipantsDialogOpen(true)}
+        className="text-xs text-primary hover:underline flex items-center gap-1 mt-1"
+      >
+        <HugeiconsIcon icon={UserMultiple02Icon} size={12} />
+        Manage participants
+      </button>
       <AddParticipantDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onAdded={(p) => setSelectedParticipantId(p.id)}
       />
+      <ParticipantsDialog open={participantsDialogOpen} onOpenChange={setParticipantsDialogOpen} />
+    </>
+  ) : (
+    <>
+      <Button
+        className="w-full h-9 gap-1.5"
+        onClick={() => setParticipantsDialogOpen(true)}
+      >
+        <HugeiconsIcon icon={UserAdd01Icon} size={14} />
+        Add participants
+      </Button>
+      <p className="text-xs text-muted-foreground">Add signers to start placing fields</p>
+      <ParticipantsDialog open={participantsDialogOpen} onOpenChange={setParticipantsDialogOpen} />
     </>
   );
 
