@@ -24,7 +24,7 @@ import {
   Plus, ChevronDown, Search, LayoutGrid, List, MoreVertical,
   Eye, Pencil, Send, Download, FolderInput, Trash2, ChevronLeft, ChevronRight,
   Bell, Check, FileText, Settings, Tag, Share2, Activity, CircleDot, Circle, CheckCircle,
-  X, Clock
+  X, Clock, Archive
 } from 'lucide-react';
 
 const CURRENT_USER = 'Ahmad Medhat';
@@ -84,7 +84,7 @@ function getActionButton(doc: WorkspaceDocument) {
   if (doc.stage === 'approving') return { label: 'Remind', icon: Bell, variant: 'outline' as const, className: '' };
   if (doc.stage === 'requires_action') return { label: 'Sign', icon: Pencil, variant: 'default' as const, className: '' };
   if (['sent', 'partially_signed', 'waiting'].includes(doc.stage)) return { label: 'Remind', icon: Bell, variant: 'outline' as const, className: '' };
-  if (doc.stage === 'completed') return { label: 'View', icon: Eye, variant: 'ghost' as const, className: 'text-muted-foreground' };
+  if (doc.stage === 'completed') return { label: 'Vault', icon: Archive, variant: 'outline' as const, className: '' };
   return { label: 'View', icon: Eye, variant: 'ghost' as const, className: 'text-muted-foreground' };
 }
 
