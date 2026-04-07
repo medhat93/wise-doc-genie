@@ -64,6 +64,7 @@ import {
   MoreHorizontal,
   MessageSquare,
   GitCompareArrows,
+  Clock,
 } from "lucide-react";
 import EditorDocumentsPopover, { type EditorDocument } from "./EditorDocumentsPopover";
 
