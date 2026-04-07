@@ -1234,7 +1234,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                   </div>
 
                   {/* Floating thread pins — positioned at the right edge of the document */}
-                  {doc.id === "doc-1" && Object.keys(commentsBySection).length > 0 && (
+                  {doc.id === "doc-1" && !isEsign && Object.keys(commentsBySection).length > 0 && (
                     <>
                       {Object.entries(commentsBySection).map(([sectionRef, sectionComments]) => {
                         const yPos = sectionPositions[sectionRef];
