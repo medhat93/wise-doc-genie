@@ -1141,138 +1141,12 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
         />
       )}
 
-      <div
-        ref={scrollRef}
-        className={cn("flex-1 overflow-y-auto overflow-x-hidden relative", isEsign ? "bg-muted/40" : "bg-muted/20")}
-        onScroll={handleScroll}
-        onClick={handleCanvasClick}
-        onMouseUp={handleMouseUp}
-        data-editor-canvas
-      >
-        <ScrollIndicator doc={showIndicator ? activeDoc : null} />
-
+      <div className="flex-1 relative">
         <AnimatePresence>
           {searchOpen && (
             <SearchBar open={searchOpen} onClose={() => setSearchOpen(false)} />
           )}
         </AnimatePresence>
-
-        <AnimatePresence>
-          {selectionToolbar && (
-            <SelectionToolbar
-              position={{ x: selectionToolbar.x, y: selectionToolbar.y }}
-              onComment={handleSelectionComment}
-              onAskAi={handleSelectionAskAi}
-              onDismiss={() => setSelectionToolbar(null)}
-            />
-          )}
-        </AnimatePresence>
-
-        <div
-          className="p-6 md:p-10 space-y-0"
-          style={{
-            transform: `scale(${zoom / 100})`,
-            transformOrigin: "top center",
-          }}
-        >
-          {MOCK_DOCUMENTS.map((doc, idx) => {
-            const docFields = placedFields.filter((f) => f.page === idx + 1);
-            return (
-              <div key={doc.id}>
-                {idx > 0 && <DocumentDivider doc={doc} />}
-                <div className="relative">
-                  <div
-                    ref={(el) => { docRefs.current[doc.id] = el; }}
-                    data-doc-id={doc.id}
-                    onDrop={(e) => handleDrop(e, doc.id)}
-                    onDragOver={handleDragOver}
-                    className={cn(
-                      "max-w-[816px] mx-auto bg-card shadow-sm border rounded-sm min-h-[800px] p-12 md:p-16 relative",
-                      DOC_BORDER[doc.docType]
-                    )}
-                  >
-                    <div ref={doc.id === "doc-1" ? doc1Ref : undefined}>
-                      {doc.id === "doc-1" ? (
-                        <>
-                          <Doc1Content comments={comments} onClickHighlight={handleClickHighlight} variableValues={variableValues} />
-                          {/* AI Suggestion blocks after Section 2 */}
-                          {(suggestionsBySection["Section 2: Scope of Services"] || []).map(s => (
-                            <AiSuggestionBlock
-                              key={s.id}
-                              suggestion={s}
-                              onAccept={handleAcceptSuggestion}
-                              onReject={handleRejectSuggestion}
-                            />
-                          ))}
-                          {/* AI Suggestion blocks after Section 5 */}
-                          {(suggestionsBySection["Section 5: Termination"] || []).map(s => (
-                            <AiSuggestionBlock
-                              key={s.id}
-                              suggestion={s}
-                              onAccept={handleAcceptSuggestion}
-                              onReject={handleRejectSuggestion}
-                            />
-                          ))}
-                        </>
-                      ) : doc.id === "doc-2" ? (
-                        <Doc2Content />
-                      ) : (
-                        <Doc3Content />
-                      )}
-                    </div>
-                    {docFields.map((f) => (
-                      <FieldOverlay
-                        key={f.id}
-                        field={f}
-                        isSelected={selectedFieldId === f.id}
-                        onSelect={() => handleFieldSelect(f.id)}
-                        onRemove={() => removePlacedField(f.id)}
-                        onDuplicate={() => duplicateField(f)}
-                        onUpdateField={updateField}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Floating thread pins — positioned at the right edge of the document */}
-                  {doc.id === "doc-1" && !isEsign && Object.keys(commentsBySection).length > 0 && (
-                    <>
-                      {Object.entries(commentsBySection).map(([sectionRef, sectionComments]) => {
-                        const yPos = sectionPositions[sectionRef];
-                        if (yPos === undefined) return null;
-                        return (
-                          <div key={sectionRef} className="absolute z-20" style={{ top: yPos, right: -20 }}>
-                            <ThreadPin
-                              comments={sectionComments}
-                              isOpen={openThreadSection === sectionRef}
-                              onToggle={() => setOpenThreadSection((prev) => (prev === sectionRef ? null : sectionRef))}
-                              onClose={() => setOpenThreadSection(null)}
-                              onAddReply={handleAddReply}
-                            />
-                          </div>
-                        );
-                      })}
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Pending suggestions counter */}
-          {pendingSuggestions.length > 0 && (
-            <div className="sticky bottom-4 flex justify-center pointer-events-none z-20">
-              <button
-                onClick={scrollToNextSuggestion}
-                className="pointer-events-auto bg-violet-100 text-violet-700 border border-violet-200 text-xs font-medium rounded-full px-3 py-1 shadow-sm hover:bg-violet-200 transition-colors flex items-center gap-1.5"
-              >
-                <Sparkles size={12} />
-                {pendingSuggestions.length} pending suggestion{pendingSuggestions.length !== 1 ? "s" : ""}
-              </button>
-            </div>
-          )}
-
-          <div className="h-20" />
-        </div>
 
         <ZoomBar
           zoom={zoom}
@@ -1280,6 +1154,19 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
           searchOpen={searchOpen}
           onSearchToggle={() => setSearchOpen(prev => !prev)}
         />
+
+        <div
+          ref={scrollRef}
+          className={cn("absolute inset-0 overflow-y-auto overflow-x-hidden", isEsign ? "bg-muted/40" : "bg-muted/20")}
+          onScroll={handleScroll}
+          onClick={handleCanvasClick}
+          onMouseUp={handleMouseUp}
+          data-editor-canvas
+        >
+          <ScrollIndicator doc={showIndicator ? activeDoc : null} />
+...
+          <div className="h-20" />
+        </div>
       </div>
     </div>
   );
