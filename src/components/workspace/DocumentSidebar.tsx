@@ -28,7 +28,7 @@ const VIEWS: { id: SidebarView; label: string; tooltip?: string }[] = [
   { id: 'in_signing', label: 'In Signing', tooltip: 'Documents currently being signed' },
   { id: 'in_approval', label: 'In Approval', tooltip: 'Documents currently being approved' },
   { id: 'requires_action', label: 'Requires your action', tooltip: 'Documents that need your action — signing, approval, or tasks' },
-  { id: 'owned', label: 'Owned by me', tooltip: 'Documents where you are the sender' },
+  { id: 'owned', label: 'Owned by you', tooltip: 'Documents where you are the sender' },
   { id: 'expiring', label: 'Expiring soon', tooltip: 'Signatures expiring within 30 days' },
   { id: 'completed', label: 'Completed', tooltip: 'Completed signature documents' },
 ];
