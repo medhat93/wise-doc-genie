@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import {
   LayoutGrid, Share2, Send, Trash2, Clock, Plus, ChevronDown, MoreHorizontal
 } from 'lucide-react';
@@ -84,16 +85,39 @@ export default function DocumentSidebar({
             </button>
           </div>
           <div className="space-y-0.5">
-            {VIEWS.map(({ id, label }) => (
-              <Item
-                key={id}
-                label={label}
-                active={activeView === id}
-                onClick={() => {
-                  onViewChange(activeView === id ? 'all' : id);
-                  onQuickLinkChange(null);
-                }}
-              />
+            {VIEWS.map(({ id, label, dot, pulse, tooltip }) => (
+              <Tooltip key={id} delayDuration={400}>
+                <TooltipTrigger asChild>
+                  <div>
+                    <button
+                      onClick={() => {
+                        onViewChange(activeView === id ? 'all' : id);
+                        onQuickLinkChange(null);
+                      }}
+                      className={cn(
+                        'flex items-center gap-2.5 w-full rounded-md px-2 py-1.5 text-sm transition-colors relative',
+                        activeView === id ? 'bg-primary/5 text-primary font-medium' : 'text-foreground hover:bg-muted'
+                      )}
+                    >
+                      {activeView === id && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-primary rounded-r-full" />}
+                      {dot ? (
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          {pulse && <span className={cn('absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping', dot)} />}
+                          <span className={cn('relative inline-flex rounded-full h-2 w-2', dot)} />
+                        </span>
+                      ) : (
+                        <span className="w-2" />
+                      )}
+                      <span className="flex-1 text-left truncate">{label}</span>
+                    </button>
+                  </div>
+                </TooltipTrigger>
+                {tooltip && (
+                  <TooltipContent side="right" className="text-xs max-w-[200px]">
+                    {tooltip}
+                  </TooltipContent>
+                )}
+              </Tooltip>
             ))}
           </div>
         </div>

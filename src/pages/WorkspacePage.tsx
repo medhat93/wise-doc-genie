@@ -148,11 +148,12 @@ export default function WorkspacePage() {
 
   const filteredDocs = useMemo(() => {
     let docs = [...workspaceDocuments];
-    if (activeView === 'in_progress') docs = docs.filter(d => ['approving', 'sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'].includes(d.stage));
+    if (activeView === 'in_signing') docs = docs.filter(d => ['sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'].includes(d.stage));
+    else if (activeView === 'in_approval') docs = docs.filter(d => ['approving', 'approved'].includes(d.stage));
+    else if (activeView === 'requires_action') docs = docs.filter(d => d.stage === 'requires_action' || (d.waitingFor?.name === CURRENT_USER && d.stage !== 'draft'));
     else if (activeView === 'owned') docs = docs.filter(d => d.owner === CURRENT_USER);
-    else if (activeView === 'requires_action') docs = docs.filter(d => d.stage === 'requires_action' || d.waitingFor?.name === CURRENT_USER);
+    else if (activeView === 'expiring') docs = docs.filter(d => d.stage === 'expiring' || (d.expiresAt && new Date(d.expiresAt).getTime() > Date.now()));
     else if (activeView === 'completed') docs = docs.filter(d => d.stage === 'completed');
-    else if (activeView === 'expiring') docs = docs.filter(d => d.stage === 'expiring');
     if (statusFilter.length > 0) docs = docs.filter(d => statusFilter.includes(d.stage));
     if (activeTags.length > 0) docs = docs.filter(d => d.tags.some(t => activeTags.includes(t)));
     if (searchQuery) {
