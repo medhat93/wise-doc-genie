@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import {
-  X, Send, Download, Pencil, MoreHorizontal, Clock, FileText, Eye,
+  X, Send, Download, Pencil, MoreVertical, Clock, FileText, Eye,
   PenTool, Bell, XCircle, Plus, CheckCircle, Circle, GitPullRequest,
   Users, File, AlertTriangle, Ban, Lock, Copy, Check, ChevronDown, ChevronUp, Sparkles, Edit,
   Link as LinkIcon,
@@ -307,7 +307,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         doc={doc}
         onRename={handleRename}
         onParticipants={() => setActiveTab('participants')}
-        trigger={<Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal size={14} /></Button>}
+        trigger={<Button variant="ghost" className="h-8 w-8 p-0"><MoreVertical size={14} /></Button>}
       />
     );
 
