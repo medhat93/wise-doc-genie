@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEditorContext, type AcknowledgmentLevel } from "./EditorContext";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Settings02Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -291,9 +293,15 @@ const ReviewSendDialog = ({
 
           {/* ── Footer ── */}
           <div className="border-t p-4 flex items-center justify-between flex-shrink-0">
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              Back
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => onOpenChange(false)}>
+                Back
+              </Button>
+              <Button variant="ghost" size="sm" className="text-xs gap-1 text-muted-foreground" onClick={() => toast("Settings dialog coming soon")}>
+                <HugeiconsIcon icon={Settings02Icon} size={12} />
+                Advanced settings
+              </Button>
+            </div>
             <Button
               className="gap-1.5"
               disabled={participants.length === 0 || sending}
