@@ -117,11 +117,197 @@ function formatWaitingSince(since: string): string {
   if (hours < 24) return `since ${hours}h`;
   return `since ${Math.floor(hours / 24)}d`;
 }
-const WORKFLOW_FILTER_OPTIONS = [
+type ApprovalType = 'internal' | 'external';
+
+interface WorkflowDef {
+  label: string;
+  type: ApprovalType;
+  steps: { name: string; approvalType: ApprovalType }[];
+}
+
+const ALL_WORKFLOWS: WorkflowDef[] = [
   {
-    label: 'Internal Approval',
-    children: [
-      { label: 'Standard Approval', steps: ['Drafting', 'Legal Review', 'Manager Approval'] },
+    label: 'Standard Approval',
+    type: 'internal',
+    steps: [
+      { name: 'Drafting', approvalType: 'internal' },
+      { name: 'Legal Review', approvalType: 'internal' },
+      { name: 'Manager Approval', approvalType: 'internal' },
+    ],
+  },
+  {
+    label: 'Legal Review',
+    type: 'internal',
+    steps: [
+      { name: 'Drafting', approvalType: 'internal' },
+      { name: 'Paralegal Review', approvalType: 'internal' },
+      { name: 'Senior Legal Review', approvalType: 'internal' },
+      { name: 'Legal Director Approval', approvalType: 'internal' },
+    ],
+  },
+  {
+    label: 'Executive Approval',
+    type: 'external',
+    steps: [
+      { name: 'Drafting', approvalType: 'internal' },
+      { name: 'Department Review', approvalType: 'internal' },
+      { name: 'VP Approval', approvalType: 'internal' },
+      { name: 'Legal Review', approvalType: 'external' },
+      { name: 'Executive Sign-off', approvalType: 'external' },
+    ],
+  },
+  {
+    label: 'Procurement Approval',
+    type: 'external',
+    steps: [
+      { name: 'Drafting', approvalType: 'internal' },
+      { name: 'Budget Review', approvalType: 'internal' },
+      { name: 'Procurement Review', approvalType: 'external' },
+      { name: 'CFO Approval', approvalType: 'external' },
+    ],
+  },
+  {
+    label: 'Vendor Onboarding',
+    type: 'external',
+    steps: [
+      { name: 'Drafting', approvalType: 'internal' },
+      { name: 'Compliance Check', approvalType: 'internal' },
+      { name: 'Vendor Review', approvalType: 'external' },
+      { name: 'Finance Approval', approvalType: 'internal' },
+    ],
+  },
+];
+
+function WorkflowFilterPill() {
+  const [selected, setSelected] = useState<string[]>([]);
+  const [approvalTypeFilter, setApprovalTypeFilter] = useState<ApprovalType | null>(null);
+  const [expandedWorkflow, setExpandedWorkflow] = useState<string | null>(null);
+
+  const toggleWorkflow = (label: string) => {
+    setSelected(prev => prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]);
+  };
+
+  const toggleApprovalType = (type: ApprovalType) => {
+    if (approvalTypeFilter === type) {
+      setApprovalTypeFilter(null);
+      const wfLabels = ALL_WORKFLOWS.filter(w => w.type === type).map(w => w.label);
+      setSelected(prev => prev.filter(l => !wfLabels.includes(l)));
+    } else {
+      setApprovalTypeFilter(type);
+      const wfLabels = ALL_WORKFLOWS.filter(w => w.type === type).map(w => w.label);
+      setSelected(prev => [...new Set([...prev, ...wfLabels])]);
+    }
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className={cn(
+          'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors',
+          selected.length > 0
+            ? 'border-primary text-primary bg-primary/5'
+            : 'border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50'
+        )}>
+          + Workflow {selected.length > 0 && `(${selected.length})`}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80 p-0">
+        {/* Approval type toggles */}
+        <div className="p-2 border-b border-border">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 pb-1.5">Approval Type</p>
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => toggleApprovalType('internal')}
+              className={cn(
+                'flex-1 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors',
+                approvalTypeFilter === 'internal'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border text-muted-foreground hover:bg-muted'
+              )}
+            >
+              <div className="flex items-center justify-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                Internal Approval
+              </div>
+            </button>
+            <button
+              onClick={() => toggleApprovalType('external')}
+              className={cn(
+                'flex-1 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors',
+                approvalTypeFilter === 'external'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border text-muted-foreground hover:bg-muted'
+              )}
+            >
+              <div className="flex items-center justify-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                External Approval
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Workflow list */}
+        <div className="p-2 max-h-[320px] overflow-y-auto">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 pb-1">Workflows</p>
+          {ALL_WORKFLOWS.map(wf => {
+            const isSelected = selected.includes(wf.label);
+            const isExpanded = expandedWorkflow === wf.label;
+            return (
+              <div key={wf.label}>
+                <button
+                  onClick={() => toggleWorkflow(wf.label)}
+                  className={cn(
+                    'flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded hover:bg-muted',
+                    isSelected && 'text-primary font-medium'
+                  )}
+                >
+                  <Checkbox checked={isSelected} className="h-3.5 w-3.5" />
+                  <span className="flex-1 text-left">{wf.label}</span>
+                  <div className={cn(
+                    'h-1.5 w-1.5 rounded-full',
+                    wf.type === 'internal' ? 'bg-indigo-500' : 'bg-amber-500'
+                  )} />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setExpandedWorkflow(isExpanded ? null : wf.label); }}
+                    className="p-0.5 hover:bg-muted rounded"
+                  >
+                    <ChevronDown size={12} className={cn('transition-transform', isExpanded && 'rotate-180')} />
+                  </button>
+                </button>
+                {isExpanded && (
+                  <div className="ml-4 pl-3 border-l border-dashed border-border mb-1">
+                    {wf.steps.map((step, i) => (
+                      <div key={step.name} className="flex items-center gap-2 py-1 text-xs text-muted-foreground">
+                        <div className={cn(
+                          'h-4 w-4 rounded-full flex items-center justify-center text-[9px] font-medium',
+                          i === 0 ? 'bg-primary/15 text-primary' : 'bg-muted'
+                        )}>
+                          {i}
+                        </div>
+                        <span className="flex-1">{step.name}</span>
+                        <div className={cn(
+                          'h-1.5 w-1.5 rounded-full',
+                          step.approvalType === 'internal' ? 'bg-indigo-500' : 'bg-amber-500'
+                        )} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {selected.length > 0 && (
+          <div className="border-t border-border p-2">
+            <button onClick={() => { setSelected([]); setApprovalTypeFilter(null); }} className="w-full text-xs text-primary px-2 py-1.5 hover:bg-muted rounded">Clear filters</button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
       { label: 'Legal Review', steps: ['Drafting', 'Paralegal Review', 'Senior Legal Review', 'Legal Director Approval'] },
     ],
   },
