@@ -1132,8 +1132,6 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     return acc;
   }, {});
 
-  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
-
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {showToolbar && (
@@ -1142,14 +1140,9 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
           activeDocId={activeDocId}
           onScrollToDoc={scrollToDoc}
           onOpenComments={onOpenComments}
-          onOpenVersionHistory={() => setVersionHistoryOpen(true)}
+          onOpenVersionHistory={onOpenVersionHistory}
         />
       )}
-
-      <VersionHistoryOverlay
-        open={versionHistoryOpen}
-        onClose={() => setVersionHistoryOpen(false)}
-      />
 
       <div
         ref={scrollRef}
