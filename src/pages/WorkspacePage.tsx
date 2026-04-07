@@ -210,7 +210,7 @@ function WorkflowFilterPill() {
   );
 }
 
-
+export default function WorkspacePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeView, setActiveView] = useState<SidebarView>('all');
