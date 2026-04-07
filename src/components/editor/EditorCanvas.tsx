@@ -1138,6 +1138,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
           documents={MOCK_DOCUMENTS}
           activeDocId={activeDocId}
           onScrollToDoc={scrollToDoc}
+          onOpenComments={onOpenComments}
         />
       )}
 
