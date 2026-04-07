@@ -360,16 +360,6 @@ const EditorParticipantsViewPanel = () => {
         </div>
       )}
 
-      {/* Add participant button */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-8 text-xs gap-1.5 w-full"
-        onClick={() => setParticipantsDialogOpen(true)}
-      >
-        <Plus size={14} />
-        Add new participant
-      </Button>
 
 
       {/* Participants Dialog */}
