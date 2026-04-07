@@ -213,7 +213,7 @@ const EditorSmartFieldsPanel = () => {
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">Insert dynamic fields that auto-fill with data</p>
+      <p className="text-xs text-muted-foreground">Fill existing or add new dynamic fields</p>
 
       {/* Search */}
       <div className="relative">

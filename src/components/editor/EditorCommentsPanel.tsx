@@ -258,7 +258,7 @@ const EditorCommentsPanel = () => {
     <div className="flex flex-col h-full -m-4">
       {/* Tabs */}
       <div className="flex border-b px-4 flex-shrink-0">
-        {(["inline", "general"] as const).map((t) => (
+        {(["general", "inline"] as const).map((t) => (
           <button
             key={t}
             onClick={() => { setTab(t); setReplyingTo(null); setPendingCommentRef(null); }}
