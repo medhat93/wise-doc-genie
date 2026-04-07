@@ -64,10 +64,22 @@ const EditorPageInner = () => {
   const childType = searchParams.get("childType") || "amendment";
   const [isEsign, setIsEsign] = useState(initialMode === "esign");
   const isMobile = useIsMobile();
-  const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen } = useEditorContext();
+  const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen, participants, placedFields, usedVariables, variableValues } = useEditorContext();
 
   const [loading, setLoading] = useState(true);
-  const [activePanel, setActivePanel] = useState<PanelId | null>("annotations");
+
+  // Compute checklist status
+  const hasParticipants = participants.length > 0;
+  const hasFields = placedFields.length > 0;
+  const usedTokens = new Set(usedVariables);
+  const hasVariables = usedTokens.size > 0;
+  const filledVarCount = Array.from(usedTokens).filter(t => variableValues[t]?.trim()).length;
+  const allVarsFilled = !hasVariables || filledVarCount === usedTokens.size;
+  const checklistIncomplete = !hasParticipants || !hasFields || !allVarsFilled;
+
+  // Default panel: checklist if incomplete (CLM), else annotations
+  const defaultPanel: PanelId = (!isEsign && checklistIncomplete) ? "checklist" : "annotations";
+  const [activePanel, setActivePanel] = useState<PanelId | null>(defaultPanel);
 
   // Brief loading skeleton
   useEffect(() => {
@@ -88,6 +100,10 @@ const EditorPageInner = () => {
 
   const handlePanelToggle = (id: PanelId) => {
     setActivePanel((prev) => (prev === id ? null : id));
+  };
+
+  const handleSwitchPanel = (id: PanelId) => {
+    setActivePanel(id);
   };
 
   const handleFieldSelect = (fieldId: string | null) => {
@@ -144,6 +160,7 @@ const EditorPageInner = () => {
                 panelId={activePanel}
                 onClose={() => setActivePanel(null)}
                 docType={docType}
+                onSwitchPanel={handleSwitchPanel}
               />
             )}
           </AnimatePresence>
@@ -155,6 +172,7 @@ const EditorPageInner = () => {
             activePanel={activePanel}
             onPanelToggle={handlePanelToggle}
             isEsign={isEsign}
+            checklistIncomplete={checklistIncomplete}
           />
         )}
 
@@ -170,6 +188,7 @@ const EditorPageInner = () => {
                   panelId={activePanel}
                   onClose={() => setActivePanel(null)}
                   docType={docType}
+                  onSwitchPanel={handleSwitchPanel}
                 />
               )}
             </SheetContent>
@@ -184,6 +203,7 @@ const EditorPageInner = () => {
           onPanelToggle={handlePanelToggle}
           className="w-full h-12 flex-row border-t border-l-0 py-0 px-2"
           isEsign={isEsign}
+          checklistIncomplete={checklistIncomplete}
         />
       )}
     </motion.div>
