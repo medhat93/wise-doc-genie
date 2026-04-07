@@ -11,6 +11,7 @@ import {
 import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare, Sparkles, ArrowRight, Check, Pencil } from "lucide-react";
 import { ZoomBar, SearchBar } from "./EditorZoomSearch";
 import EditorToolbar from "./EditorToolbar";
+import VersionHistoryOverlay from "./VersionHistoryOverlay";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
 import { useEditorContext, COMMENT_SECTIONS, type Comment, type AiSuggestion, type AnnotationType } from "./EditorContext";
@@ -1131,6 +1132,8 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     return acc;
   }, {});
 
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {showToolbar && (
@@ -1139,8 +1142,14 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
           activeDocId={activeDocId}
           onScrollToDoc={scrollToDoc}
           onOpenComments={onOpenComments}
+          onOpenVersionHistory={() => setVersionHistoryOpen(true)}
         />
       )}
+
+      <VersionHistoryOverlay
+        open={versionHistoryOpen}
+        onClose={() => setVersionHistoryOpen(false)}
+      />
 
       <div
         ref={scrollRef}
