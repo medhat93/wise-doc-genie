@@ -11,7 +11,6 @@ import {
 import { X, Copy, Trash2, Bold, Italic, Highlighter, MessageSquare, Sparkles, ArrowRight, Check, Pencil } from "lucide-react";
 import { ZoomBar, SearchBar } from "./EditorZoomSearch";
 import EditorToolbar from "./EditorToolbar";
-import VersionHistoryOverlay from "./VersionHistoryOverlay";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
 import { useEditorContext, COMMENT_SECTIONS, type Comment, type AiSuggestion, type AnnotationType } from "./EditorContext";
