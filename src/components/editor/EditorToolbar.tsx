@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -393,6 +394,7 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments }
   const [fontSize, setFontSize] = useState("12");
   const [heading, setHeading] = useState("normal");
   const [findOpen, setFindOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const toggle = (key: string) =>
