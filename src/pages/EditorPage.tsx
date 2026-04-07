@@ -79,8 +79,8 @@ const EditorPageInner = () => {
   const allVarsFilled = !hasVariables || filledVarCount === usedTokens.size;
   const checklistIncomplete = !hasParticipants || !hasFields || !allVarsFilled;
 
-  // Default panel: checklist if incomplete (CLM), else annotations
-  const defaultPanel: PanelId = isEsign ? "annotations" : (checklistIncomplete ? "checklist" : "annotations");
+  // Default panel: checklist for CLM, annotations for eSign
+  const defaultPanel: PanelId = isEsign ? "annotations" : "checklist";
   const [activePanel, setActivePanel] = useState<PanelId | null>(defaultPanel);
 
   // Brief loading skeleton
