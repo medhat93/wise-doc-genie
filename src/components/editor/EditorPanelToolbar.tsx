@@ -106,19 +106,27 @@ const EditorPanelToolbar = ({ activePanel, onPanelToggle, className, isEsign, ch
       );
     }
 
+    const isChecklist = panel.id === "checklist";
+
     return (
       <Tooltip key={panel.id} delayDuration={0}>
         <TooltipTrigger asChild>
           <button
             onClick={() => onPanelToggle(panel.id)}
             className={cn(
-              "h-9 w-9 rounded-lg flex items-center justify-center transition-colors",
+              "h-9 w-9 rounded-lg flex items-center justify-center transition-colors relative",
               isActive
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
             )}
           >
             <HugeiconsIcon icon={panel.icon} size={18} />
+            {isChecklist && !isActive && (
+              <span className={cn(
+                "absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full",
+                checklistIncomplete ? "bg-destructive" : "bg-emerald-500"
+              )} />
+            )}
           </button>
         </TooltipTrigger>
         <TooltipContent side="left">

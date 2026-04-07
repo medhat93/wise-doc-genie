@@ -11,15 +11,17 @@ import EditorWorkflowPanel from "./EditorWorkflowPanel";
 import EditorFieldsSidebar from "./EditorFieldsSidebar";
 import EditorParticipantsViewPanel from "./EditorParticipantsViewPanel";
 import EditorTasksPanel from "./EditorTasksPanel";
+import EditorChecklistPanel from "./EditorChecklistPanel";
 import { useEditorContext } from "./EditorContext";
 
 const PANEL_TITLES: Record<PanelId, string> = {
+  checklist: "Ready to send",
   annotations: "Fields",
   participants: "Participants",
   ai: "AI Assistant",
   comments: "Comments",
   properties: "Properties",
-  fields: "Variables",
+  fields: "Placeholders",
   workflow: "Workflow",
   tasks: "Tasks",
   "field-settings": "Field Settings",
@@ -29,9 +31,10 @@ interface EditorPanelProps {
   panelId: PanelId;
   onClose: () => void;
   docType?: string;
+  onSwitchPanel?: (id: PanelId) => void;
 }
 
-const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
+const EditorPanel = ({ panelId, onClose, docType, onSwitchPanel }: EditorPanelProps) => {
   const { selectedFieldId, setSelectedFieldId } = useEditorContext();
 
   const showFieldSettings = panelId === "annotations" && !!selectedFieldId;
@@ -58,7 +61,9 @@ const EditorPanel = ({ panelId, onClose, docType }: EditorPanelProps) => {
 
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-4">
-            {panelId === "annotations" ? (
+            {panelId === "checklist" ? (
+              <EditorChecklistPanel onSwitchPanel={onSwitchPanel || (() => {})} />
+            ) : panelId === "annotations" ? (
               <EditorFieldsSidebar asPanel />
             ) : panelId === "ai" ? (
               <EditorAIPanel docType={docType} />
