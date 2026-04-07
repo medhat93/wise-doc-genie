@@ -601,6 +601,38 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
             Draft
           </span>
 
+          {/* Editing mode selector */}
+          {!isEsign && (
+            <div className="hidden md:flex items-center h-7 rounded-md border bg-muted/50 p-0.5 ml-2 flex-shrink-0">
+              {([
+                { key: "editing" as const, label: "Editing", tooltip: "Edit directly" },
+                { key: "suggesting" as const, label: "Suggesting", tooltip: "Suggest changes" },
+                { key: "viewing" as const, label: "Viewing", tooltip: "View only" },
+              ]).map(mode => (
+                <Tooltip key={mode.key}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        setEditingMode(mode.key);
+                        if (mode.key === "suggesting") toast("Suggesting mode — your changes will appear as suggestions");
+                        if (mode.key === "viewing") toast("View only mode");
+                      }}
+                      className={cn(
+                        "h-[22px] px-2 rounded text-[10px] font-medium transition-all",
+                        editingMode === mode.key
+                          ? "bg-card text-foreground shadow-sm border"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {mode.label}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs">{mode.tooltip}</TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          )}
+
           {/* Tags */}
           <div className="hidden sm:flex items-center gap-1 ml-2">
             {visibleTags.map((tag) => (
