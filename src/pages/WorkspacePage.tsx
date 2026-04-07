@@ -148,11 +148,12 @@ export default function WorkspacePage() {
 
   const filteredDocs = useMemo(() => {
     let docs = [...workspaceDocuments];
-    if (activeView === 'in_progress') docs = docs.filter(d => ['approving', 'sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'].includes(d.stage));
+    if (activeView === 'in_signing') docs = docs.filter(d => ['sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'].includes(d.stage));
+    else if (activeView === 'in_approval') docs = docs.filter(d => ['approving', 'approved'].includes(d.stage));
+    else if (activeView === 'requires_action') docs = docs.filter(d => d.stage === 'requires_action' || (d.waitingFor?.name === CURRENT_USER && d.stage !== 'draft'));
     else if (activeView === 'owned') docs = docs.filter(d => d.owner === CURRENT_USER);
-    else if (activeView === 'requires_action') docs = docs.filter(d => d.stage === 'requires_action' || d.waitingFor?.name === CURRENT_USER);
+    else if (activeView === 'expiring') docs = docs.filter(d => d.stage === 'expiring' || (d.expiresAt && new Date(d.expiresAt).getTime() > Date.now()));
     else if (activeView === 'completed') docs = docs.filter(d => d.stage === 'completed');
-    else if (activeView === 'expiring') docs = docs.filter(d => d.stage === 'expiring');
     if (statusFilter.length > 0) docs = docs.filter(d => statusFilter.includes(d.stage));
     if (activeTags.length > 0) docs = docs.filter(d => d.tags.some(t => activeTags.includes(t)));
     if (searchQuery) {
@@ -448,6 +449,7 @@ export default function WorkspacePage() {
                           {/* Status */}
                           <td className="px-2 py-3">
                             <div>
+                              {doc.stage !== 'draft' && (
                               <HoverCard openDelay={200} closeDelay={100}>
                                 <HoverCardTrigger asChild>
                                   <Badge className={cn('text-[10px] font-medium cursor-default', statusBadge.className)}>{statusBadge.label}</Badge>
@@ -456,7 +458,7 @@ export default function WorkspacePage() {
                                   {doc.approvalSteps ? (
                                     <>
                                       <div className="px-3 py-2 border-b border-border">
-                                        <p className="text-xs font-semibold text-muted-foreground">Approval Progress</p>
+                                        <p className="text-xs font-semibold text-foreground">{doc.workflow || 'Approval Workflow'}</p>
                                       </div>
                                       {doc.approvalSteps.map(step => (
                                         <div key={step.name} className="flex items-center justify-between px-3 py-1.5">
@@ -475,32 +477,36 @@ export default function WorkspacePage() {
                                   ) : ['sent', 'partially_signed', 'waiting', 'requires_action'].includes(doc.stage) ? (
                                     <>
                                       <div className="px-3 py-2 border-b border-border">
-                                        <p className="text-xs font-semibold text-muted-foreground">Signing Progress</p>
+                                        <p className="text-xs font-semibold text-foreground">Signing process</p>
                                       </div>
-                                      {doc.participants.filter(p => p.role === 'signer' || p.role === 'approver').map(p => (
+                                      {doc.participants.filter(p => p.role === 'signer' || p.role === 'approver').map((p, i) => (
                                         <div key={p.id} className="flex items-center justify-between px-3 py-1.5">
                                           <div className="flex items-center gap-2">
-                                            {p.status === 'signed' ? (
-                                              <CheckCircle size={14} className="text-green-500" />
-                                            ) : p.status === 'viewed' ? (
-                                              <Eye size={14} className="text-amber-500" />
-                                            ) : p.status === 'pending' ? (
-                                              <Circle size={14} className="text-blue-500" />
-                                            ) : (
-                                              <Circle size={14} className="text-muted-foreground" />
-                                            )}
+                                            <Avatar className="h-4 w-4">
+                                              <AvatarFallback className="text-[8px] bg-muted text-muted-foreground">{p.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                            </Avatar>
                                             <span className={cn('text-sm', p.name === CURRENT_USER && 'text-primary font-medium')}>{p.name}</span>
                                           </div>
-                                          <span className={cn('text-[11px]', p.status === 'signed' ? 'text-green-600' : p.status === 'viewed' ? 'text-amber-600' : 'text-muted-foreground')}>
-                                            {p.status === 'signed' ? 'Signed' : p.status === 'viewed' ? 'Viewed' : p.status === 'pending' ? 'Sent' : 'Not sent'}
+                                          <span className={cn('text-[11px]',
+                                            p.status === 'signed' ? 'text-green-600' :
+                                            p.status === 'viewed' ? 'text-amber-600' :
+                                            p.status === 'declined' ? 'text-destructive' :
+                                            'text-muted-foreground'
+                                          )}>
+                                            {p.status === 'signed' ? 'Signed' : p.status === 'viewed' ? 'Viewed' : p.status === 'pending' ? 'Pending' : p.status === 'declined' ? 'Declined' : 'Not sent'}
                                           </span>
                                         </div>
                                       ))}
+                                      <div className="px-3 py-1.5 border-t border-border">
+                                        <p className="text-[11px] text-muted-foreground">
+                                          {doc.participants.filter(p => (p.role === 'signer' || p.role === 'approver') && p.status === 'signed').length} of {doc.participants.filter(p => p.role === 'signer' || p.role === 'approver').length} signed
+                                        </p>
+                                      </div>
                                     </>
                                   ) : doc.stage === 'completed' ? (
                                     <>
                                       <div className="px-3 py-2 border-b border-border">
-                                        <p className="text-xs font-semibold text-muted-foreground">Completed</p>
+                                        <p className="text-xs font-semibold text-foreground">Completed</p>
                                       </div>
                                       {doc.participants.filter(p => p.role === 'signer').map(p => (
                                         <div key={p.id} className="flex items-center justify-between px-3 py-1.5">
@@ -511,37 +517,52 @@ export default function WorkspacePage() {
                                           <span className="text-[11px] text-green-600">Signed</span>
                                         </div>
                                       ))}
+                                      <div className="px-3 py-1.5 border-t border-border">
+                                        <p className="text-[11px] text-muted-foreground">
+                                          Completed {new Date(doc.modifiedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </p>
+                                      </div>
                                     </>
                                   ) : doc.stage === 'declined' ? (
                                     <>
                                       <div className="px-3 py-2 border-b border-border">
-                                        <p className="text-xs font-semibold text-muted-foreground">Declined</p>
+                                        <p className="text-xs font-semibold text-foreground">Declined</p>
                                       </div>
                                       {doc.participants.filter(p => p.role === 'signer').map((p, i) => (
                                         <div key={p.id} className="flex items-center justify-between px-3 py-1.5">
                                           <div className="flex items-center gap-2">
-                                            {i === 0 ? <X size={14} className="text-red-500" /> : <Circle size={14} className="text-muted-foreground" />}
+                                            {p.status === 'declined' ? <X size={14} className="text-red-500" /> : <Circle size={14} className="text-muted-foreground" />}
                                             <span className="text-sm">{p.name}</span>
                                           </div>
-                                          <span className={cn('text-[11px]', i === 0 ? 'text-red-600' : 'text-muted-foreground')}>
-                                            {i === 0 ? 'Declined' : 'Cancelled'}
+                                          <span className={cn('text-[11px]', p.status === 'declined' ? 'text-destructive' : 'text-muted-foreground')}>
+                                            {p.status === 'declined' ? 'Declined' : 'Cancelled'}
                                           </span>
                                         </div>
                                       ))}
+                                      <div className="px-3 py-1.5 border-t border-border">
+                                        <p className="text-[11px] text-muted-foreground">
+                                          Declined {new Date(doc.modifiedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </p>
+                                      </div>
                                     </>
                                   ) : doc.stage === 'voided' ? (
                                     <>
                                       <div className="px-3 py-2 border-b border-border">
-                                        <p className="text-xs font-semibold text-muted-foreground">Voided</p>
+                                        <p className="text-xs font-semibold text-foreground">Voided</p>
                                       </div>
                                       <div className="px-3 py-2 text-sm text-muted-foreground">
                                         Document was voided by {doc.owner}
+                                      </div>
+                                      <div className="px-3 py-1.5 border-t border-border">
+                                        <p className="text-[11px] text-muted-foreground">
+                                          Voided {new Date(doc.modifiedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </p>
                                       </div>
                                     </>
                                   ) : doc.stage === 'expired' ? (
                                     <>
                                       <div className="px-3 py-2 border-b border-border">
-                                        <p className="text-xs font-semibold text-muted-foreground">Expired</p>
+                                        <p className="text-xs font-semibold text-foreground">Expired</p>
                                       </div>
                                       {doc.participants.filter(p => p.role === 'signer').map(p => (
                                         <div key={p.id} className="flex items-center justify-between px-3 py-1.5">
@@ -558,6 +579,11 @@ export default function WorkspacePage() {
                                           </span>
                                         </div>
                                       ))}
+                                      <div className="px-3 py-1.5 border-t border-border">
+                                        <p className="text-[11px] text-muted-foreground">
+                                          Expired {doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                        </p>
+                                      </div>
                                     </>
                                   ) : (
                                     <div className="px-3 py-2 text-sm text-muted-foreground">
@@ -566,6 +592,10 @@ export default function WorkspacePage() {
                                   )}
                                 </HoverCardContent>
                               </HoverCard>
+                              )}
+                              {doc.stage === 'draft' && (
+                                <Badge className={cn('text-[10px] font-medium', statusBadge.className)}>{statusBadge.label}</Badge>
+                              )}
                               {subStatus && (
                                 <p className={cn('text-[10px] mt-0.5 truncate max-w-[120px]', subStatus.className)}>{subStatus.text}</p>
                               )}

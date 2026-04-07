@@ -1,10 +1,13 @@
-import { useState, useRef, useEffect } from "react";
-import { Link as LinkIcon, X } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Link as LinkIcon, X, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { UploadedDocument, DocumentType } from "@/types/document";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +40,7 @@ import {
   CloudIcon,
   Edit02Icon,
   SentIcon,
+  Search01Icon,
 } from "@hugeicons/core-free-icons";
 import { FileText, FilePlus, RotateCw, Lock, MoreVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -390,8 +394,20 @@ const DocumentQueuePanel = ({
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
   const [rotateDoc, setRotateDoc] = useState<UploadedDocument | null>(null);
+  const [linkSearch, setLinkSearch] = useState("");
+  const [linkedDoc, setLinkedDoc] = useState<{ name: string; status: string } | null>(null);
+  const [linkDismissed, setLinkDismissed] = useState(false);
+  const [showPrimaryConflict, setShowPrimaryConflict] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(documents.length);
+
+  const MOCK_PRIMARY_DOCS = [
+    { name: 'Master Services Agreement — Acme Corp', status: 'Completed', date: 'Mar 15, 2026' },
+    { name: 'Enterprise License Agreement — CloudVault', status: 'In Signing', date: 'Mar 28, 2026' },
+    { name: 'Annual Review — Acme Corp', status: 'Completed', date: 'Feb 10, 2026' },
+    { name: 'Consulting Agreement — Strategy Partners', status: 'Draft', date: 'Apr 1, 2026' },
+    { name: 'NDA — Stark Industries', status: 'In Signing', date: 'Mar 30, 2026' },
+  ];
 
   useEffect(() => {
     if (documents.length > prevCountRef.current && scrollRef.current) {
@@ -411,6 +427,15 @@ const DocumentQueuePanel = ({
   const count = allDocs.length;
   const primaryCount = allDocs.filter((d) => d.documentType === "primary").length;
   const supplementCount = allDocs.filter((d) => d.documentType === "supplement").length;
+  const allSupplementsOnly = documents.length > 0 && primaryCount === 0 && !followUpParentName;
+
+  const searchResults = useMemo(() => {
+    if (!linkSearch.trim()) return [];
+    const q = linkSearch.toLowerCase();
+    return MOCK_PRIMARY_DOCS.filter(d =>
+      d.name.toLowerCase().includes(q) && d.status !== 'Draft'
+    ).slice(0, 5);
+  }, [linkSearch]);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -428,13 +453,18 @@ const DocumentQueuePanel = ({
   }
 
   function handleToggleSupplement(id: string) {
-    setDocuments((prev) =>
-      prev.map((d) => {
+    setDocuments((prev) => {
+      const updated = prev.map((d) => {
         if (d.id !== id) return d;
         const newType: DocumentType = d.documentType === "supplement" ? "primary" : "supplement";
         return { ...d, documentType: newType };
-      })
-    );
+      });
+      const newPrimaryCount = updated.filter(d => d.documentType === 'primary').length;
+      if (newPrimaryCount > 0 && linkedDoc) {
+        setShowPrimaryConflict(true);
+      }
+      return updated;
+    });
   }
 
   // Build footer summary
@@ -462,6 +492,105 @@ const DocumentQueuePanel = ({
             </div>
           </div>
         )}
+
+        {/* Supplement-only linking prompt */}
+        {allSupplementsOnly && !linkDismissed && !linkedDoc && (
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-3 relative">
+            <button
+              className="absolute top-2 right-2 text-blue-400 hover:text-blue-600 transition-colors"
+              onClick={() => setLinkDismissed(true)}
+            >
+              <X size={14} />
+            </button>
+            <div className="flex items-start gap-2 mb-2">
+              <LinkIcon size={16} className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Link to a primary document</p>
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">These supplements need a primary document. Search your existing documents to link them.</p>
+              </div>
+            </div>
+            <div className="relative">
+              <HugeiconsIcon icon={Search01Icon} size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={linkSearch}
+                onChange={e => setLinkSearch(e.target.value)}
+                placeholder="Search existing documents..."
+                className="pl-8 h-9 text-sm bg-background"
+              />
+            </div>
+            {linkSearch.trim() && (
+              <div className="mt-1.5 border border-border rounded-md bg-background overflow-hidden max-h-[200px] overflow-y-auto">
+                {searchResults.length > 0 ? searchResults.map((doc, i) => (
+                  <button
+                    key={i}
+                    className="flex items-center gap-2 w-full px-2.5 py-2 text-left hover:bg-muted transition-colors border-b border-border last:border-b-0"
+                    onClick={() => {
+                      setLinkedDoc({ name: doc.name, status: doc.status });
+                      setLinkSearch("");
+                    }}
+                  >
+                    <FileText size={14} className="text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{doc.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{doc.date}</p>
+                    </div>
+                    <Badge className={cn('text-[9px] shrink-0',
+                      doc.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                      doc.status === 'In Signing' ? 'bg-blue-100 text-blue-700' :
+                      'bg-muted text-muted-foreground'
+                    )}>{doc.status}</Badge>
+                  </button>
+                )) : (
+                  <div className="px-3 py-3 text-center text-xs text-muted-foreground">
+                    No matching documents found
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Linked document display */}
+        {linkedDoc && !linkDismissed && allSupplementsOnly && (
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-2.5 mb-3 flex items-center gap-2">
+            <LinkIcon size={14} className="text-blue-600 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium truncate">{linkedDoc.name}</p>
+            </div>
+            <Badge className={cn('text-[9px] shrink-0',
+              linkedDoc.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+            )}>{linkedDoc.status}</Badge>
+            <button className="text-[10px] text-primary hover:underline shrink-0" onClick={() => { setLinkedDoc(null); setLinkSearch(""); }}>Change</button>
+            <button className="text-muted-foreground hover:text-foreground shrink-0" onClick={() => setLinkedDoc(null)}>
+              <X size={12} />
+            </button>
+          </div>
+        )}
+
+        {/* Dismissed warning */}
+        {allSupplementsOnly && linkDismissed && !linkedDoc && (
+          <div className="mb-2 px-1">
+            <p className="text-[11px] text-amber-600 flex items-center gap-1">
+              ⚠ No primary document linked
+            </p>
+          </div>
+        )}
+
+        {/* Primary conflict dialog */}
+        <AlertDialog open={showPrimaryConflict} onOpenChange={setShowPrimaryConflict}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Primary document added</AlertDialogTitle>
+              <AlertDialogDescription>
+                You added a primary document. Remove the link to "{linkedDoc?.name}"?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowPrimaryConflict(false)}>Keep both</AlertDialogCancel>
+              <AlertDialogAction onClick={() => { setLinkedDoc(null); setLinkDismissed(false); setShowPrimaryConflict(false); }}>Remove link</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-2">
@@ -536,7 +665,7 @@ const DocumentQueuePanel = ({
                         onPreview={setPreviewDoc}
                         onToggleSupplement={handleToggleSupplement}
                         onRotate={setRotateDoc}
-                        followUpParentName={followUpParentName}
+                        followUpParentName={followUpParentName || (linkedDoc && doc.documentType === 'supplement' ? linkedDoc.name : undefined)}
                       />
                     </motion.div>
                   ))}
