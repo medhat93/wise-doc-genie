@@ -35,11 +35,11 @@ const STATUS_FILTER_OPTIONS = [
     { label: 'Approving', stages: ['approving'] as DocumentStage[] },
     { label: 'Approved', stages: ['approved'] as DocumentStage[] },
   ]},
-  { label: 'In Signing', stages: ['sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'] as DocumentStage[], children: [
+  { label: 'In Signing', stages: ['sent', 'partially_signed', 'waiting', 'requires_action'] as DocumentStage[], children: [
     { label: 'Requires your action', stages: ['requires_action'] as DocumentStage[] },
     { label: 'Waiting on others', stages: ['sent', 'partially_signed', 'waiting'] as DocumentStage[] },
-    { label: 'Expiring soon', stages: ['expiring'] as DocumentStage[] },
   ]},
+  { label: 'Expiring soon', stages: ['expiring'] as DocumentStage[] },
   { label: 'Completed', stages: ['completed'] as DocumentStage[] },
   { label: 'Declined', stages: ['declined'] as DocumentStage[] },
   { label: 'Voided', stages: ['voided'] as DocumentStage[] },
@@ -316,9 +316,7 @@ export default function WorkspacePage() {
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 transition-colors">
             + Sent to
           </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 transition-colors">
-            + Workflow
-          </button>
+          <WorkflowFilterPill />
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 transition-colors">
             + Add filters <ChevronDown size={12} />
           </button>
