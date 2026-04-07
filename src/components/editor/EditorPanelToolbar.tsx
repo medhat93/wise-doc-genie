@@ -8,6 +8,7 @@ import {
   WorkflowSquare10Icon,
   CursorAddSelection02Icon,
   CheckmarkSquare02Icon,
+  CheckListIcon,
 } from "@hugeicons/core-free-icons";
 import { ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -28,7 +29,8 @@ export type PanelId =
   | "workflow"
   | "field-settings"
   | "annotations"
-  | "tasks";
+  | "tasks"
+  | "checklist";
 
 interface PanelItem {
   id: PanelId;
@@ -42,15 +44,16 @@ interface PanelItem {
 
 const PANELS: PanelItem[] = [
   // Main visible icons
-  { id: "participants", label: "Participants", shortcut: "⌘1", icon: UserMultiple02Icon, group: "main" },
-  { id: "annotations", label: "Fields", shortcut: "⌘2", icon: CursorAddSelection02Icon, group: "main" },
-  { id: "ai", label: "AI Assistant ✨", shortcut: "⌘3", useAiIcon: true, clmOnly: true, group: "main" },
-  { id: "fields", label: "Variables", shortcut: "⌘4", icon: TextField, clmOnly: true, group: "main" },
+  { id: "checklist", label: "Ready for signature", shortcut: "⌘1", icon: CheckListIcon, clmOnly: true, group: "main" },
+  { id: "participants", label: "Participants", shortcut: "⌘2", icon: UserMultiple02Icon, group: "main" },
+  { id: "annotations", label: "Fields", shortcut: "⌘3", icon: CursorAddSelection02Icon, group: "main" },
+  { id: "ai", label: "AI Assistant ✨", shortcut: "⌘4", useAiIcon: true, clmOnly: true, group: "main" },
   // Overflow icons
-  { id: "comments", label: "Comments", shortcut: "⌘5", icon: Comment01Icon, clmOnly: true, group: "overflow" },
-  { id: "tasks", label: "Tasks", shortcut: "⌘6", icon: CheckmarkSquare02Icon, clmOnly: true, group: "overflow" },
-  { id: "properties", label: "Properties", shortcut: "⌘7", icon: PropertyEditIcon, clmOnly: true, group: "overflow" },
-  { id: "workflow", label: "Workflow", shortcut: "⌘8", icon: WorkflowSquare10Icon, clmOnly: true, group: "overflow" },
+  { id: "fields", label: "Placeholders", shortcut: "⌘5", icon: TextField, clmOnly: true, group: "overflow" },
+  { id: "comments", label: "Comments", shortcut: "⌘6", icon: Comment01Icon, clmOnly: true, group: "overflow" },
+  { id: "tasks", label: "Tasks", shortcut: "⌘7", icon: CheckmarkSquare02Icon, clmOnly: true, group: "overflow" },
+  { id: "properties", label: "Properties", shortcut: "⌘8", icon: PropertyEditIcon, clmOnly: true, group: "overflow" },
+  { id: "workflow", label: "Workflow", shortcut: "⌘9", icon: WorkflowSquare10Icon, clmOnly: true, group: "overflow" },
 ];
 
 const OVERFLOW_IDS = PANELS.filter(p => p.group === "overflow").map(p => p.id);
@@ -60,9 +63,10 @@ interface EditorPanelToolbarProps {
   onPanelToggle: (id: PanelId) => void;
   className?: string;
   isEsign?: boolean;
+  checklistIncomplete?: boolean;
 }
 
-const EditorPanelToolbar = ({ activePanel, onPanelToggle, className, isEsign }: EditorPanelToolbarProps) => {
+const EditorPanelToolbar = ({ activePanel, onPanelToggle, className, isEsign, checklistIncomplete }: EditorPanelToolbarProps) => {
   const [expanded, setExpanded] = useState(false);
   const visiblePanels = isEsign ? PANELS.filter((p) => !p.clmOnly) : PANELS;
 
