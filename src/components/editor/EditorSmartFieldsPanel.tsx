@@ -219,12 +219,55 @@ const EditorSmartFieldsPanel = () => {
       <div className="relative">
         <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search variables..."
+          placeholder="Add placeholder..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="h-8 text-sm pl-8"
         />
       </div>
+
+      {/* Search results (shown when searching, regardless of collapsed state) */}
+      {search.trim() && (() => {
+        // Gather all searchable variables
+        const allSearchable: Variable[] = [];
+        participantVariables.forEach(({ variables }) => {
+          variables.forEach(v => allSearchable.push({ token: v.token, description: v.value || "—", category: "participant" }));
+        });
+        SYSTEM_VARIABLES.forEach(v => allSearchable.push(v));
+        customVariables.forEach(v => allSearchable.push(v));
+
+        const results = allSearchable.filter(v => matchesSearch(v.token) || matchesSearch(v.description));
+
+        return (
+          <div className="space-y-1">
+            <h3 className="text-xs font-semibold text-muted-foreground">Search results</h3>
+            {results.length > 0 ? (
+              <div className="space-y-0.5">
+                {results.map(v => (
+                  <VariableRow key={v.token} token={v.token} description={v.description} value={undefined} onCopy={handleCopy} />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2 py-2">
+                <p className="text-xs text-muted-foreground">No placeholder found for "{search}"</p>
+                <button
+                  onClick={() => {
+                    const token = search.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(".");
+                    const newVar: Variable = { token, description: search.trim(), category: "custom", defaultValue: "" };
+                    setCustomVariables(prev => [...prev, newVar]);
+                    navigator.clipboard?.writeText(`[${token}]`);
+                    toast.success(`[${token}] created and copied to clipboard`);
+                    setSearch("");
+                  }}
+                  className="w-full text-left text-sm text-primary border border-dashed rounded-md p-2 hover:bg-primary/5 transition-colors"
+                >
+                  Create "{search.trim()}" as custom placeholder
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Status bar */}
       {usedVarsList.length > 0 && (
@@ -232,12 +275,12 @@ const EditorSmartFieldsPanel = () => {
           {unfilledCount === 0 ? (
             <>
               <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
-              <span className="text-emerald-700 dark:text-emerald-400">All variables filled</span>
+              <span className="text-emerald-700 dark:text-emerald-400">All placeholders filled</span>
             </>
           ) : (
             <>
               <AlertTriangle size={12} className="text-amber-600 dark:text-amber-400" />
-              <span className="text-amber-700 dark:text-amber-400">{unfilledCount} variable{unfilledCount !== 1 ? "s" : ""} need{unfilledCount === 1 ? "s" : ""} values</span>
+              <span className="text-amber-700 dark:text-amber-400">{unfilledCount} placeholder{unfilledCount !== 1 ? "s" : ""} need{unfilledCount === 1 ? "s" : ""} values</span>
             </>
           )}
           <span className="text-muted-foreground ml-auto">{usedVarsList.length} used · {filledCount} filled</span>
