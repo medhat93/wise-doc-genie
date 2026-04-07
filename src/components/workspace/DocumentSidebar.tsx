@@ -24,13 +24,13 @@ const QUICK_LINKS: { id: QuickLink; label: string; icon: React.ElementType }[] =
   { id: 'trash', label: 'Trash', icon: Trash2 },
 ];
 
-const VIEWS: { id: SidebarView; label: string; dot?: string; pulse?: boolean; tooltip?: string }[] = [
-  { id: 'in_signing', label: 'In Signing', dot: 'bg-blue-500', tooltip: 'Documents currently being signed' },
-  { id: 'in_approval', label: 'In Approval', dot: 'bg-indigo-500', tooltip: 'Documents currently being approved' },
-  { id: 'requires_action', label: 'Requires your action', dot: 'bg-amber-500', pulse: true, tooltip: 'Documents that need your action — signing, approval, or tasks' },
+const VIEWS: { id: SidebarView; label: string; tooltip?: string }[] = [
+  { id: 'in_signing', label: 'In Signing', tooltip: 'Documents currently being signed' },
+  { id: 'in_approval', label: 'In Approval', tooltip: 'Documents currently being approved' },
+  { id: 'requires_action', label: 'Requires your action', tooltip: 'Documents that need your action — signing, approval, or tasks' },
   { id: 'owned', label: 'Owned by me', tooltip: 'Documents where you are the sender' },
-  { id: 'expiring', label: 'Expiring soon', dot: 'bg-red-500', tooltip: 'Signatures expiring within 30 days' },
-  { id: 'completed', label: 'Completed', dot: 'bg-green-500', tooltip: 'Completed signature documents' },
+  { id: 'expiring', label: 'Expiring soon', tooltip: 'Signatures expiring within 30 days' },
+  { id: 'completed', label: 'Completed', tooltip: 'Completed signature documents' },
 ];
 
 const TAGS = ['arbitration', 'assignment', 'urgent', 'NDA', 'renewal', 'VIP client'];
@@ -85,7 +85,7 @@ export default function DocumentSidebar({
             </button>
           </div>
           <div className="space-y-0.5">
-            {VIEWS.map(({ id, label, dot, pulse, tooltip }) => (
+            {VIEWS.map(({ id, label, tooltip }) => (
               <Tooltip key={id} delayDuration={400}>
                 <TooltipTrigger asChild>
                   <div>
@@ -100,14 +100,6 @@ export default function DocumentSidebar({
                       )}
                     >
                       {activeView === id && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-primary rounded-r-full" />}
-                      {dot ? (
-                        <span className="relative flex h-2 w-2 shrink-0">
-                          {pulse && <span className={cn('absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping', dot)} />}
-                          <span className={cn('relative inline-flex rounded-full h-2 w-2', dot)} />
-                        </span>
-                      ) : (
-                        <span className="w-2" />
-                      )}
                       <span className="flex-1 text-left truncate">{label}</span>
                     </button>
                   </div>
