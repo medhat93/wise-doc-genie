@@ -32,7 +32,7 @@ const VIEWS: { id: SidebarView; label: string; dot?: string; pulse?: boolean; ic
   { id: 'in_signing', label: 'In Signing', dot: 'bg-blue-500' },
   { id: 'in_approval', label: 'In Approval', dot: 'bg-indigo-500' },
   { id: 'requires_action', label: 'Requires your action', dot: 'bg-amber-500', pulse: true },
-  { id: 'owned', label: 'Owned by me' },
+  { id: 'owned', label: 'Owned by you' },
   { id: 'expiring', label: 'Expiring soon', dot: 'bg-red-500' },
   { id: 'completed', label: 'Completed', dot: 'bg-green-500' },
 ];
