@@ -5,12 +5,16 @@ import MissingFieldsWarningDialog, { type ParticipantIssue, type DocumentIssue }
 import { useEditorContext, type AcknowledgmentLevel } from "./EditorContext";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  ArrowLeft01Icon,
+  Cancel01Icon,
   UserAdd01Icon,
   Settings02Icon,
   MoreHorizontalIcon,
   SentIcon,
   PencilEdit01Icon,
+  Share01Icon,
+  Copy01Icon,
+  Download01Icon,
+  Delete02Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -556,11 +560,11 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
         <div className="flex items-center gap-2 min-w-0">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => navigate("/create")}>
-                <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
+              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => { toast("Saved as draft"); navigate("/workspace"); }}>
+                <X size={16} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Back</TooltipContent>
+            <TooltipContent>Save as draft and close</TooltipContent>
           </Tooltip>
 
           <div className="h-5 w-px bg-border mx-1 flex-shrink-0" />
@@ -645,15 +649,6 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
 
         {/* ── RIGHT ── */}
         <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSettingsOpen(true)}>
-                <HugeiconsIcon icon={Settings02Icon} size={16} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Sending settings</TooltipContent>
-          </Tooltip>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -661,29 +656,40 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setAssignOpen(true)}>
-                <HugeiconsIcon icon={UserAdd01Icon} size={14} className="mr-2" />
-                Assign
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShareOpen(true)}>
-                <Share2 size={14} className="mr-2" />
-                Share
-              </DropdownMenuItem>
+              {!isEsign && (
+                <>
+                  <DropdownMenuItem onClick={() => setShareOpen(true)}>
+                    <HugeiconsIcon icon={Share01Icon} size={14} className="mr-2" />
+                    Share
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuItem onClick={() => toast.success("Document duplicated")}>
-                <Copy size={14} className="mr-2" />
+                <HugeiconsIcon icon={Copy01Icon} size={14} className="mr-2" />
                 Duplicate
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => toast.success("Exporting PDF...")}>
-                <FileDown size={14} className="mr-2" />
+                <HugeiconsIcon icon={Download01Icon} size={14} className="mr-2" />
                 Export PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+                <HugeiconsIcon icon={Settings02Icon} size={14} className="mr-2" />
+                Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setShowDeleteDialog(true)}>
-                <Trash2 size={14} className="mr-2" />
+                <HugeiconsIcon icon={Delete02Icon} size={14} className="mr-2" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {!isEsign && (
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setAssignOpen(true)}>
+              <HugeiconsIcon icon={UserAdd01Icon} size={14} />
+              {!isMobile && "Assign"}
+            </Button>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>
