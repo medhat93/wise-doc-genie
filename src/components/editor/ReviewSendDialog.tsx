@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEditorContext, type AcknowledgmentLevel } from "./EditorContext";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Settings02Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +18,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon } from "@hugeicons/core-free-icons";
+import { SentIcon, Settings02Icon } from "@hugeicons/core-free-icons";
 import {
   ChevronDown,
   FileText,
