@@ -591,6 +591,7 @@ const DocumentQueuePanel = ({
           </AlertDialogContent>
         </AlertDialog>
 
+        {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-2">
             <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-6 flex flex-col items-center w-full">
               <div className="rounded-full p-3 bg-muted mb-2">
