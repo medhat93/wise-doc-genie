@@ -452,13 +452,18 @@ const DocumentQueuePanel = ({
   }
 
   function handleToggleSupplement(id: string) {
-    setDocuments((prev) =>
-      prev.map((d) => {
+    setDocuments((prev) => {
+      const updated = prev.map((d) => {
         if (d.id !== id) return d;
         const newType: DocumentType = d.documentType === "supplement" ? "primary" : "supplement";
         return { ...d, documentType: newType };
-      })
-    );
+      });
+      const newPrimaryCount = updated.filter(d => d.documentType === 'primary').length;
+      if (newPrimaryCount > 0 && linkedDoc) {
+        setShowPrimaryConflict(true);
+      }
+      return updated;
+    });
   }
 
   // Build footer summary
