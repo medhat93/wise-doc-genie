@@ -34,6 +34,8 @@ import {
   Plus,
   List,
   ListOrdered,
+  ListChecks,
+  ListTree,
   IndentDecrease,
   IndentIncrease,
   AlignLeft,
@@ -47,11 +49,19 @@ import {
   SeparatorHorizontal,
   Search,
   SpellCheck,
-  Printer,
   Type,
   Highlighter,
   X,
   Pilcrow,
+  Paintbrush,
+  Eraser,
+  BookOpen,
+  Hash,
+  TableOfContents,
+  PanelTop,
+  Footprints,
+  Omega,
+  ChevronDown,
 } from "lucide-react";
 import EditorDocumentsPopover, { type EditorDocument } from "./EditorDocumentsPopover";
 
@@ -61,20 +71,23 @@ const TBtn = ({
   label,
   active,
   onClick,
+  onDoubleClick,
   className,
 }: {
   icon: typeof Bold;
   label: string;
   active?: boolean;
   onClick?: () => void;
+  onDoubleClick?: () => void;
   className?: string;
 }) => (
   <Tooltip delayDuration={300}>
     <TooltipTrigger asChild>
       <button
         onClick={onClick}
+        onDoubleClick={onDoubleClick}
         className={cn(
-          "h-7 w-7 flex items-center justify-center rounded transition-colors",
+          "h-7 w-7 flex items-center justify-center rounded transition-colors flex-shrink-0",
           active
             ? "bg-primary/10 text-primary"
             : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -84,11 +97,11 @@ const TBtn = ({
         <Icon size={14} />
       </button>
     </TooltipTrigger>
-    <TooltipContent>{label}</TooltipContent>
+    <TooltipContent side="bottom" className="text-xs">{label}</TooltipContent>
   </Tooltip>
 );
 
-const Sep = () => <Separator orientation="vertical" className="h-5 mx-1" />;
+const Sep = () => <Separator orientation="vertical" className="h-5 mx-1 flex-shrink-0" />;
 
 /* ── Color picker popover ── */
 const PRESET_COLORS = [
@@ -111,12 +124,12 @@ const ColorPickerBtn = ({
       <PopoverTrigger asChild>
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
-            <button className="h-7 w-7 flex flex-col items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground gap-0">
+            <button className="h-7 w-7 flex flex-col items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground gap-0 flex-shrink-0">
               <Icon size={13} />
               <div className="w-3.5 h-1 rounded-sm mt-px" style={{ backgroundColor: color }} />
             </button>
           </TooltipTrigger>
-          <TooltipContent>{label}</TooltipContent>
+          <TooltipContent side="bottom" className="text-xs">{label}</TooltipContent>
         </Tooltip>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2" align="start">
@@ -183,13 +196,16 @@ const TableGridSelector = () => {
 /* ── Line spacing popover ── */
 const LineSpacingBtn = () => {
   const [spacing, setSpacing] = useState("1.15");
+  const [spaceBefore, setSpaceBefore] = useState(false);
+  const [spaceAfter, setSpaceAfter] = useState(true);
   const opts = ["1.0", "1.15", "1.5", "2.0", "2.5", "3.0"];
   return (
     <Popover>
       <PopoverTrigger asChild>
         <span><TBtn icon={Pilcrow} label="Line & paragraph spacing" /></span>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-1" align="start">
+      <PopoverContent className="w-52 p-1" align="start">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-1 pb-1">Line spacing</p>
         {opts.map((o) => (
           <button
             key={o}
@@ -203,11 +219,22 @@ const LineSpacingBtn = () => {
           </button>
         ))}
         <Separator className="my-1" />
-        <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent text-muted-foreground">
-          Add space before paragraph
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-1 pb-1">Paragraph spacing</p>
+        <button
+          className={cn("w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent", spaceBefore && "text-primary font-medium")}
+          onClick={() => setSpaceBefore(!spaceBefore)}
+        >
+          {spaceBefore ? "✓ " : ""}Add space before paragraph
         </button>
+        <button
+          className={cn("w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent", spaceAfter && "text-primary font-medium")}
+          onClick={() => setSpaceAfter(!spaceAfter)}
+        >
+          {spaceAfter ? "✓ " : ""}Add space after paragraph
+        </button>
+        <Separator className="my-1" />
         <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent text-muted-foreground">
-          Add space after paragraph
+          Custom spacing…
         </button>
       </PopoverContent>
     </Popover>
@@ -218,7 +245,7 @@ const LineSpacingBtn = () => {
 const LinkInsertBtn = () => (
   <Popover>
     <PopoverTrigger asChild>
-      <span><TBtn icon={Link} label="Insert link" /></span>
+      <span><TBtn icon={Link} label="Insert link (⌘K)" /></span>
     </PopoverTrigger>
     <PopoverContent className="w-64 p-3" align="start">
       <div className="space-y-2">
@@ -228,6 +255,195 @@ const LinkInsertBtn = () => (
           Insert
         </Button>
       </div>
+    </PopoverContent>
+  </Popover>
+);
+
+/* ── Clause numbering popover ── */
+const ClauseNumberingBtn = () => {
+  const [style, setStyle] = useState<string | null>(null);
+  const options = [
+    { id: "decimal", label: "1. / 1.1 / 1.1.1", description: "Decimal hierarchical" },
+    { id: "roman", label: "I. / A. / 1.", description: "Roman + Alpha + Numeric" },
+    { id: "legal", label: "Article I / Section 1 / (a)", description: "Formal legal style" },
+    { id: "none", label: "None", description: "Remove numbering" },
+  ];
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <span><TBtn icon={ListTree} label="Clause numbering" active={!!style && style !== "none"} /></span>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1" align="start">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-1 pb-1">Numbering style</p>
+        {options.map(o => (
+          <button
+            key={o.id}
+            className={cn(
+              "w-full text-left px-3 py-2 rounded hover:bg-accent transition-colors",
+              style === o.id && "bg-primary/10 text-primary"
+            )}
+            onClick={() => { setStyle(o.id); toast(`Applied: ${o.label}`); }}
+          >
+            <span className="text-sm font-medium block">{o.label}</span>
+            <span className="text-[10px] text-muted-foreground">{o.description}</span>
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+/* ── Content Library popover ── */
+const CONTENT_BLOCKS = [
+  { id: "1", title: "Standard Confidentiality Clause", category: "Standard clauses", preview: "The receiving party agrees to maintain strict confidentiality of all proprietary information..." },
+  { id: "2", title: "Limitation of Liability", category: "Legal terms", preview: "In no event shall either party be liable for any indirect, incidental, consequential..." },
+  { id: "3", title: "Force Majeure", category: "Legal terms", preview: "Neither party shall be liable for any failure or delay in performance under this agreement..." },
+  { id: "4", title: "Indemnification Clause", category: "Legal terms", preview: "Each party shall indemnify and hold harmless the other party from any claims, damages..." },
+  { id: "5", title: "Governing Law — Saudi Arabia", category: "Compliance", preview: "This agreement shall be governed by and construed in accordance with the laws of the Kingdom..." },
+  { id: "6", title: "Termination for Convenience", category: "Standard clauses", preview: "Either party may terminate this agreement at any time by providing thirty (30) days written..." },
+];
+
+const ContentLibraryBtn = () => {
+  const [search, setSearch] = useState("");
+  const filtered = CONTENT_BLOCKS.filter(b =>
+    !search || b.title.toLowerCase().includes(search.toLowerCase()) || b.category.toLowerCase().includes(search.toLowerCase())
+  );
+  const categories = [...new Set(filtered.map(b => b.category))];
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <span><TBtn icon={BookOpen} label="Insert from content library" /></span>
+      </PopoverTrigger>
+      <PopoverContent className="w-[300px] p-0" align="start" side="bottom">
+        <div className="p-2 border-b">
+          <div className="relative">
+            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search library..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-7 text-xs pl-7"
+            />
+          </div>
+        </div>
+        <div className="max-h-[300px] overflow-y-auto p-1.5 space-y-2">
+          {categories.map(cat => (
+            <div key={cat}>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">{cat}</p>
+              {filtered.filter(b => b.category === cat).map(block => (
+                <div
+                  key={block.id}
+                  className="rounded-md border p-2 hover:bg-muted/50 transition-colors cursor-pointer group"
+                  onClick={() => toast.success("Clause inserted")}
+                >
+                  <p className="text-xs font-medium mb-0.5">{block.title}</p>
+                  <p className="text-[10px] text-muted-foreground line-clamp-2">{block.preview}</p>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+/* ── Special Characters popover ── */
+const SPECIAL_CHARS = [
+  { char: "§", name: "Section" },
+  { char: "¶", name: "Paragraph" },
+  { char: "©", name: "Copyright" },
+  { char: "®", name: "Registered" },
+  { char: "™", name: "Trademark" },
+  { char: "†", name: "Dagger" },
+  { char: "‡", name: "Double dagger" },
+  { char: "•", name: "Bullet" },
+  { char: "—", name: "Em dash" },
+  { char: "–", name: "En dash" },
+  { char: "…", name: "Ellipsis" },
+  { char: "«»", name: "Guillemets" },
+];
+
+const SpecialCharsBtn = () => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <span><TBtn icon={Omega} label="Insert special character" /></span>
+    </PopoverTrigger>
+    <PopoverContent className="w-auto p-2" align="start">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Special characters</p>
+      <div className="grid grid-cols-6 gap-1">
+        {SPECIAL_CHARS.map(sc => (
+          <Tooltip key={sc.char} delayDuration={200}>
+            <TooltipTrigger asChild>
+              <button
+                className="h-8 w-8 flex items-center justify-center rounded border text-sm hover:bg-muted transition-colors font-mono"
+                onClick={() => toast(`Inserted ${sc.name}: ${sc.char}`)}
+              >
+                {sc.char}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">{sc.name}</TooltipContent>
+          </Tooltip>
+        ))}
+      </div>
+    </PopoverContent>
+  </Popover>
+);
+
+/* ── Word count popover ── */
+const WordCountBtn = () => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <span><TBtn icon={Hash} label="Word count" /></span>
+    </PopoverTrigger>
+    <PopoverContent className="w-52 p-3" align="start">
+      <p className="text-xs font-semibold mb-2">Word count</p>
+      <div className="space-y-1.5">
+        {[
+          { label: "Words", value: "2,847" },
+          { label: "Characters", value: "16,203" },
+          { label: "Characters (no spaces)", value: "13,891" },
+          { label: "Paragraphs", value: "42" },
+          { label: "Pages", value: "~5" },
+        ].map(row => (
+          <div key={row.label} className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">{row.label}</span>
+            <span className="font-medium font-mono">{row.value}</span>
+          </div>
+        ))}
+      </div>
+    </PopoverContent>
+  </Popover>
+);
+
+/* ── Header/Footer popover ── */
+const HeaderFooterBtn = () => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <span><TBtn icon={PanelTop} label="Headers & footers" /></span>
+    </PopoverTrigger>
+    <PopoverContent className="w-52 p-1" align="start">
+      <button className="w-full text-left text-sm px-3 py-2 rounded hover:bg-accent" onClick={() => toast("Edit header — scroll to top")}>
+        Edit header
+      </button>
+      <button className="w-full text-left text-sm px-3 py-2 rounded hover:bg-accent" onClick={() => toast("Edit footer — scroll to bottom")}>
+        Edit footer
+      </button>
+      <Separator className="my-1" />
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-1 pb-1">Page numbers</p>
+      {["Top right", "Bottom center", "Bottom right"].map(pos => (
+        <button key={pos} className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent text-muted-foreground" onClick={() => toast(`Page numbers: ${pos}`)}>
+          {pos}
+        </button>
+      ))}
+      <Separator className="my-1" />
+      <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent text-muted-foreground" onClick={() => toast("Document ID added to footer")}>
+        Document ID in footer
+      </button>
+      <button className="w-full text-left text-xs px-3 py-1.5 rounded hover:bg-accent text-muted-foreground" onClick={() => toast("Different first page enabled")}>
+        Different first page
+      </button>
     </PopoverContent>
   </Popover>
 );
@@ -275,6 +491,7 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
     superscript: false,
     bulletList: false,
     numberedList: false,
+    checklist: false,
     alignLeft: true,
     alignCenter: false,
     alignRight: false,
@@ -282,12 +499,14 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
     spellCheck: false,
     ltr: true,
     rtl: false,
+    paintFormat: false,
   });
 
   const [font, setFont] = useState("Inter");
   const [fontSize, setFontSize] = useState("12");
   const [heading, setHeading] = useState("normal");
   const [findOpen, setFindOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const toggle = (key: string) =>
     setToggles((p) => ({ ...p, [key]: !p[key] }));
@@ -308,9 +527,19 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
       rtl: key === "rtl",
     }));
 
+  const handlePaintFormat = () => {
+    toggle("paintFormat");
+    if (!toggles.paintFormat) {
+      toast("Paint format: click text to apply formatting");
+    }
+  };
+
   return (
     <div className="relative flex-shrink-0">
-      <div className="h-11 border-b bg-card flex items-center px-3 gap-0.5 overflow-x-auto scrollbar-none">
+      <div
+        ref={scrollRef}
+        className="h-11 border-b bg-card flex items-center px-3 gap-0.5 overflow-x-auto scrollbar-none"
+      >
         {/* G0: Documents */}
         <EditorDocumentsPopover
           documents={documents}
@@ -319,14 +548,21 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
         />
         <Sep />
 
-        {/* G1: Undo/Redo */}
-        <TBtn icon={Undo2} label="Undo" />
-        <TBtn icon={Redo2} label="Redo" />
+        {/* G1: History & Clipboard */}
+        <TBtn icon={Undo2} label="Undo (⌘Z)" />
+        <TBtn icon={Redo2} label="Redo (⌘⇧Z)" />
+        <TBtn
+          icon={Paintbrush}
+          label="Paint format"
+          active={toggles.paintFormat}
+          onClick={handlePaintFormat}
+          onDoubleClick={() => { setToggles(p => ({ ...p, paintFormat: true })); toast("Paint format locked — press Escape to exit"); }}
+        />
         <Sep />
 
         {/* G2: Text Style */}
         <Select value={font} onValueChange={setFont}>
-          <SelectTrigger className="h-7 w-[120px] text-xs border-input">
+          <SelectTrigger className="h-7 w-[120px] text-xs border-input flex-shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -337,7 +573,7 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
         </Select>
 
         <Select value={fontSize} onValueChange={setFontSize}>
-          <SelectTrigger className="h-7 w-[54px] text-xs border-input ml-1">
+          <SelectTrigger className="h-7 w-[54px] text-xs border-input ml-1 flex-shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -351,23 +587,24 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
         <TBtn icon={Plus} label="Increase font size" onClick={() => setFontSize((p) => String(Math.min(72, Number(p) + 1)))} />
         <Sep />
 
-        {/* G3: Basic Formatting */}
-        <TBtn icon={Bold} label="Bold" active={toggles.bold} onClick={() => toggle("bold")} />
-        <TBtn icon={Italic} label="Italic" active={toggles.italic} onClick={() => toggle("italic")} />
-        <TBtn icon={Underline} label="Underline" active={toggles.underline} onClick={() => toggle("underline")} />
-        <TBtn icon={Strikethrough} label="Strikethrough" active={toggles.strikethrough} onClick={() => toggle("strikethrough")} />
+        {/* G3: Formatting */}
+        <TBtn icon={Bold} label="Bold (⌘B)" active={toggles.bold} onClick={() => toggle("bold")} />
+        <TBtn icon={Italic} label="Italic (⌘I)" active={toggles.italic} onClick={() => toggle("italic")} />
+        <TBtn icon={Underline} label="Underline (⌘U)" active={toggles.underline} onClick={() => toggle("underline")} />
+        <TBtn icon={Strikethrough} label="Strikethrough (⌘⇧X)" active={toggles.strikethrough} onClick={() => toggle("strikethrough")} />
         <TBtn icon={Subscript} label="Subscript" active={toggles.subscript} onClick={() => toggle("subscript")} />
         <TBtn icon={Superscript} label="Superscript" active={toggles.superscript} onClick={() => toggle("superscript")} />
+        <TBtn icon={Eraser} label="Clear formatting (⌘\)" onClick={() => toast("Formatting cleared")} />
         <Sep />
 
-        {/* G4: Text Color & Highlight */}
+        {/* G4: Color */}
         <ColorPickerBtn icon={Type} label="Text color" defaultColor="#000000" />
         <ColorPickerBtn icon={Highlighter} label="Highlight color" defaultColor="#FFFF00" />
         <Sep />
 
         {/* G5: Paragraph */}
         <Select value={heading} onValueChange={setHeading}>
-          <SelectTrigger className="h-7 w-[96px] text-xs border-input">
+          <SelectTrigger className="h-7 w-[96px] text-xs border-input flex-shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -385,17 +622,19 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
           </SelectContent>
         </Select>
 
-        <TBtn icon={List} label="Bullet list" active={toggles.bulletList} onClick={() => toggle("bulletList")} />
-        <TBtn icon={ListOrdered} label="Numbered list" active={toggles.numberedList} onClick={() => toggle("numberedList")} />
-        <TBtn icon={IndentDecrease} label="Decrease indent" />
-        <TBtn icon={IndentIncrease} label="Increase indent" />
+        <TBtn icon={List} label="Bullet list (⌘⇧8)" active={toggles.bulletList} onClick={() => toggle("bulletList")} />
+        <TBtn icon={ListOrdered} label="Numbered list (⌘⇧7)" active={toggles.numberedList} onClick={() => toggle("numberedList")} />
+        <TBtn icon={ListChecks} label="Checklist" active={toggles.checklist} onClick={() => toggle("checklist")} />
+        <ClauseNumberingBtn />
+        <TBtn icon={IndentDecrease} label="Decrease indent (⌘[)" />
+        <TBtn icon={IndentIncrease} label="Increase indent (⌘])" />
         <Sep />
 
         {/* G6: Alignment */}
-        <TBtn icon={AlignLeft} label="Align left" active={toggles.alignLeft} onClick={() => setAlignment("alignLeft")} />
-        <TBtn icon={AlignCenter} label="Align center" active={toggles.alignCenter} onClick={() => setAlignment("alignCenter")} />
-        <TBtn icon={AlignRight} label="Align right" active={toggles.alignRight} onClick={() => setAlignment("alignRight")} />
-        <TBtn icon={AlignJustify} label="Justify" active={toggles.justify} onClick={() => setAlignment("justify")} />
+        <TBtn icon={AlignLeft} label="Align left (⌘⇧L)" active={toggles.alignLeft} onClick={() => setAlignment("alignLeft")} />
+        <TBtn icon={AlignCenter} label="Align center (⌘⇧E)" active={toggles.alignCenter} onClick={() => setAlignment("alignCenter")} />
+        <TBtn icon={AlignRight} label="Align right (⌘⇧R)" active={toggles.alignRight} onClick={() => setAlignment("alignRight")} />
+        <TBtn icon={AlignJustify} label="Justify (⌘⇧J)" active={toggles.justify} onClick={() => setAlignment("justify")} />
         <Sep />
 
         {/* G7: Line spacing */}
@@ -408,12 +647,17 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
         <LinkInsertBtn />
         <TBtn icon={MinusSquare} label="Horizontal rule" onClick={() => toast("Horizontal rule inserted")} />
         <TBtn icon={SeparatorHorizontal} label="Page break" onClick={() => toast("Page break inserted")} />
+        <TBtn icon={TableOfContents} label="Insert table of contents" onClick={() => toast("Table of contents inserted")} />
+        <HeaderFooterBtn />
+        <TBtn icon={Superscript} label="Insert footnote (⌘⌥F)" onClick={() => toast("Footnote inserted")} className="text-[10px]" />
+        <ContentLibraryBtn />
+        <SpecialCharsBtn />
         <Sep />
 
-        {/* G9: Advanced */}
-        <TBtn icon={Search} label="Find & Replace" active={findOpen} onClick={() => setFindOpen(!findOpen)} />
+        {/* G9: Tools */}
+        <TBtn icon={Search} label="Find & Replace (⌘F)" active={findOpen} onClick={() => setFindOpen(!findOpen)} />
         <TBtn icon={SpellCheck} label="Spell check" active={toggles.spellCheck} onClick={() => toggle("spellCheck")} />
-        <TBtn icon={Printer} label="Print" onClick={() => toast("Print preview")} />
+        <WordCountBtn />
         <Sep />
 
         {/* G10: Direction */}
@@ -422,28 +666,28 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc }: EditorToolbarP
             <button
               onClick={() => setDirection("ltr")}
               className={cn(
-                "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors",
+                "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
                 toggles.ltr ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
               )}
             >
               LTR
             </button>
           </TooltipTrigger>
-          <TooltipContent>Left to right</TooltipContent>
+          <TooltipContent side="bottom" className="text-xs">Left to right</TooltipContent>
         </Tooltip>
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
             <button
               onClick={() => setDirection("rtl")}
               className={cn(
-                "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors",
+                "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
                 toggles.rtl ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
               )}
             >
               RTL
             </button>
           </TooltipTrigger>
-          <TooltipContent>Right to left</TooltipContent>
+          <TooltipContent side="bottom" className="text-xs">Right to left</TooltipContent>
         </Tooltip>
       </div>
 
