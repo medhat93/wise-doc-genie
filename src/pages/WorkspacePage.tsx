@@ -35,11 +35,11 @@ const STATUS_FILTER_OPTIONS = [
     { label: 'Approving', stages: ['approving'] as DocumentStage[] },
     { label: 'Approved', stages: ['approved'] as DocumentStage[] },
   ]},
-  { label: 'In Signing', stages: ['sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'] as DocumentStage[], children: [
+  { label: 'In Signing', stages: ['sent', 'partially_signed', 'waiting', 'requires_action'] as DocumentStage[], children: [
     { label: 'Requires your action', stages: ['requires_action'] as DocumentStage[] },
     { label: 'Waiting on others', stages: ['sent', 'partially_signed', 'waiting'] as DocumentStage[] },
-    { label: 'Expiring soon', stages: ['expiring'] as DocumentStage[] },
   ]},
+  { label: 'Expiring soon', stages: ['expiring'] as DocumentStage[] },
   { label: 'Completed', stages: ['completed'] as DocumentStage[] },
   { label: 'Declined', stages: ['declined'] as DocumentStage[] },
   { label: 'Voided', stages: ['voided'] as DocumentStage[] },
@@ -117,8 +117,100 @@ function formatWaitingSince(since: string): string {
   if (hours < 24) return `since ${hours}h`;
   return `since ${Math.floor(hours / 24)}d`;
 }
+const WORKFLOW_FILTER_OPTIONS = [
+  {
+    label: 'Internal Approval',
+    children: [
+      { label: 'Standard Approval', steps: ['Drafting', 'Legal Review', 'Manager Approval'] },
+      { label: 'Legal Review', steps: ['Drafting', 'Paralegal Review', 'Senior Legal Review', 'Legal Director Approval'] },
+    ],
+  },
+  {
+    label: 'External Approval',
+    children: [
+      { label: 'Executive Approval', steps: ['Drafting', 'Department Review', 'VP Approval', 'Legal Review', 'Executive Sign-off'] },
+      { label: 'Procurement Approval', steps: ['Drafting', 'Budget Review', 'Procurement Review', 'CFO Approval'] },
+    ],
+  },
+];
 
-export default function WorkspacePage() {
+function WorkflowFilterPill() {
+  const [selected, setSelected] = useState<string[]>([]);
+  const [expandedWorkflow, setExpandedWorkflow] = useState<string | null>(null);
+
+  const toggleWorkflow = (label: string) => {
+    setSelected(prev => prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]);
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className={cn(
+          'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors',
+          selected.length > 0
+            ? 'border-primary text-primary bg-primary/5'
+            : 'border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50'
+        )}>
+          + Workflow {selected.length > 0 && `(${selected.length})`}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 p-2">
+        {WORKFLOW_FILTER_OPTIONS.map(group => (
+          <div key={group.label} className="mb-2 last:mb-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-2 py-1.5">{group.label}</p>
+            {group.children.map(wf => {
+              const isSelected = selected.includes(wf.label);
+              const isExpanded = expandedWorkflow === wf.label;
+              return (
+                <div key={wf.label}>
+                  <button
+                    onClick={() => toggleWorkflow(wf.label)}
+                    className={cn(
+                      'flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded hover:bg-muted',
+                      isSelected && 'text-primary font-medium'
+                    )}
+                  >
+                    <Checkbox checked={isSelected} className="h-3.5 w-3.5" />
+                    <span className="flex-1 text-left">{wf.label}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setExpandedWorkflow(isExpanded ? null : wf.label); }}
+                      className="p-0.5 hover:bg-muted rounded"
+                    >
+                      <ChevronDown size={12} className={cn('transition-transform', isExpanded && 'rotate-180')} />
+                    </button>
+                  </button>
+                  {isExpanded && (
+                    <div className="ml-4 pl-3 border-l border-dashed border-border mb-1">
+                      {wf.steps.map((step, i) => (
+                        <div key={step} className="flex items-center gap-2 py-1 text-xs text-muted-foreground">
+                          <div className={cn(
+                            'h-4 w-4 rounded-full flex items-center justify-center text-[9px] font-medium',
+                            i === 0 ? 'bg-primary/15 text-primary' : 'bg-muted'
+                          )}>
+                            {i}
+                          </div>
+                          {step}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+        {selected.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <button onClick={() => setSelected([])} className="w-full text-xs text-primary px-2 py-1.5 hover:bg-muted rounded">Clear filters</button>
+          </>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeView, setActiveView] = useState<SidebarView>('all');
@@ -316,9 +408,7 @@ export default function WorkspacePage() {
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 transition-colors">
             + Sent to
           </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 transition-colors">
-            + Workflow
-          </button>
+          <WorkflowFilterPill />
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 transition-colors">
             + Add filters <ChevronDown size={12} />
           </button>
