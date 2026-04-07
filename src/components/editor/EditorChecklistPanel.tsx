@@ -774,20 +774,20 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                 </div>
 
                 {/* Continue / Skip buttons */}
-                <div className="flex gap-2">
-                  {step.isOptional && !canContinue && (
-                    <Button variant="ghost" size="sm" className="flex-1 h-9 text-xs" onClick={handleSkip}>
-                      {step.skipLabel || "Skip"}
-                    </Button>
-                  )}
+                <div className="flex flex-col gap-2">
                   <Button
                     size="sm"
-                    className={cn("h-9 text-xs", step.isOptional && !canContinue ? "flex-1" : "w-full")}
+                    className="w-full h-9 text-xs"
                     disabled={!canContinue}
                     onClick={handleContinue}
                   >
                     Continue
                   </Button>
+                  {step.isOptional && !canContinue && (
+                    <Button variant="ghost" size="sm" className="w-full h-9 text-xs text-muted-foreground" onClick={handleSkip}>
+                      {step.skipLabel || "Skip"}
+                    </Button>
+                  )}
                 </div>
               </div>
             );
