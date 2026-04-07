@@ -129,9 +129,9 @@ const VariableRow = ({
 const EditorSmartFieldsPanel = () => {
   const { participants, variableValues, setVariableValues, usedVariables } = useEditorContext();
   const [search, setSearch] = useState("");
-  const [participantOpen, setParticipantOpen] = useState(true);
-  const [systemOpen, setSystemOpen] = useState(true);
-  const [customOpen, setCustomOpen] = useState(true);
+  const [participantOpen, setParticipantOpen] = useState(false);
+  const [systemOpen, setSystemOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
   const [unusedOpen, setUnusedOpen] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newVarName, setNewVarName] = useState("");

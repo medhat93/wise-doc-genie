@@ -136,7 +136,7 @@ const MOCK_PLACED_FIELDS: PlacedField[] = [
   { id: "f3", fieldTypeId: "signature", participantId: "p2", participantName: "Sarah Johnson", participantColor: "#DC2626", page: 1, x: 60, y: 760, width: 200, height: 50 },
 ];
 
-const USED_VARIABLES = ["Client.Name", "Sender.Company", "Document.Value", "Effective.Date", "Signer.Name", "Signer.Title", "Signer.Company"];
+const USED_VARIABLES: string[] = [];
 
 const INITIAL_VARIABLE_VALUES: Record<string, string> = {
   "Client.Name": "Acme Corporation",
