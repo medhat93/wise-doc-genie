@@ -463,7 +463,7 @@ const TagPopover = ({
 };
 
 /* ══════════ TOP BAR ══════════ */
-const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFieldsPanel?: (participantId?: string) => void; isEsign?: boolean; onToggleEsign?: () => void }) => {
+const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign, onOpenVersionHistory }: { onOpenFieldsPanel?: (participantId?: string) => void; isEsign?: boolean; onToggleEsign?: () => void; onOpenVersionHistory?: () => void }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { participants, placedFields, setDocumentAcknowledgments } = useEditorContext();
@@ -704,6 +704,10 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign }: { onOpenFie
               <DropdownMenuItem onClick={() => toast.success("Exporting PDF...")}>
                 <HugeiconsIcon icon={Download01Icon} size={14} className="mr-2" />
                 Export PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onOpenVersionHistory?.()}>
+                <Clock size={14} className="mr-2" />
+                Version history
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                 <HugeiconsIcon icon={Settings02Icon} size={14} className="mr-2" />
