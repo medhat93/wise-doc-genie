@@ -880,10 +880,11 @@ interface EditorCanvasProps {
   onFieldSelect?: (fieldId: string | null) => void;
   onOpenComments?: () => void;
   onOpenAi?: () => void;
+  onOpenVersionHistory?: () => void;
   isEsign?: boolean;
 }
 
-const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpenAi, isEsign }: EditorCanvasProps) => {
+const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpenAi, onOpenVersionHistory, isEsign }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
@@ -1139,6 +1140,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
           activeDocId={activeDocId}
           onScrollToDoc={scrollToDoc}
           onOpenComments={onOpenComments}
+          onOpenVersionHistory={onOpenVersionHistory}
         />
       )}
 

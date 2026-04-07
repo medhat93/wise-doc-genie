@@ -8,6 +8,7 @@ import EditorPanelToolbar, { type PanelId } from "@/components/editor/EditorPane
 import EditorPanel from "@/components/editor/EditorPanel";
 import { useEditorContext } from "@/components/editor/EditorContext";
 import CorrectionBanner from "@/components/editor/CorrectionBanner";
+import VersionHistoryOverlay from "@/components/editor/VersionHistoryOverlay";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -67,6 +68,7 @@ const EditorPageInner = () => {
   const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen, participants, placedFields, usedVariables, variableValues } = useEditorContext();
 
   const [loading, setLoading] = useState(true);
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
 
   // Compute checklist status
   const hasParticipants = participants.length > 0;
@@ -138,7 +140,7 @@ const EditorPageInner = () => {
         />
       )}
 
-      <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} />
+      <EditorTopBar isEsign={isEsign} onToggleEsign={() => setIsEsign(prev => !prev)} onOpenVersionHistory={() => setVersionHistoryOpen(true)} />
 
       <div className="flex flex-1 overflow-hidden">
 
@@ -148,8 +150,14 @@ const EditorPageInner = () => {
           onFieldSelect={handleFieldSelect}
           onOpenComments={handleOpenComments}
           onOpenAi={handleOpenAi}
+          onOpenVersionHistory={() => setVersionHistoryOpen(true)}
           isEsign={isEsign}
         />
+
+      <VersionHistoryOverlay
+        open={versionHistoryOpen}
+        onClose={() => setVersionHistoryOpen(false)}
+      />
 
         {/* Desktop panel */}
         {!isMobile && (

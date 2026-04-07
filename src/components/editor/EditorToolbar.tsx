@@ -64,6 +64,7 @@ import {
   MoreHorizontal,
   MessageSquare,
   GitCompareArrows,
+  Clock,
 } from "lucide-react";
 import EditorDocumentsPopover, { type EditorDocument } from "./EditorDocumentsPopover";
 
@@ -359,9 +360,10 @@ interface EditorToolbarProps {
   activeDocId: string | null;
   onScrollToDoc: (id: string) => void;
   onOpenComments?: () => void;
+  onOpenVersionHistory?: () => void;
 }
 
-const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments }: EditorToolbarProps) => {
+const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, onOpenVersionHistory }: EditorToolbarProps) => {
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     bold: false,
     italic: false,
@@ -517,8 +519,9 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments }
         />
         <Sep />
 
-        {/* G9: Find */}
+        {/* G9: Find & Tools */}
         <TBtn icon={Search} label="Find & Replace (⌘F)" active={findOpen} onClick={() => setFindOpen(!findOpen)} />
+        <TBtn icon={Clock} label="Version history (⌘⌥⇧H)" onClick={() => onOpenVersionHistory?.()} />
         <Sep />
 
         {/* G10: Direction */}
