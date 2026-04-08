@@ -431,7 +431,75 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
           </div>
         </div>
 
-        {/* FIX 1: AI Summary — above tabs, always visible */}
+        {/* eSign mode: single scrollable view, no tabs */}
+        {isESign ? (
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {/* Documents section (collapsed by default) */}
+            <div>
+              <button
+                className="flex items-center justify-between w-full py-2 cursor-pointer hover:bg-muted/50 rounded-md px-2 -mx-2"
+                onClick={() => setDocsExpanded(!docsExpanded)}
+              >
+                <div className="flex items-center gap-2">
+                  <File size={14} className="text-muted-foreground" />
+                  <div className="text-left">
+                    <p className="text-sm font-medium">{subDocs.length} documents</p>
+                    <p className="text-[10px] text-muted-foreground">{docSummaryParts.join(' · ')}</p>
+                  </div>
+                </div>
+                {docsExpanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
+              </button>
+              <div className={cn('overflow-hidden transition-all duration-200', docsExpanded ? 'max-h-[600px] opacity-100 mt-1' : 'max-h-0 opacity-0')}>
+                {subDocs.map(sd => {
+                  const typeColors = { Primary: 'bg-indigo-100 text-indigo-700', Supplement: 'bg-amber-100 text-amber-700', Attachment: 'bg-gray-100 text-gray-700' };
+                  return (
+                    <div key={sd.id} onClick={() => toast.info(`Open ${sd.name}`)} className="py-2.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 transition-colors rounded-sm">
+                      <div className="flex items-center gap-3">
+                        <File size={16} className="shrink-0 text-muted-foreground" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{sd.name}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={cn('text-[10px] px-1.5 rounded font-medium', typeColors[sd.type])}>{sd.type}</span>
+                            <span className="text-[10px] text-muted-foreground">·</span>
+                            <span className="text-[10px] text-muted-foreground">{sd.pages} {sd.pages === 1 ? 'page' : 'pages'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Participants (always visible) */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Participants</p>
+              <SigningTimeline doc={doc} />
+            </div>
+
+            <Separator />
+
+            {/* Tags */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tags</p>
+              <div className="flex flex-wrap gap-1.5">
+                {doc.tags.length > 0 ? doc.tags.map(t => (
+                  <span key={t} className="group bg-muted border border-border text-xs px-2 py-0.5 rounded-md flex items-center gap-1">
+                    {t}
+                    <X size={10} className="opacity-0 group-hover:opacity-100 cursor-pointer text-muted-foreground hover:text-foreground transition-opacity" />
+                  </span>
+                )) : null}
+                <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border px-2 py-0.5 rounded-md transition-colors">
+                  <Plus size={10} /> Add
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+        {/* CLM: AI Summary — above tabs */}
         <div className="px-4 py-3 border-b border-border shrink-0">
           <div className="bg-violet-50/50 rounded-md p-2.5 border border-violet-100 flex gap-2">
             <Sparkles size={14} className="text-violet-500 shrink-0 mt-0.5" />
@@ -444,22 +512,20 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* CLM Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <div className="px-4 pt-2 border-b border-border shrink-0">
             <TabsList className="w-full justify-start h-9 bg-transparent p-0 gap-4">
               <TabsTrigger value="overview" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
                 <FileText size={12} /> Overview
               </TabsTrigger>
-              {!isESign && (
-                <TabsTrigger value="activity" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
-                  <Clock size={12} /> Activity
-                </TabsTrigger>
-              )}
+              <TabsTrigger value="activity" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
+                <Clock size={12} /> Activity
+              </TabsTrigger>
               <TabsTrigger value="participants" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
                 <Users size={12} /> Participants
               </TabsTrigger>
-              {!isESign && hasWorkflow && (
+              {hasWorkflow && (
                 <TabsTrigger value="workflow" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
                   <GitPullRequest size={12} /> Workflow
                 </TabsTrigger>
@@ -482,7 +548,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
                 </div>
               )}
 
-              {/* FIX 2: Documents section — collapsed by default */}
+              {/* Documents section — collapsed by default */}
               <div>
                 <button
                   className="flex items-center justify-between w-full py-2 cursor-pointer hover:bg-muted/50 rounded-md px-2 -mx-2"
@@ -552,44 +618,38 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
 
               <Separator />
 
-              {/* FIX 3: Jira-style inline properties — replaces Key Details */}
+              {/* Jira-style inline properties */}
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Properties</p>
                 <div className="space-y-0.5">
-                  {!isESign && (
-                    <PropertyRow
-                      label="Document type"
-                      value={docType}
-                      type="select"
-                      options={['Service Agreement', 'NDA', 'Employment', 'Consulting', 'Procurement', 'Lease', 'Partnership', 'Other']}
-                      onSave={setDocType}
-                    />
-                  )}
+                  <PropertyRow
+                    label="Document type"
+                    value={docType}
+                    type="select"
+                    options={['Service Agreement', 'NDA', 'Employment', 'Consulting', 'Procurement', 'Lease', 'Partnership', 'Other']}
+                    onSave={setDocType}
+                  />
                   <PropertyRow label="Counterparty" value={doc.counterparty || ''} onSave={() => {}} />
                   <PropertyRow label="Sender" value={doc.owner} readOnly />
                   <PropertyRow label="Created" value={formatDate(doc.createdAt)} readOnly />
                   <PropertyRow label="Last modified" value={formatDate(doc.modifiedAt)} readOnly />
                   <PropertyRow label="Expiry date" value={expiryDate} type="date" onSave={setExpiryDate} />
-                  {!isESign && <PropertyRow label="Folder" value={folder} onSave={setFolder} />}
+                  <PropertyRow label="Folder" value={folder} onSave={setFolder} />
                   <PropertyRow label="Contract value" value={contractValue} type="number" onSave={setContractValue} />
-                  {!isESign && (
-                    <>
-                      <PropertyRow
-                        label="Department"
-                        value={department}
-                        type="select"
-                        options={['Legal', 'Finance', 'HR', 'Engineering', 'Sales', 'Procurement']}
-                        onSave={setDepartment}
-                      />
-                      <PropertyRow
-                        label="Priority"
-                        value={priority}
-                        type="select"
-                        options={['Low', 'Medium', 'High', 'Critical']}
-                        onSave={setPriority}
-                      />
-                    </>
-                  )}
+                  <PropertyRow
+                    label="Department"
+                    value={department}
+                    type="select"
+                    options={['Legal', 'Finance', 'HR', 'Engineering', 'Sales', 'Procurement']}
+                    onSave={setDepartment}
+                  />
+                  <PropertyRow
+                    label="Priority"
+                    value={priority}
+                    type="select"
+                    options={['Low', 'Medium', 'High', 'Critical']}
+                    onSave={setPriority}
+                  />
                 </div>
               </div>
 
@@ -612,7 +672,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
               </div>
             </TabsContent>
 
-            {/* ═══ TAB 2: ACTIVITY — FIX 4: full log, no truncation ═══ */}
+            {/* ═══ TAB 2: ACTIVITY ═══ */}
             <TabsContent value="activity" className="p-4 mt-0">
               <div className="relative">
                 <div className="absolute left-[9px] top-2 bottom-2 w-px bg-border" />
@@ -632,7 +692,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
               </div>
             </TabsContent>
 
-            {/* ═══ TAB 3: PARTICIPANTS — FIX 5: Signing Timeline ═══ */}
+            {/* ═══ TAB 3: PARTICIPANTS ═══ */}
             <TabsContent value="participants" className="p-4 mt-0 space-y-4">
               <SigningTimeline doc={doc} />
             </TabsContent>
@@ -705,6 +765,8 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
             )}
           </div>
         </Tabs>
+        </>
+        )}
       </SheetContent>
     </Sheet>
     
