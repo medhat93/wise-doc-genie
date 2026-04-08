@@ -445,18 +445,19 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     if (isLocked) return;
 
     if (isCompleted) {
-      // Toggle expanded state for completed steps
       setExpandedCompletedSteps(prev => {
         const next = new Set(prev);
         if (next.has(step.id)) {
           next.delete(step.id);
+          // Remove snapshot on collapse
+          setStepSnapshots(p => { const n = { ...p }; delete n[step.id]; return n; });
         } else {
           next.add(step.id);
+          // Capture snapshot on expand
+          setStepSnapshots(p => ({ ...p, [step.id]: getStepFingerprint(step.id) }));
         }
         return next;
       });
-    } else if (index === activeStepIndex) {
-      // Can't collapse active step
     }
   };
 
