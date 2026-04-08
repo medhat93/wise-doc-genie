@@ -163,6 +163,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [documentAcknowledgments, setDocumentAcknowledgments] = useState<Record<string, Record<string, AcknowledgmentLevel>>>({});
   const [pendingAiQuestion, setPendingAiQuestion] = useState<{ question: string; selectedText: string } | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
+  const [checklistState, setChecklistState] = useState<ChecklistState>({ completedStepIds: [], skippedStepIds: [] });
 
   return (
     <EditorContext.Provider value={{
