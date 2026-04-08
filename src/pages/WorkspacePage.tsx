@@ -352,6 +352,7 @@ function WorkspacePageInner() {
     else if (activeView === 'in_approval') docs = docs.filter(d => ['approving', 'approved'].includes(d.stage));
     else if (activeView === 'requires_action') docs = docs.filter(d => d.stage === 'requires_action' || (d.waitingFor?.name === CURRENT_USER && d.stage !== 'draft'));
     else if (activeView === 'owned') docs = docs.filter(d => d.owner === CURRENT_USER);
+    else if (activeView === 'received') docs = docs.filter(d => d.owner !== CURRENT_USER && d.participants.some(p => p.name === CURRENT_USER));
     else if (activeView === 'expiring') docs = docs.filter(d => d.stage === 'expiring' || (d.expiresAt && new Date(d.expiresAt).getTime() > Date.now()));
     else if (activeView === 'completed') docs = docs.filter(d => d.stage === 'completed');
     if (statusFilter.length > 0) docs = docs.filter(d => statusFilter.includes(d.stage));
