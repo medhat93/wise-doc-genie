@@ -261,6 +261,21 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     }
   }, [steps, activeStepIndex]);
 
+  // Auto-advance when the current active step becomes complete from external changes
+  useEffect(() => {
+    if (activeStepIndex !== null && steps[activeStepIndex]?.isComplete) {
+      const nextIncomplete = steps.findIndex((s, i) => i > activeStepIndex && !s.isComplete);
+      if (nextIncomplete >= 0) {
+        setActiveStepIndex(nextIncomplete);
+        setOpenSteps(prev => {
+          const next = new Set(prev);
+          next.add(nextIncomplete);
+          return next;
+        });
+      }
+    }
+  }, [steps, activeStepIndex]);
+
   // Auto-select first participant for Step 2
   useEffect(() => {
     if (hasParticipants && !selectedParticipantId) {
