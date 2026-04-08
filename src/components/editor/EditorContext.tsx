@@ -126,6 +126,8 @@ interface EditorContextType {
   setPendingAiQuestion: (q: { question: string; selectedText: string } | null) => void;
   aiSuggestions: AiSuggestion[];
   setAiSuggestions: React.Dispatch<React.SetStateAction<AiSuggestion[]>>;
+  checklistState: ChecklistState;
+  setChecklistState: React.Dispatch<React.SetStateAction<ChecklistState>>;
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
