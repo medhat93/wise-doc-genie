@@ -479,10 +479,14 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
         <TBtn icon={Strikethrough} label="Strikethrough (⌘⇧X)" active={toggles.strikethrough} onClick={() => toggle("strikethrough")} />
         <Sep />
 
-        {/* G4: Color */}
-        <ColorPickerBtn icon={Type} label="Text color" defaultColor="#000000" />
-        <ColorPickerBtn icon={Highlighter} label="Highlight color" defaultColor="#FFFF00" />
-        <Sep />
+        {/* G4: Color — collapsible */}
+        {showColors && (
+          <>
+            <ColorPickerBtn icon={Type} label="Text color" defaultColor="#000000" />
+            <ColorPickerBtn icon={Highlighter} label="Highlight color" defaultColor="#FFFF00" />
+            <Sep />
+          </>
+        )}
 
         {/* G5: Paragraph style & lists */}
         <Select value={heading} onValueChange={setHeading}>
@@ -504,59 +508,75 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
           </SelectContent>
         </Select>
 
-        <TBtn icon={List} label="Bullet list (⌘⇧8)" active={toggles.bulletList} onClick={() => toggle("bulletList")} />
-        <TBtn icon={ListOrdered} label="Numbered list (⌘⇧7)" active={toggles.numberedList} onClick={() => toggle("numberedList")} />
-        <TBtn icon={IndentDecrease} label="Decrease indent (⌘[)" />
-        <TBtn icon={IndentIncrease} label="Increase indent (⌘])" />
+        {showLists && (
+          <>
+            <TBtn icon={List} label="Bullet list (⌘⇧8)" active={toggles.bulletList} onClick={() => toggle("bulletList")} />
+            <TBtn icon={ListOrdered} label="Numbered list (⌘⇧7)" active={toggles.numberedList} onClick={() => toggle("numberedList")} />
+            <TBtn icon={IndentDecrease} label="Decrease indent (⌘[)" />
+            <TBtn icon={IndentIncrease} label="Increase indent (⌘])" />
+          </>
+        )}
         <Sep />
 
-        {/* G6: Alignment */}
-        <TBtn icon={AlignLeft} label="Align left (⌘⇧L)" active={toggles.alignLeft} onClick={() => setAlignment("alignLeft")} />
-        <TBtn icon={AlignCenter} label="Align center (⌘⇧E)" active={toggles.alignCenter} onClick={() => setAlignment("alignCenter")} />
-        <TBtn icon={AlignRight} label="Align right (⌘⇧R)" active={toggles.alignRight} onClick={() => setAlignment("alignRight")} />
-        <TBtn icon={AlignJustify} label="Justify (⌘⇧J)" active={toggles.justify} onClick={() => setAlignment("justify")} />
-        <Sep />
+        {/* G6: Alignment — collapsible */}
+        {showAlignment && (
+          <>
+            <TBtn icon={AlignLeft} label="Align left (⌘⇧L)" active={toggles.alignLeft} onClick={() => setAlignment("alignLeft")} />
+            <TBtn icon={AlignCenter} label="Align center (⌘⇧E)" active={toggles.alignCenter} onClick={() => setAlignment("alignCenter")} />
+            <TBtn icon={AlignRight} label="Align right (⌘⇧R)" active={toggles.alignRight} onClick={() => setAlignment("alignRight")} />
+            <TBtn icon={AlignJustify} label="Justify (⌘⇧J)" active={toggles.justify} onClick={() => setAlignment("justify")} />
+            <Sep />
+          </>
+        )}
 
-        {/* G7: Insert essentials */}
-        <TableGridSelector />
-        <TBtn icon={Image} label="Insert image" onClick={() => toast("Select an image to insert")} />
-        <LinkInsertBtn />
-        <Sep />
+        {/* G7: Insert essentials — collapsible */}
+        {showInsert && (
+          <>
+            <TableGridSelector />
+            <TBtn icon={Image} label="Insert image" onClick={() => toast("Select an image to insert")} />
+            <LinkInsertBtn />
+            <Sep />
+          </>
+        )}
 
         {/* G9: Tools */}
         <TBtn icon={Clock} label="Version history (⌘⌥⇧H)" onClick={() => onOpenVersionHistory?.()} />
         <Sep />
 
-        {/* G10: Direction */}
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => setDirection("ltr")}
-              className={cn(
-                "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
-                toggles.ltr ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
-              )}
-            >
-              LTR
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs">Left to right</TooltipContent>
-        </Tooltip>
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => setDirection("rtl")}
-              className={cn(
-                "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
-                toggles.rtl ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
-              )}
-            >
-              RTL
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs">Right to left</TooltipContent>
-        </Tooltip>
-        <Sep />
+        {/* G10: Direction — collapsible */}
+        {showDirection && (
+          <>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setDirection("ltr")}
+                  className={cn(
+                    "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
+                    toggles.ltr ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  LTR
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Left to right</TooltipContent>
+            </Tooltip>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setDirection("rtl")}
+                  className={cn(
+                    "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
+                    toggles.rtl ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  RTL
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Right to left</TooltipContent>
+            </Tooltip>
+            <Sep />
+          </>
+        )}
 
         {/* G11: More tools toggle */}
         <TBtn
