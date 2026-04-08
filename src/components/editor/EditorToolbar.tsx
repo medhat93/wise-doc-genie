@@ -450,8 +450,6 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
           </SelectContent>
         </Select>
 
-        <TBtn icon={Minus} label="Decrease font size" onClick={() => setFontSize((p) => String(Math.max(8, Number(p) - 1)))} />
-        <TBtn icon={Plus} label="Increase font size" onClick={() => setFontSize((p) => String(Math.min(72, Number(p) + 1)))} />
         <Sep />
 
         {/* G3: Core formatting */}
@@ -503,24 +501,9 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
         <TableGridSelector />
         <TBtn icon={Image} label="Insert image" onClick={() => toast("Select an image to insert")} />
         <LinkInsertBtn />
-        <ContentLibraryBtn />
         <Sep />
 
-        {/* G8: Comment & Track Changes */}
-        <TBtn icon={MessageSquare} label="Add comment" onClick={() => { onOpenComments?.(); toast("Click on text to add a comment"); }} />
-        <TBtn
-          icon={GitCompareArrows}
-          label="Track changes"
-          active={toggles.trackChanges}
-          onClick={() => {
-            toggle("trackChanges");
-            toast(toggles.trackChanges ? "Track changes off" : "Track changes on — edits will be tracked");
-          }}
-        />
-        <Sep />
-
-        {/* G9: Find & Tools */}
-        <TBtn icon={Search} label="Find & Replace (⌘F)" active={findOpen} onClick={() => setFindOpen(!findOpen)} />
+        {/* G9: Tools */}
         <TBtn icon={Clock} label="Version history (⌘⌥⇧H)" onClick={() => onOpenVersionHistory?.()} />
         <Sep />
 
