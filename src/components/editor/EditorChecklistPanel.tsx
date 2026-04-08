@@ -251,7 +251,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     return s.filter(step => step.isVisible);
   }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, hasRequiredProperties, allPropsComplete, workflowEnforced, workflowComplete, selectedWorkflow]);
 
-  // Initialize active step
+  // Initialize active step and open steps
   useEffect(() => {
     if (activeStepIndex === null && steps.length > 0) {
       const firstIncomplete = steps.findIndex(s => !s.isComplete);
@@ -279,19 +279,12 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   const handleContinue = () => {
     if (activeStepIndex !== null) {
+      // Mark current step as manually completed if it's properties
       const currentStep = steps[activeStepIndex];
       if (currentStep?.id === "properties") {
         setManuallyCompletedSteps(prev => new Set(prev).add("properties"));
       }
 
-      // Collapse current step
-      setOpenSteps(prev => {
-        const next = new Set(prev);
-        next.delete(activeStepIndex);
-        return next;
-      });
-
-      // Open next step
       if (activeStepIndex < steps.length - 1) {
         const nextIndex = activeStepIndex + 1;
         setActiveStepIndex(nextIndex);
@@ -301,6 +294,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
           return next;
         });
       } else {
+        // Last step — just close it
         setActiveStepIndex(null);
       }
     }
@@ -310,19 +304,30 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     handleContinue();
   };
 
-  // Save & collapse a re-opened completed step
-  const handleSaveStep = (index: number) => {
-    setOpenSteps(prev => {
-      const next = new Set(prev);
-      next.delete(index);
-      return next;
-    });
-  };
-
   const handleStepClick = (index: number) => {
-    if (steps[index].isComplete && !openSteps.has(index)) {
-      // Open a completed step for review
-      setOpenSteps(prev => new Set(prev).add(index));
+    // Toggle open/close for completed steps without affecting the active editing step
+    if (steps[index].isComplete) {
+      setOpenSteps(prev => {
+        const next = new Set(prev);
+        if (next.has(index) && index !== activeStepIndex) {
+          next.delete(index);
+        } else {
+          next.add(index);
+        }
+        return next;
+      });
+      // If clicking a completed step, also set it as active for editing
+      if (!openSteps.has(index)) {
+        setActiveStepIndex(index);
+      }
+    } else if (index === activeStepIndex) {
+      // Toggle current active step
+      setOpenSteps(prev => {
+        const next = new Set(prev);
+        if (next.has(index)) next.delete(index);
+        else next.add(index);
+        return next;
+      });
     }
   };
 
@@ -401,9 +406,9 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
               </div>
             )}
 
-            <Button className="w-full h-9 gap-1.5" variant={hasParticipants ? "outline" : "default"} onClick={() => setParticipantsOpen(true)}>
+            <Button className="w-full h-9 gap-1.5" onClick={() => setParticipantsOpen(true)}>
               <User size={14} />
-              {hasParticipants ? "Manage participants" : "Add participants"}
+              Add participants
             </Button>
 
             {!hasParticipants && (
@@ -798,6 +803,20 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                     )}
                   </div>
                   <span className="text-sm font-semibold flex-1">{step.title}</span>
+                  {isCompleted && (
+                    <button
+                      onClick={() => {
+                        setOpenSteps(prev => {
+                          const next = new Set(prev);
+                          next.delete(index);
+                          return next;
+                        });
+                      }}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Collapse
+                    </button>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground mb-3 ml-[34px]">{step.description}</p>
 
@@ -806,18 +825,8 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                   {renderStepContent(step, index)}
                 </div>
 
-                {/* Buttons */}
-                {isCompleted ? (
-                  /* Re-opened completed step — Save to collapse */
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full h-9 text-xs"
-                    onClick={() => handleSaveStep(index)}
-                  >
-                    Save
-                  </Button>
-                ) : isCurrentActive ? (
+                {/* Continue / Skip buttons — only for the current active step */}
+                {isCurrentActive && !isCompleted && (
                   <div className="flex flex-col gap-2">
                     <Button
                       size="sm"
@@ -833,7 +842,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                       </Button>
                     )}
                   </div>
-                ) : null}
+                )}
               </div>
             );
           }
