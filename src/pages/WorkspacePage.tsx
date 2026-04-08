@@ -24,6 +24,27 @@ import {
   Plus, ChevronDown, Search, LayoutGrid, List, MoreVertical,
   Eye, Pencil, Send, Download, FolderInput, Trash2, ChevronLeft, ChevronRight,
   Bell, Check, FileText, Settings, Tag, Share2, Activity, CircleDot, Circle, CheckCircle,
+  X, Clock, Archive, Upload
+} from 'lucide-react';
+import { WorkspaceModeProvider, useWorkspaceMode } from '@/contexts/WorkspaceModeContext';
+
+const APPROVAL_STAGES: DocumentStage[] = ['approving', 'approved'];
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
+import {
+  Popover, PopoverContent, PopoverTrigger
+} from '@/components/ui/popover';
+import {
+  Plus, ChevronDown, Search, LayoutGrid, List, MoreVertical,
+  Eye, Pencil, Send, Download, FolderInput, Trash2, ChevronLeft, ChevronRight,
+  Bell, Check, FileText, Settings, Tag, Share2, Activity, CircleDot, Circle, CheckCircle,
   X, Clock, Archive
 } from 'lucide-react';
 

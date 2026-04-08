@@ -7,6 +7,7 @@ import {
   LayoutGrid, Share2, Send, Trash2, Clock, Plus, ChevronDown, MoreVertical
 } from 'lucide-react';
 import { SidebarView, QuickLink } from '@/types/workspace';
+import { useWorkspaceMode } from '@/contexts/WorkspaceModeContext';
 
 interface Props {
   activeView: SidebarView;

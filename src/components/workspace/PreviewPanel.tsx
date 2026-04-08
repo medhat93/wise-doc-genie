@@ -20,6 +20,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Progress } from '@/components/ui/progress';
 import DocumentActionsMenu from './DocumentActionsMenu';
 import CorrectionDialog from './CorrectionDialog';
+import { useWorkspaceMode } from '@/contexts/WorkspaceModeContext';
 
 /* ── stage badge config ─────────────────────────────────────── */
 const stageConfig: Record<string, { label: string; className: string; icon: React.ElementType }> = {
