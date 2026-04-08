@@ -142,12 +142,10 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     variableValues, setVariableValues,
   } = useEditorContext();
 
-  const [openSteps, setOpenSteps] = useState<Set<number>>(new Set());
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
   const [showSendCelebration, setShowSendCelebration] = useState(false);
-  const [manuallyCompletedSteps, setManuallyCompletedSteps] = useState<Set<string>>(new Set());
 
   // Step 4 state
   const [documentType, setDocumentType] = useState("");
@@ -174,7 +172,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   // Step 4 completion
   const requiredProps = documentType ? (REQUIRED_PROPS[documentType] || DEFAULT_REQUIRED_PROPS) : [];
-  const allPropsComplete = (!!documentType && requiredProps.every(f => propValues[f.key]?.trim())) || manuallyCompletedSteps.has("properties");
+  const allPropsComplete = !!documentType && requiredProps.every(f => propValues[f.key]?.trim());
 
   // Step 5 completion
   const wfSteps = selectedWorkflow !== "none" ? (WORKFLOW_TEMPLATES[selectedWorkflow]?.steps || []) : [];
@@ -251,13 +249,11 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     return s.filter(step => step.isVisible);
   }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, hasRequiredProperties, allPropsComplete, workflowEnforced, workflowComplete, selectedWorkflow]);
 
-  // Initialize active step and open steps
+  // Initialize active step
   useEffect(() => {
     if (activeStepIndex === null && steps.length > 0) {
       const firstIncomplete = steps.findIndex(s => !s.isComplete);
-      const idx = firstIncomplete >= 0 ? firstIncomplete : steps.length - 1;
-      setActiveStepIndex(idx);
-      setOpenSteps(new Set([idx]));
+      setActiveStepIndex(firstIncomplete >= 0 ? firstIncomplete : steps.length - 1);
     }
   }, [steps, activeStepIndex]);
 
@@ -278,25 +274,10 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   }, [allComplete, steps.length]);
 
   const handleContinue = () => {
-    if (activeStepIndex !== null) {
-      // Mark current step as manually completed if it's properties
-      const currentStep = steps[activeStepIndex];
-      if (currentStep?.id === "properties") {
-        setManuallyCompletedSteps(prev => new Set(prev).add("properties"));
-      }
-
-      if (activeStepIndex < steps.length - 1) {
-        const nextIndex = activeStepIndex + 1;
-        setActiveStepIndex(nextIndex);
-        setOpenSteps(prev => {
-          const next = new Set(prev);
-          next.add(nextIndex);
-          return next;
-        });
-      } else {
-        // Last step — just close it
-        setActiveStepIndex(null);
-      }
+    if (activeStepIndex !== null && activeStepIndex < steps.length - 1) {
+      setActiveStepIndex(activeStepIndex + 1);
+    } else {
+      setActiveStepIndex(null);
     }
   };
 
@@ -305,29 +286,9 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   };
 
   const handleStepClick = (index: number) => {
-    // Toggle open/close for completed steps without affecting the active editing step
-    if (steps[index].isComplete) {
-      setOpenSteps(prev => {
-        const next = new Set(prev);
-        if (next.has(index) && index !== activeStepIndex) {
-          next.delete(index);
-        } else {
-          next.add(index);
-        }
-        return next;
-      });
-      // If clicking a completed step, also set it as active for editing
-      if (!openSteps.has(index)) {
-        setActiveStepIndex(index);
-      }
-    } else if (index === activeStepIndex) {
-      // Toggle current active step
-      setOpenSteps(prev => {
-        const next = new Set(prev);
-        if (next.has(index)) next.delete(index);
-        else next.add(index);
-        return next;
-      });
+    // Can only click completed steps to re-edit
+    if (steps[index].isComplete || index === activeStepIndex) {
+      setActiveStepIndex(index);
     }
   };
 
@@ -393,7 +354,22 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       case "participants":
         return (
           <div className="space-y-3">
-            {/* Existing participants list */}
+            {/* Quick add self */}
+            <button
+              onClick={handleQuickAddSelf}
+              className="w-full border rounded-lg p-3 hover:bg-muted/50 transition-colors flex items-center justify-between text-left"
+            >
+              <span className="text-sm font-medium">I'm the only signer</span>
+              <span className="text-xs text-primary">→</span>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <Separator className="flex-1" />
+              <span className="text-[10px] text-muted-foreground uppercase">or</span>
+              <Separator className="flex-1" />
+            </div>
+
+            {/* Existing participants */}
             {participants.length > 0 && (
               <div className="space-y-1.5">
                 {participants.map(p => (
@@ -403,22 +379,19 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                     <Badge variant="outline" className="text-[9px] h-4 px-1.5">{p.role}</Badge>
                   </div>
                 ))}
+                <button
+                  onClick={() => setParticipantsOpen(true)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Edit →
+                </button>
               </div>
             )}
 
             <Button className="w-full h-9 gap-1.5" onClick={() => setParticipantsOpen(true)}>
               <User size={14} />
-              Add participants
+              {hasParticipants ? "Manage participants" : "Add participants"}
             </Button>
-
-            {!hasParticipants && (
-              <button
-                onClick={handleQuickAddSelf}
-                className="w-full text-xs text-primary hover:underline text-center"
-              >
-                I am the only signer
-              </button>
-            )}
           </div>
         );
 
@@ -731,10 +704,31 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       {/* Steps */}
       <div className="space-y-2">
         {steps.map((step, index) => {
-          const isOpen = openSteps.has(index);
-          const isCurrentActive = index === activeStepIndex;
+          const isActive = index === activeStepIndex;
           const isLocked = activeStepIndex !== null && index > activeStepIndex && !step.isComplete;
-          const isCompleted = step.isComplete;
+          const isCompleted = step.isComplete && !isActive;
+
+          // COMPLETED STATE
+          if (isCompleted) {
+            return (
+              <div
+                key={step.id}
+                className="rounded-lg border p-3 bg-emerald-500/5 border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
+                onClick={() => handleStepClick(index)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <Check size={12} className="text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-muted-foreground">{step.title}</span>
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400">{step.completeSummary}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground hover:text-primary">Edit →</span>
+                </div>
+              </div>
+            );
+          }
 
           // LOCKED STATE
           if (isLocked) {
@@ -757,66 +751,20 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
             );
           }
 
-          // COMPLETED but collapsed — show summary
-          if (isCompleted && !isOpen) {
+          // ACTIVE STATE
+          if (isActive) {
+            const canContinue = step.isComplete;
             return (
               <div
                 key={step.id}
-                className="rounded-lg border p-3 bg-emerald-500/5 border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
-                onClick={() => handleStepClick(index)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                    <Check size={12} className="text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-muted-foreground">{step.title}</span>
-                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400">{step.completeSummary}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground hover:text-primary">Edit →</span>
-                </div>
-              </div>
-            );
-          }
-
-          // OPEN STATE (active or re-opened completed step)
-          if (isOpen || isCurrentActive) {
-            const canContinue = step.isComplete || step.id === "properties";
-            return (
-              <div
-                key={step.id}
-                className={cn(
-                  "rounded-xl border-2 p-4 bg-card shadow-sm",
-                  isCompleted ? "border-emerald-500/40" : "border-primary"
-                )}
+                className="rounded-xl border-2 border-primary p-4 bg-card shadow-sm"
               >
                 {/* Step header */}
                 <div className="flex items-center gap-2.5 mb-1">
-                  <div className={cn(
-                    "h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0",
-                    isCompleted ? "bg-emerald-500" : "bg-primary"
-                  )}>
-                    {isCompleted ? (
-                      <Check size={12} className="text-white" />
-                    ) : (
-                      <span className="text-xs font-bold text-primary-foreground">{index + 1}</span>
-                    )}
+                  <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-primary-foreground">{index + 1}</span>
                   </div>
-                  <span className="text-sm font-semibold flex-1">{step.title}</span>
-                  {isCompleted && (
-                    <button
-                      onClick={() => {
-                        setOpenSteps(prev => {
-                          const next = new Set(prev);
-                          next.delete(index);
-                          return next;
-                        });
-                      }}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      Collapse
-                    </button>
-                  )}
+                  <span className="text-sm font-semibold">{step.title}</span>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3 ml-[34px]">{step.description}</p>
 
@@ -825,24 +773,22 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                   {renderStepContent(step, index)}
                 </div>
 
-                {/* Continue / Skip buttons — only for the current active step */}
-                {isCurrentActive && !isCompleted && (
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      size="sm"
-                      className="w-full h-9 text-xs"
-                      disabled={!canContinue}
-                      onClick={handleContinue}
-                    >
-                      Continue
+                {/* Continue / Skip buttons */}
+                <div className="flex flex-col gap-2">
+                  <Button
+                    size="sm"
+                    className="w-full h-9 text-xs"
+                    disabled={!canContinue}
+                    onClick={handleContinue}
+                  >
+                    Continue
+                  </Button>
+                  {step.isOptional && !canContinue && (
+                    <Button variant="ghost" size="sm" className="w-full h-9 text-xs text-muted-foreground" onClick={handleSkip}>
+                      {step.skipLabel || "Skip"}
                     </Button>
-                    {step.isOptional && !step.isComplete && (
-                      <Button variant="ghost" size="sm" className="w-full h-9 text-xs text-muted-foreground" onClick={handleSkip}>
-                        {step.skipLabel || "Skip"}
-                      </Button>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           }
@@ -879,10 +825,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
               </motion.div>
             )}
           </AnimatePresence>
-          <Button
-            className="w-full h-11 text-base font-semibold shadow-md gap-2"
-            onClick={() => toast.success("Document sent for signature!")}
-          >
+          <Button className="w-full h-11 text-base font-semibold shadow-md gap-2">
             <Send size={16} />
             Send for signature
           </Button>
