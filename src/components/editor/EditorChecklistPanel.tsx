@@ -142,10 +142,12 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     variableValues, setVariableValues,
   } = useEditorContext();
 
+  const [openSteps, setOpenSteps] = useState<Set<number>>(new Set());
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
   const [showSendCelebration, setShowSendCelebration] = useState(false);
+  const [manuallyCompletedSteps, setManuallyCompletedSteps] = useState<Set<string>>(new Set());
 
   // Step 4 state
   const [documentType, setDocumentType] = useState("");
