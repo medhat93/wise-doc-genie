@@ -7,6 +7,7 @@ import {
   LayoutGrid, Share2, Send, Trash2, Clock, Plus, ChevronDown, MoreVertical
 } from 'lucide-react';
 import { SidebarView, QuickLink } from '@/types/workspace';
+import { useWorkspaceMode } from '@/contexts/WorkspaceModeContext';
 
 interface Props {
   activeView: SidebarView;
@@ -39,6 +40,7 @@ export default function DocumentSidebar({
   activeView, activeQuickLink, onViewChange, onQuickLinkChange,
   activeTags, onTagToggle,
 }: Props) {
+  const { isESign } = useWorkspaceMode();
   const [tagsOpen, setTagsOpen] = useState(false);
 
   const Item = ({ icon: Icon, label, active, onClick }: {
@@ -80,12 +82,14 @@ export default function DocumentSidebar({
         <div>
           <div className="flex items-center justify-between px-2 mb-1.5">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Views</p>
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
-              <Plus size={12} />
-            </button>
+            {!isESign && (
+              <button className="text-muted-foreground hover:text-foreground transition-colors">
+                <Plus size={12} />
+              </button>
+            )}
           </div>
           <div className="space-y-0.5">
-            {VIEWS.map(({ id, label, tooltip }) => (
+            {VIEWS.filter(v => !(isESign && v.id === 'in_approval')).map(({ id, label, tooltip }) => (
               <Tooltip key={id} delayDuration={400}>
                 <TooltipTrigger asChild>
                   <div>
@@ -114,21 +118,23 @@ export default function DocumentSidebar({
           </div>
         </div>
 
-        {/* My Views */}
-        <div>
-          <div className="flex items-center justify-between px-2 mb-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">My Views</p>
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
-              <Plus size={12} />
-            </button>
-          </div>
-          <div className="space-y-0.5">
-            <div className="flex items-center justify-between w-full rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-muted group cursor-pointer">
-              <span>Custom demo</span>
-              <MoreVertical size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+        {/* My Views — hidden in eSign */}
+        {!isESign && (
+          <div>
+            <div className="flex items-center justify-between px-2 mb-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">My Views</p>
+              <button className="text-muted-foreground hover:text-foreground transition-colors">
+                <Plus size={12} />
+              </button>
+            </div>
+            <div className="space-y-0.5">
+              <div className="flex items-center justify-between w-full rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-muted group cursor-pointer">
+                <span>Custom demo</span>
+                <MoreVertical size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Tags */}
         <Collapsible open={tagsOpen} onOpenChange={setTagsOpen}>

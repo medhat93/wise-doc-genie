@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CorrectionDialog from './CorrectionDialog';
+import { useWorkspaceMode } from '@/contexts/WorkspaceModeContext';
 
 /* ── helpers ────────────────────────────────────────────────── */
 type StageKey = 'draft' | 'approval_waiting' | 'approval_yours' | 'signing_waiting' | 'signing_yours' | 'completed' | 'declined' | 'voided' | 'expired';
@@ -52,7 +53,7 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
   onRename?: () => void;
   onCorrect?: () => void;
   onFollowUp?: () => void;
-}): MenuGroup[] {
+}, isESign: boolean): MenuGroup[] {
   const { onTrash, onVoid, onParticipants, onRename, onCorrect, onFollowUp } = callbacks;
 
   const rename: MenuItem = { label: 'Rename', icon: Pencil, onClick: onRename || (() => toast.success('Document renamed')) };
@@ -75,25 +76,37 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
 
   const mgmt = [tags, duplicate, participants];
 
+  // Items to exclude in eSign mode
+  const esignExclude = new Set(['Correct', 'Transfer ownership', 'Move to vault', 'Audit trail']);
+
+  const filterItems = (items: MenuItem[]): MenuItem[] => {
+    if (!isESign) return items;
+    return items.filter(item => !esignExclude.has(item.label));
+  };
+
+  const filterGroups = (groups: MenuGroup[]): MenuGroup[] => {
+    return groups.map(filterItems).filter(g => g.length > 0);
+  };
+
   switch (stageKey) {
     case 'draft':
-      return [[download, rename, share], mgmt, [trash]];
+      return filterGroups([[download, rename, share], mgmt, [trash]]);
     case 'approval_waiting':
-      return [[rename, share], mgmt, [trash]];
+      return filterGroups([[rename, share], mgmt, [trash]]);
     case 'approval_yours':
-      return [[download, rename, share], mgmt, [trash]];
+      return filterGroups([[download, rename, share], mgmt, [trash]]);
     case 'signing_waiting':
-      return [[correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]];
+      return filterGroups([[correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]]);
     case 'signing_yours':
-      return [[rename, share], [correct, updateExp, markComplete, voidDoc], mgmt, [audit], [trash]];
+      return filterGroups([[rename, share], [correct, updateExp, markComplete, voidDoc], mgmt, [audit], [trash]]);
     case 'completed':
-      return [[rename, share], [followUp, transfer, vault, audit], mgmt, [trash]];
+      return filterGroups([[rename, share], [followUp, transfer, vault, audit], mgmt, [trash]]);
     case 'declined':
-      return [[rename, share], [audit], [tags, participants], [trash]];
+      return filterGroups([[rename, share], [audit], [tags, participants], [trash]]);
     case 'voided':
-      return [[rename, share], [audit], [tags, participants], [trash]];
+      return filterGroups([[rename, share], [audit], [tags, participants], [trash]]);
     case 'expired':
-      return [[duplicate, rename, share], [updateExp, audit], mgmt, [trash]];
+      return filterGroups([[duplicate, rename, share], [updateExp, audit], mgmt, [trash]]);
   }
 }
 
@@ -107,6 +120,7 @@ interface Props {
 
 export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRename }: Props) {
   const navigate = useNavigate();
+  const { isESign } = useWorkspaceMode();
   const [trashOpen, setTrashOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
   const [correctionOpen, setCorrectionOpen] = useState(false);
@@ -119,7 +133,7 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
     onRename,
     onCorrect: () => setCorrectionOpen(true),
     onFollowUp: () => navigate(`/create?mode=followup&parentId=${doc.id}&childType=supplement`),
-  });
+  }, isESign);
 
   return (
     <>

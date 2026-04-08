@@ -24,8 +24,12 @@ import {
   Plus, ChevronDown, Search, LayoutGrid, List, MoreVertical,
   Eye, Pencil, Send, Download, FolderInput, Trash2, ChevronLeft, ChevronRight,
   Bell, Check, FileText, Settings, Tag, Share2, Activity, CircleDot, Circle, CheckCircle,
-  X, Clock, Archive
+  X, Clock, Archive, Upload
 } from 'lucide-react';
+import { WorkspaceModeProvider, useWorkspaceMode } from '@/contexts/WorkspaceModeContext';
+
+
+const APPROVAL_STAGES: DocumentStage[] = ['approving', 'approved'];
 
 const CURRENT_USER = 'Ahmad Medhat';
 
@@ -311,7 +315,8 @@ function WorkflowFilterPill() {
 
 
 
-export default function WorkspacePage() {
+function WorkspacePageInner() {
+  const { isESign, mode, setMode } = useWorkspaceMode();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeView, setActiveView] = useState<SidebarView>('all');
@@ -341,6 +346,8 @@ export default function WorkspacePage() {
 
   const filteredDocs = useMemo(() => {
     let docs = [...workspaceDocuments];
+    // eSign mode: filter out approval-stage documents
+    if (isESign) docs = docs.filter(d => !APPROVAL_STAGES.includes(d.stage));
     if (activeView === 'in_signing') docs = docs.filter(d => ['sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'].includes(d.stage));
     else if (activeView === 'in_approval') docs = docs.filter(d => ['approving', 'approved'].includes(d.stage));
     else if (activeView === 'requires_action') docs = docs.filter(d => d.stage === 'requires_action' || (d.waitingFor?.name === CURRENT_USER && d.stage !== 'draft'));
@@ -354,7 +361,7 @@ export default function WorkspacePage() {
       docs = docs.filter(d => d.name.toLowerCase().includes(q) || d.counterparty?.toLowerCase().includes(q));
     }
     return docs;
-  }, [activeView, statusFilter, activeTags, searchQuery]);
+  }, [activeView, statusFilter, activeTags, searchQuery, isESign]);
 
   const totalFake = 250;
   const paginatedDocs = useMemo(() => {
@@ -402,6 +409,9 @@ export default function WorkspacePage() {
             <span className="hover:text-foreground cursor-pointer transition-colors">Home</span>
             <span>›</span>
             <span className="text-foreground font-medium">Documents</span>
+            {isESign && (
+              <Badge variant="secondary" className="text-[10px] h-5 px-1.5 ml-1 font-normal text-muted-foreground">eSign</Badge>
+            )}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -423,25 +433,63 @@ export default function WorkspacePage() {
           </DropdownMenu>
         </div>
 
+        {/* Mode Switcher */}
+        <div className="h-10 border-b border-border flex items-center justify-center gap-2 bg-muted/30 shrink-0">
+          <span className="text-xs text-muted-foreground">Mode:</span>
+          <div className="flex items-center border border-border rounded-md overflow-hidden">
+            <button
+              onClick={() => setMode('clm')}
+              className={cn(
+                'px-3 h-7 text-xs rounded-md transition-all',
+                mode === 'clm'
+                  ? 'bg-card font-medium text-foreground shadow-sm'
+                  : 'bg-transparent text-muted-foreground hover:text-foreground'
+              )}
+            >
+              CLM
+            </button>
+            <button
+              onClick={() => setMode('esign')}
+              className={cn(
+                'px-3 h-7 text-xs rounded-md transition-all',
+                mode === 'esign'
+                  ? 'bg-card font-medium text-foreground shadow-sm'
+                  : 'bg-transparent text-muted-foreground hover:text-foreground'
+              )}
+            >
+              eSign
+            </button>
+          </div>
+          <span className="text-[9px] text-muted-foreground italic">(Demo)</span>
+        </div>
+
         {/* Page header */}
         <div className="h-14 flex items-center justify-between px-6 shrink-0">
           <h1 className="text-2xl font-bold">Documents</h1>
           <div className="flex items-center">
-            <Button className="gap-1.5 rounded-r-none" onClick={() => navigate('/create')}>
-              <Plus size={16} /> New document
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="rounded-l-none border-l border-primary-foreground/20 px-2">
-                  <ChevronDown size={14} />
+            {isESign ? (
+              <Button className="gap-1.5" onClick={() => navigate('/create')}>
+                <Upload size={16} /> Upload Document
+              </Button>
+            ) : (
+              <>
+                <Button className="gap-1.5 rounded-r-none" onClick={() => navigate('/create')}>
+                  <Plus size={16} /> New document
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate('/create')}>Blank Document</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/create')}>From Template</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/create')}>Upload Document</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="rounded-l-none border-l border-primary-foreground/20 px-2">
+                      <ChevronDown size={14} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => navigate('/create')}>Blank Document</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/create')}>From Template</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/create')}>Upload Document</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
           </div>
         </div>
 
@@ -470,7 +518,7 @@ export default function WorkspacePage() {
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-56 p-2">
-              {STATUS_FILTER_OPTIONS.map(opt => (
+              {STATUS_FILTER_OPTIONS.filter(opt => !(isESign && opt.label === 'Approval Cycle')).map(opt => (
                 <div key={opt.label}>
                   <button
                     onClick={() => toggleStatusFilter(opt.stages)}
@@ -509,7 +557,7 @@ export default function WorkspacePage() {
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 transition-colors">
             + Sent to
           </button>
-          <WorkflowFilterPill />
+          {!isESign && <WorkflowFilterPill />}
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 transition-colors">
             + Add filters <ChevronDown size={12} />
           </button>
@@ -878,5 +926,13 @@ export default function WorkspacePage() {
       {/* Preview Panel (Sheet) */}
       <PreviewPanel document={previewDoc} onClose={() => setPreviewDoc(null)} />
     </div>
+  );
+}
+
+export default function WorkspacePage() {
+  return (
+    <WorkspaceModeProvider>
+      <WorkspacePageInner />
+    </WorkspaceModeProvider>
   );
 }

@@ -20,6 +20,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Progress } from '@/components/ui/progress';
 import DocumentActionsMenu from './DocumentActionsMenu';
 import CorrectionDialog from './CorrectionDialog';
+import { useWorkspaceMode } from '@/contexts/WorkspaceModeContext';
 
 /* ── stage badge config ─────────────────────────────────────── */
 const stageConfig: Record<string, { label: string; className: string; icon: React.ElementType }> = {
@@ -244,6 +245,7 @@ interface Props {
 }
 
 export default function PreviewPanel({ document: doc, onClose }: Props) {
+  const { isESign } = useWorkspaceMode();
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
@@ -449,13 +451,15 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
               <TabsTrigger value="overview" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
                 <FileText size={12} /> Overview
               </TabsTrigger>
-              <TabsTrigger value="activity" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
-                <Clock size={12} /> Activity
-              </TabsTrigger>
+              {!isESign && (
+                <TabsTrigger value="activity" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
+                  <Clock size={12} /> Activity
+                </TabsTrigger>
+              )}
               <TabsTrigger value="participants" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
                 <Users size={12} /> Participants
               </TabsTrigger>
-              {hasWorkflow && (
+              {!isESign && hasWorkflow && (
                 <TabsTrigger value="workflow" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
                   <GitPullRequest size={12} /> Workflow
                 </TabsTrigger>
@@ -552,34 +556,40 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Properties</p>
                 <div className="space-y-0.5">
-                  <PropertyRow
-                    label="Document type"
-                    value={docType}
-                    type="select"
-                    options={['Service Agreement', 'NDA', 'Employment', 'Consulting', 'Procurement', 'Lease', 'Partnership', 'Other']}
-                    onSave={setDocType}
-                  />
+                  {!isESign && (
+                    <PropertyRow
+                      label="Document type"
+                      value={docType}
+                      type="select"
+                      options={['Service Agreement', 'NDA', 'Employment', 'Consulting', 'Procurement', 'Lease', 'Partnership', 'Other']}
+                      onSave={setDocType}
+                    />
+                  )}
                   <PropertyRow label="Counterparty" value={doc.counterparty || ''} onSave={() => {}} />
                   <PropertyRow label="Sender" value={doc.owner} readOnly />
                   <PropertyRow label="Created" value={formatDate(doc.createdAt)} readOnly />
                   <PropertyRow label="Last modified" value={formatDate(doc.modifiedAt)} readOnly />
                   <PropertyRow label="Expiry date" value={expiryDate} type="date" onSave={setExpiryDate} />
-                  <PropertyRow label="Folder" value={folder} onSave={setFolder} />
+                  {!isESign && <PropertyRow label="Folder" value={folder} onSave={setFolder} />}
                   <PropertyRow label="Contract value" value={contractValue} type="number" onSave={setContractValue} />
-                  <PropertyRow
-                    label="Department"
-                    value={department}
-                    type="select"
-                    options={['Legal', 'Finance', 'HR', 'Engineering', 'Sales', 'Procurement']}
-                    onSave={setDepartment}
-                  />
-                  <PropertyRow
-                    label="Priority"
-                    value={priority}
-                    type="select"
-                    options={['Low', 'Medium', 'High', 'Critical']}
-                    onSave={setPriority}
-                  />
+                  {!isESign && (
+                    <>
+                      <PropertyRow
+                        label="Department"
+                        value={department}
+                        type="select"
+                        options={['Legal', 'Finance', 'HR', 'Engineering', 'Sales', 'Procurement']}
+                        onSave={setDepartment}
+                      />
+                      <PropertyRow
+                        label="Priority"
+                        value={priority}
+                        type="select"
+                        options={['Low', 'Medium', 'High', 'Critical']}
+                        onSave={setPriority}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
 
