@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -389,6 +389,26 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
   const [moreOpen, setMoreOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Responsive collapse: measure toolbar width and hide groups progressively
+  const [toolbarWidth, setToolbarWidth] = useState(2000);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setToolbarWidth(entry.contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Collapse thresholds — groups disappear from main row into overflow
+  const showDirection = toolbarWidth > 1050;
+  const showAlignment = toolbarWidth > 950;
+  const showInsert = toolbarWidth > 850;
+  const showLists = toolbarWidth > 750;
+  const showColors = toolbarWidth > 650;
+  const hasCollapsed = !showDirection || !showAlignment || !showInsert || !showLists || !showColors;
+
   const toggle = (key: string) =>
     setToggles((p) => ({ ...p, [key]: !p[key] }));
 
@@ -459,10 +479,14 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
         <TBtn icon={Strikethrough} label="Strikethrough (⌘⇧X)" active={toggles.strikethrough} onClick={() => toggle("strikethrough")} />
         <Sep />
 
-        {/* G4: Color */}
-        <ColorPickerBtn icon={Type} label="Text color" defaultColor="#000000" />
-        <ColorPickerBtn icon={Highlighter} label="Highlight color" defaultColor="#FFFF00" />
-        <Sep />
+        {/* G4: Color — collapsible */}
+        {showColors && (
+          <>
+            <ColorPickerBtn icon={Type} label="Text color" defaultColor="#000000" />
+            <ColorPickerBtn icon={Highlighter} label="Highlight color" defaultColor="#FFFF00" />
+            <Sep />
+          </>
+        )}
 
         {/* G5: Paragraph style & lists */}
         <Select value={heading} onValueChange={setHeading}>
@@ -484,72 +508,88 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
           </SelectContent>
         </Select>
 
-        <TBtn icon={List} label="Bullet list (⌘⇧8)" active={toggles.bulletList} onClick={() => toggle("bulletList")} />
-        <TBtn icon={ListOrdered} label="Numbered list (⌘⇧7)" active={toggles.numberedList} onClick={() => toggle("numberedList")} />
-        <TBtn icon={IndentDecrease} label="Decrease indent (⌘[)" />
-        <TBtn icon={IndentIncrease} label="Increase indent (⌘])" />
+        {showLists && (
+          <>
+            <TBtn icon={List} label="Bullet list (⌘⇧8)" active={toggles.bulletList} onClick={() => toggle("bulletList")} />
+            <TBtn icon={ListOrdered} label="Numbered list (⌘⇧7)" active={toggles.numberedList} onClick={() => toggle("numberedList")} />
+            <TBtn icon={IndentDecrease} label="Decrease indent (⌘[)" />
+            <TBtn icon={IndentIncrease} label="Increase indent (⌘])" />
+          </>
+        )}
         <Sep />
 
-        {/* G6: Alignment */}
-        <TBtn icon={AlignLeft} label="Align left (⌘⇧L)" active={toggles.alignLeft} onClick={() => setAlignment("alignLeft")} />
-        <TBtn icon={AlignCenter} label="Align center (⌘⇧E)" active={toggles.alignCenter} onClick={() => setAlignment("alignCenter")} />
-        <TBtn icon={AlignRight} label="Align right (⌘⇧R)" active={toggles.alignRight} onClick={() => setAlignment("alignRight")} />
-        <TBtn icon={AlignJustify} label="Justify (⌘⇧J)" active={toggles.justify} onClick={() => setAlignment("justify")} />
-        <Sep />
+        {/* G6: Alignment — collapsible */}
+        {showAlignment && (
+          <>
+            <TBtn icon={AlignLeft} label="Align left (⌘⇧L)" active={toggles.alignLeft} onClick={() => setAlignment("alignLeft")} />
+            <TBtn icon={AlignCenter} label="Align center (⌘⇧E)" active={toggles.alignCenter} onClick={() => setAlignment("alignCenter")} />
+            <TBtn icon={AlignRight} label="Align right (⌘⇧R)" active={toggles.alignRight} onClick={() => setAlignment("alignRight")} />
+            <TBtn icon={AlignJustify} label="Justify (⌘⇧J)" active={toggles.justify} onClick={() => setAlignment("justify")} />
+            <Sep />
+          </>
+        )}
 
-        {/* G7: Insert essentials */}
-        <TableGridSelector />
-        <TBtn icon={Image} label="Insert image" onClick={() => toast("Select an image to insert")} />
-        <LinkInsertBtn />
-        <Sep />
+        {/* G7: Insert essentials — collapsible */}
+        {showInsert && (
+          <>
+            <TableGridSelector />
+            <TBtn icon={Image} label="Insert image" onClick={() => toast("Select an image to insert")} />
+            <LinkInsertBtn />
+            <Sep />
+          </>
+        )}
 
         {/* G9: Tools */}
         <TBtn icon={Clock} label="Version history (⌘⌥⇧H)" onClick={() => onOpenVersionHistory?.()} />
         <Sep />
 
-        {/* G10: Direction */}
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => setDirection("ltr")}
-              className={cn(
-                "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
-                toggles.ltr ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
-              )}
-            >
-              LTR
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs">Left to right</TooltipContent>
-        </Tooltip>
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => setDirection("rtl")}
-              className={cn(
-                "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
-                toggles.rtl ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
-              )}
-            >
-              RTL
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs">Right to left</TooltipContent>
-        </Tooltip>
-        <Sep />
+        {/* G10: Direction — collapsible */}
+        {showDirection && (
+          <>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setDirection("ltr")}
+                  className={cn(
+                    "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
+                    toggles.ltr ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  LTR
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Left to right</TooltipContent>
+            </Tooltip>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setDirection("rtl")}
+                  className={cn(
+                    "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
+                    toggles.rtl ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  RTL
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Right to left</TooltipContent>
+            </Tooltip>
+            <Sep />
+          </>
+        )}
 
-        {/* G11: More tools toggle */}
+        {/* G11: More tools toggle — auto-show when collapsed or manually toggled */}
         <TBtn
           icon={MoreHorizontal}
           label="More tools"
-          active={moreOpen}
+          active={moreOpen || hasCollapsed}
           onClick={() => setMoreOpen(prev => !prev)}
         />
       </div>
 
-      {/* Secondary toolbar row (Google Docs style) */}
+      {/* Secondary toolbar row — shows when "More" clicked OR when groups are collapsed */}
       <AnimatePresence>
-        {moreOpen && (
+        {(moreOpen || hasCollapsed) && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -558,17 +598,82 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
             className="overflow-hidden border-b bg-card"
           >
             <div className="h-10 flex items-center px-3 gap-0.5 overflow-x-auto scrollbar-none">
-              {/* Formatting extras */}
+              {/* Collapsed groups appear first */}
+              {!showColors && (
+                <>
+                  <ColorPickerBtn icon={Type} label="Text color" defaultColor="#000000" />
+                  <ColorPickerBtn icon={Highlighter} label="Highlight color" defaultColor="#FFFF00" />
+                  <Sep />
+                </>
+              )}
+              {!showLists && (
+                <>
+                  <TBtn icon={List} label="Bullet list (⌘⇧8)" active={toggles.bulletList} onClick={() => toggle("bulletList")} />
+                  <TBtn icon={ListOrdered} label="Numbered list (⌘⇧7)" active={toggles.numberedList} onClick={() => toggle("numberedList")} />
+                  <TBtn icon={IndentDecrease} label="Decrease indent (⌘[)" />
+                  <TBtn icon={IndentIncrease} label="Increase indent (⌘])" />
+                  <Sep />
+                </>
+              )}
+              {!showAlignment && (
+                <>
+                  <TBtn icon={AlignLeft} label="Align left (⌘⇧L)" active={toggles.alignLeft} onClick={() => setAlignment("alignLeft")} />
+                  <TBtn icon={AlignCenter} label="Align center (⌘⇧E)" active={toggles.alignCenter} onClick={() => setAlignment("alignCenter")} />
+                  <TBtn icon={AlignRight} label="Align right (⌘⇧R)" active={toggles.alignRight} onClick={() => setAlignment("alignRight")} />
+                  <TBtn icon={AlignJustify} label="Justify (⌘⇧J)" active={toggles.justify} onClick={() => setAlignment("justify")} />
+                  <Sep />
+                </>
+              )}
+              {!showInsert && (
+                <>
+                  <TableGridSelector />
+                  <TBtn icon={Image} label="Insert image" onClick={() => toast("Select an image to insert")} />
+                  <LinkInsertBtn />
+                  <Sep />
+                </>
+              )}
+              {!showDirection && (
+                <>
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setDirection("ltr")}
+                        className={cn(
+                          "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
+                          toggles.ltr ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                        )}
+                      >
+                        LTR
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">Left to right</TooltipContent>
+                  </Tooltip>
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setDirection("rtl")}
+                        className={cn(
+                          "h-7 px-1.5 flex items-center justify-center rounded text-[10px] font-semibold transition-colors flex-shrink-0",
+                          toggles.rtl ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                        )}
+                      >
+                        RTL
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">Right to left</TooltipContent>
+                  </Tooltip>
+                  <Sep />
+                </>
+              )}
+
+              {/* Original overflow items */}
               <TBtn icon={Eraser} label="Clear formatting (⌘\)" onClick={() => toast("Formatting cleared")} />
               <TBtn icon={Subscript} label="Subscript" onClick={() => toast("Subscript toggled")} />
               <TBtn icon={Superscript} label="Superscript" onClick={() => toast("Superscript toggled")} />
               <TBtn icon={Paintbrush} label="Paint format" onClick={() => toast("Paint format: click text to apply")} />
               <Sep />
 
-              {/* Lists */}
               <TBtn icon={ListChecks} label="Checklist" active={toggles.checklist} onClick={() => toggle("checklist")} />
-
-              {/* Clause numbering */}
               <Popover>
                 <PopoverTrigger asChild>
                   <span><TBtn icon={ListTree} label="Clause numbering" /></span>
@@ -583,15 +688,11 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
               </Popover>
               <Sep />
 
-              {/* Insert */}
               <TBtn icon={MinusSquare} label="Horizontal rule" onClick={() => toast("Horizontal rule inserted")} />
               <TBtn icon={SeparatorHorizontal} label="Page break" onClick={() => toast("Page break inserted")} />
               <TBtn icon={TableOfContents} label="Table of contents" onClick={() => toast("Table of contents inserted")} />
-
-              {/* Footnote */}
               <TBtn icon={Superscript} label="Footnote (⌘⌥F)" onClick={() => toast("Footnote inserted")} />
 
-              {/* Headers & footers */}
               <Popover>
                 <PopoverTrigger asChild>
                   <span><TBtn icon={PanelTop} label="Headers & footers" /></span>
@@ -608,7 +709,6 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
                 </PopoverContent>
               </Popover>
 
-              {/* Special characters */}
               <Popover>
                 <PopoverTrigger asChild>
                   <span><TBtn icon={Omega} label="Special characters" /></span>
@@ -630,10 +730,7 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
               </Popover>
               <Sep />
 
-              {/* Tools */}
               <TBtn icon={SpellCheck} label="Spell check" active={toggles.spellCheck} onClick={() => toggle("spellCheck")} />
-
-              {/* Word count */}
               <Popover>
                 <PopoverTrigger asChild>
                   <span><TBtn icon={Hash} label="Word count" /></span>
