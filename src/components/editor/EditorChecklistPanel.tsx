@@ -167,6 +167,9 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
   const [showSendSection, setShowSendSection] = useState(false);
 
+  // Snapshot tracking for re-edit detection
+  const [stepSnapshots, setStepSnapshots] = useState<Record<string, string>>({});
+
   // Send dialog state
   const [sendOpen, setSendOpen] = useState(false);
   const [warningOpen, setWarningOpen] = useState(false);
