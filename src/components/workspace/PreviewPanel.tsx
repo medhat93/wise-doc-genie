@@ -313,6 +313,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       />
     );
 
+    // Draft
     if (doc.stage === 'draft') {
       return (
         <>
@@ -321,6 +322,8 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         </>
       );
     }
+
+    // Approval — yours (CLM only, filtered out in eSign)
     if (isApproval && isYourAction) {
       return (
         <>
@@ -330,42 +333,53 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         </>
       );
     }
+
+    // Approval — waiting (CLM only)
     if (isApproval) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Reminder sent')}><Bell size={12} /> Remind</Button>
+          {!isESign && <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>}
           {moreMenu}
         </>
       );
     }
+
+    // Signing — yours
     if (isSigning && isYourAction) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => navigate(`/signing/${doc.id}`)}><PenTool size={12} /> Sign</Button>
-          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>
+          {!isESign && <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>}
           {moreMenu}
         </>
       );
     }
+
+    // Signing — waiting
     if (isSigning) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Reminder sent')}><Bell size={12} /> Remind</Button>
-          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>
+          {!isESign && <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>}
           {moreMenu}
         </>
       );
     }
+
+    // Completed
     if (doc.stage === 'completed') {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
-          <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate(`/create?mode=followup&parentId=${doc.id}&childType=supplement`)}><LinkIcon size={12} /> Follow-up</Button>
+          {!isESign && <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate(`/create?mode=followup&parentId=${doc.id}&childType=supplement`)}><LinkIcon size={12} /> Follow-up</Button>}
           {moreMenu}
         </>
       );
     }
-    if (doc.stage === 'declined' || doc.stage === 'voided') {
+
+    // Declined
+    if (doc.stage === 'declined') {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document duplicated')}><Copy size={12} /> Duplicate</Button>
@@ -373,6 +387,18 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         </>
       );
     }
+
+    // Voided
+    if (doc.stage === 'voided') {
+      return (
+        <>
+          <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document duplicated')}><Copy size={12} /> Duplicate</Button>
+          {moreMenu}
+        </>
+      );
+    }
+
+    // Expired
     if (doc.stage === 'expired') {
       return (
         <>
@@ -381,6 +407,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         </>
       );
     }
+
     return (
       <>
         <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
