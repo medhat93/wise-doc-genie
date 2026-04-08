@@ -251,11 +251,13 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     return s.filter(step => step.isVisible);
   }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, hasRequiredProperties, allPropsComplete, workflowEnforced, workflowComplete, selectedWorkflow]);
 
-  // Initialize active step
+  // Initialize active step and open steps
   useEffect(() => {
     if (activeStepIndex === null && steps.length > 0) {
       const firstIncomplete = steps.findIndex(s => !s.isComplete);
-      setActiveStepIndex(firstIncomplete >= 0 ? firstIncomplete : steps.length - 1);
+      const idx = firstIncomplete >= 0 ? firstIncomplete : steps.length - 1;
+      setActiveStepIndex(idx);
+      setOpenSteps(new Set([idx]));
     }
   }, [steps, activeStepIndex]);
 
@@ -276,10 +278,25 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   }, [allComplete, steps.length]);
 
   const handleContinue = () => {
-    if (activeStepIndex !== null && activeStepIndex < steps.length - 1) {
-      setActiveStepIndex(activeStepIndex + 1);
-    } else {
-      setActiveStepIndex(null);
+    if (activeStepIndex !== null) {
+      // Mark current step as manually completed if it's properties
+      const currentStep = steps[activeStepIndex];
+      if (currentStep?.id === "properties") {
+        setManuallyCompletedSteps(prev => new Set(prev).add("properties"));
+      }
+
+      if (activeStepIndex < steps.length - 1) {
+        const nextIndex = activeStepIndex + 1;
+        setActiveStepIndex(nextIndex);
+        setOpenSteps(prev => {
+          const next = new Set(prev);
+          next.add(nextIndex);
+          return next;
+        });
+      } else {
+        // Last step — just close it
+        setActiveStepIndex(null);
+      }
     }
   };
 
@@ -288,9 +305,29 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   };
 
   const handleStepClick = (index: number) => {
-    // Can only click completed steps to re-edit
-    if (steps[index].isComplete || index === activeStepIndex) {
-      setActiveStepIndex(index);
+    // Toggle open/close for completed steps without affecting the active editing step
+    if (steps[index].isComplete) {
+      setOpenSteps(prev => {
+        const next = new Set(prev);
+        if (next.has(index) && index !== activeStepIndex) {
+          next.delete(index);
+        } else {
+          next.add(index);
+        }
+        return next;
+      });
+      // If clicking a completed step, also set it as active for editing
+      if (!openSteps.has(index)) {
+        setActiveStepIndex(index);
+      }
+    } else if (index === activeStepIndex) {
+      // Toggle current active step
+      setOpenSteps(prev => {
+        const next = new Set(prev);
+        if (next.has(index)) next.delete(index);
+        else next.add(index);
+        return next;
+      });
     }
   };
 
