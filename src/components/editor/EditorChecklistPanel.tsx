@@ -319,6 +319,34 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     return s.filter(step => step.isVisible);
   }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, hasRequiredProperties, allPropsComplete, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
 
+  // Detect changes in expanded completed steps and reactivate them
+  useEffect(() => {
+    for (const stepId of expandedCompletedSteps) {
+      const snapshot = stepSnapshots[stepId];
+      if (!snapshot) continue;
+      const current = getStepFingerprint(stepId);
+      if (current !== snapshot) {
+        unmarkStepCompleted(stepId);
+        setExpandedCompletedSteps(prev => {
+          const next = new Set(prev);
+          next.delete(stepId);
+          return next;
+        });
+        const stepIndex = steps.findIndex(s => s.id === stepId);
+        if (stepIndex >= 0) {
+          setActiveStepIndex(stepIndex);
+          setShowSendSection(false);
+        }
+        setStepSnapshots(prev => {
+          const next = { ...prev };
+          delete next[stepId];
+          return next;
+        });
+        break;
+      }
+    }
+  }, [expandedCompletedSteps, stepSnapshots, getStepFingerprint, unmarkStepCompleted, steps]);
+
   // Initialize active step
   useEffect(() => {
     if (activeStepIndex === null && steps.length > 0) {
