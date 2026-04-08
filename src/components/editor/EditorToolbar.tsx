@@ -578,11 +578,11 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
           </>
         )}
 
-        {/* G11: More tools toggle */}
+        {/* G11: More tools toggle — auto-show when collapsed or manually toggled */}
         <TBtn
           icon={MoreHorizontal}
           label="More tools"
-          active={moreOpen}
+          active={moreOpen || hasCollapsed}
           onClick={() => setMoreOpen(prev => !prev)}
         />
       </div>
