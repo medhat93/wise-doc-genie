@@ -421,9 +421,9 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
               </div>
             )}
 
-            <Button className="w-full h-9 gap-1.5" onClick={() => setParticipantsOpen(true)}>
+            <Button className="w-full h-9 gap-1.5" variant={hasParticipants ? "outline" : "default"} onClick={() => setParticipantsOpen(true)}>
               <User size={14} />
-              Add participants
+              {hasParticipants ? "Manage participants" : "Add participants"}
             </Button>
 
             {!hasParticipants && (
