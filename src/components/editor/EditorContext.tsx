@@ -96,6 +96,12 @@ export const COMMENT_SECTIONS: Record<string, { docIndex: number; selector: stri
 
 export type AcknowledgmentLevel = 'none';
 
+/* ── Checklist state ── */
+export interface ChecklistState {
+  completedStepIds: string[];
+  skippedStepIds: string[];
+}
+
 interface EditorContextType {
   participants: Participant[];
   setParticipants: React.Dispatch<React.SetStateAction<Participant[]>>;
@@ -120,6 +126,8 @@ interface EditorContextType {
   setPendingAiQuestion: (q: { question: string; selectedText: string } | null) => void;
   aiSuggestions: AiSuggestion[];
   setAiSuggestions: React.Dispatch<React.SetStateAction<AiSuggestion[]>>;
+  checklistState: ChecklistState;
+  setChecklistState: React.Dispatch<React.SetStateAction<ChecklistState>>;
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
@@ -155,6 +163,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [documentAcknowledgments, setDocumentAcknowledgments] = useState<Record<string, Record<string, AcknowledgmentLevel>>>({});
   const [pendingAiQuestion, setPendingAiQuestion] = useState<{ question: string; selectedText: string } | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
+  const [checklistState, setChecklistState] = useState<ChecklistState>({ completedStepIds: [], skippedStepIds: [] });
 
   return (
     <EditorContext.Provider value={{
@@ -170,6 +179,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       documentAcknowledgments, setDocumentAcknowledgments,
       pendingAiQuestion, setPendingAiQuestion,
       aiSuggestions, setAiSuggestions,
+      checklistState, setChecklistState,
     }}>
       {children}
     </EditorContext.Provider>
