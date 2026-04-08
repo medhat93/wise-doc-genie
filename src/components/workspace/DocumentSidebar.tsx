@@ -25,11 +25,12 @@ const QUICK_LINKS: { id: QuickLink; label: string; icon: React.ElementType }[] =
   { id: 'trash', label: 'Trash', icon: Trash2 },
 ];
 
-const VIEWS: { id: SidebarView; label: string; tooltip?: string }[] = [
+const VIEWS: { id: SidebarView; label: string; tooltip?: string; esignOnly?: boolean; clmOnly?: boolean }[] = [
   { id: 'in_signing', label: 'In Signing', tooltip: 'Documents currently being signed' },
-  { id: 'in_approval', label: 'In Approval', tooltip: 'Documents currently being approved' },
+  { id: 'in_approval', label: 'In Approval', tooltip: 'Documents currently being approved', clmOnly: true },
   { id: 'requires_action', label: 'Requires your action', tooltip: 'Documents that need your action — signing, approval, or tasks' },
   { id: 'owned', label: 'Owned by you', tooltip: 'Documents where you are the sender' },
+  { id: 'received', label: 'Received', tooltip: 'Documents sent to you by others', esignOnly: true },
   { id: 'expiring', label: 'Expiring soon', tooltip: 'Signatures expiring within 30 days' },
   { id: 'completed', label: 'Completed', tooltip: 'Completed signature documents' },
 ];
@@ -89,7 +90,11 @@ export default function DocumentSidebar({
             )}
           </div>
           <div className="space-y-0.5">
-            {VIEWS.filter(v => !(isESign && v.id === 'in_approval')).map(({ id, label, tooltip }) => (
+            {VIEWS.filter(v => {
+              if (isESign && v.clmOnly) return false;
+              if (!isESign && v.esignOnly) return false;
+              return true;
+            }).map(({ id, label, tooltip }) => (
               <Tooltip key={id} delayDuration={400}>
                 <TooltipTrigger asChild>
                   <div>

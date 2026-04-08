@@ -52,6 +52,6 @@ export interface WorkspaceDocument {
   followUpTo?: { id: string; name: string };
 }
 
-export type SidebarView = 'all' | 'in_signing' | 'in_approval' | 'requires_action' | 'owned' | 'expiring' | 'completed';
+export type SidebarView = 'all' | 'in_signing' | 'in_approval' | 'requires_action' | 'owned' | 'received' | 'expiring' | 'completed';
 
 export type QuickLink = 'my_documents' | 'shared_with_me' | 'bulk_send' | 'trash';
