@@ -518,7 +518,7 @@ function WorkspacePageInner() {
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-56 p-2">
-              {STATUS_FILTER_OPTIONS.map(opt => (
+              {STATUS_FILTER_OPTIONS.filter(opt => !(isESign && opt.label === 'Approval Cycle')).map(opt => (
                 <div key={opt.label}>
                   <button
                     onClick={() => toggleStatusFilter(opt.stages)}
@@ -557,7 +557,7 @@ function WorkspacePageInner() {
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 transition-colors">
             + Sent to
           </button>
-          <WorkflowFilterPill />
+          {!isESign && <WorkflowFilterPill />}
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 transition-colors">
             + Add filters <ChevronDown size={12} />
           </button>
@@ -926,5 +926,13 @@ function WorkspacePageInner() {
       {/* Preview Panel (Sheet) */}
       <PreviewPanel document={previewDoc} onClose={() => setPreviewDoc(null)} />
     </div>
+  );
+}
+
+export default function WorkspacePage() {
+  return (
+    <WorkspaceModeProvider>
+      <WorkspacePageInner />
+    </WorkspaceModeProvider>
   );
 }
