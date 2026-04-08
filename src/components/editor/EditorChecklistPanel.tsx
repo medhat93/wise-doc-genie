@@ -1,5 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
-import { Check, AlertTriangle, ChevronDown, GripVertical, Send, FileText, Search, ShieldCheck, UserCheck, Sparkles, Plus } from "lucide-react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Check, AlertTriangle, ChevronUp, GripVertical, Send, FileText, Search, ShieldCheck, UserCheck, Sparkles, Plus, Lock, Mail as MailIcon } from "lucide-react";
 import { PenTool, Type, Calendar, TextCursorInput, CheckSquare, Stamp, Radio, Mail, Building, User, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +23,12 @@ import { cn } from "@/lib/utils";
 import { useEditorContext } from "./EditorContext";
 import type { PanelId } from "./EditorPanelToolbar";
 import ParticipantsDialog from "@/components/ParticipantsDialog";
+import ReviewSendDialog from "./ReviewSendDialog";
+import MissingFieldsWarningDialog, { type ParticipantIssue, type DocumentIssue } from "./MissingFieldsWarningDialog";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { SentIcon, UserAdd01Icon } from "@hugeicons/core-free-icons";
 
 /* ── Field types for Step 2 ── */
 interface SidebarFieldType {
@@ -118,6 +123,14 @@ const WORKFLOW_TEMPLATES: Record<string, { label: string; steps: { name: string;
   },
 };
 
+/* ── Sending method icons ── */
+const SendMethodIcon = ({ method }: { method: string }) => {
+  switch (method) {
+    case "email": return <MailIcon size={12} className="text-muted-foreground" />;
+    default: return <MailIcon size={12} className="text-muted-foreground" />;
+  }
+};
+
 /* ── Step definition ── */
 interface WizardStep {
   id: string;
@@ -134,18 +147,30 @@ interface EditorChecklistPanelProps {
   onSwitchPanel: (id: PanelId) => void;
 }
 
+const MOCK_DOCS = [
+  { id: "d1", name: "Master Services Agreement 2026.pdf", documentType: "primary" as const },
+];
+
 const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
+  const navigate = useNavigate();
   const {
     participants, setParticipants,
     placedFields, setPlacedFields,
     usedVariables,
     variableValues, setVariableValues,
+    checklistState, setChecklistState,
   } = useEditorContext();
 
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
+  const [expandedCompletedSteps, setExpandedCompletedSteps] = useState<Set<string>>(new Set());
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
-  const [showSendCelebration, setShowSendCelebration] = useState(false);
+  const [showSendSection, setShowSendSection] = useState(false);
+
+  // Send dialog state
+  const [sendOpen, setSendOpen] = useState(false);
+  const [warningOpen, setWarningOpen] = useState(false);
+  const [participantIssues, setParticipantIssues] = useState<ParticipantIssue[]>([]);
 
   // Step 4 state
   const [documentType, setDocumentType] = useState("");
@@ -158,7 +183,10 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   // Mock flags
   const workflowEnforced = false;
-  const hasRequiredProperties = true; // show step 4 for demo
+  const hasRequiredProperties = true;
+
+  // Refs for scrolling
+  const stepRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   // Compute statuses
   const hasParticipants = participants.length > 0;
@@ -190,6 +218,25 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     return map;
   }, [participants, placedFields]);
 
+  // Persist completions from context
+  const isStepManuallyCompleted = useCallback((stepId: string) => {
+    return checklistState.completedStepIds.includes(stepId) || checklistState.skippedStepIds.includes(stepId);
+  }, [checklistState]);
+
+  const markStepCompleted = useCallback((stepId: string) => {
+    setChecklistState(prev => ({
+      ...prev,
+      completedStepIds: prev.completedStepIds.includes(stepId) ? prev.completedStepIds : [...prev.completedStepIds, stepId],
+    }));
+  }, [setChecklistState]);
+
+  const markStepSkipped = useCallback((stepId: string) => {
+    setChecklistState(prev => ({
+      ...prev,
+      skippedStepIds: prev.skippedStepIds.includes(stepId) ? prev.skippedStepIds : [...prev.skippedStepIds, stepId],
+    }));
+  }, [setChecklistState]);
+
   // Build steps array
   const steps: WizardStep[] = useMemo(() => {
     const s: WizardStep[] = [
@@ -198,7 +245,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
         title: "Add participants",
         description: "Add the people who need to sign, review, or receive this document",
         isVisible: true,
-        isComplete: hasParticipants,
+        isComplete: hasParticipants || isStepManuallyCompleted("participants"),
         completeSummary: hasParticipants
           ? (participants.length === 1 && participants[0].email === "ahmed@signit.sa"
             ? "1 signer (you)"
@@ -210,10 +257,10 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
         title: "Place annotation fields",
         description: "Drag signature fields onto the document for each participant",
         isVisible: true,
-        isComplete: hasFields,
+        isComplete: hasFields || isStepManuallyCompleted("fields"),
         completeSummary: hasFields
           ? `${placedFields.length} field${placedFields.length !== 1 ? "s" : ""} placed across ${new Set(placedFields.map(f => f.participantId)).size} participant${new Set(placedFields.map(f => f.participantId)).size !== 1 ? "s" : ""}`
-          : "",
+          : (isStepManuallyCompleted("fields") ? "Skipped — signers place own fields" : ""),
         isOptional: true,
         skipLabel: "Skip — participants will place their own fields",
       },
@@ -222,8 +269,8 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
         title: "Fill in placeholders",
         description: "Fill in the dynamic placeholders used in your document",
         isVisible: hasVariables,
-        isComplete: allVarsFilled,
-        completeSummary: allVarsFilled ? `All ${usedTokens.size} placeholders filled` : "",
+        isComplete: allVarsFilled || isStepManuallyCompleted("placeholders"),
+        completeSummary: allVarsFilled ? `All ${usedTokens.size} placeholders filled` : (isStepManuallyCompleted("placeholders") ? "Skipped" : ""),
         isOptional: true,
         skipLabel: "Skip — fill placeholders later",
       },
@@ -232,7 +279,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
         title: "Fill required properties",
         description: "Complete the required document properties",
         isVisible: hasRequiredProperties,
-        isComplete: allPropsComplete,
+        isComplete: allPropsComplete || isStepManuallyCompleted("properties"),
         completeSummary: allPropsComplete ? "All required properties filled" : "",
       },
       {
@@ -240,20 +287,23 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
         title: "Apply approval workflow",
         description: "Select and configure an approval workflow before sending",
         isVisible: workflowEnforced,
-        isComplete: workflowComplete,
+        isComplete: workflowComplete || isStepManuallyCompleted("workflow"),
         completeSummary: workflowComplete
           ? `${WORKFLOW_TEMPLATES[selectedWorkflow]?.label} applied`
           : "",
       },
     ];
     return s.filter(step => step.isVisible);
-  }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, hasRequiredProperties, allPropsComplete, workflowEnforced, workflowComplete, selectedWorkflow]);
+  }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, hasRequiredProperties, allPropsComplete, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
 
   // Initialize active step
   useEffect(() => {
     if (activeStepIndex === null && steps.length > 0) {
       const firstIncomplete = steps.findIndex(s => !s.isComplete);
-      setActiveStepIndex(firstIncomplete >= 0 ? firstIncomplete : steps.length - 1);
+      setActiveStepIndex(firstIncomplete >= 0 ? firstIncomplete : null);
+      if (firstIncomplete < 0) {
+        setShowSendSection(true);
+      }
     }
   }, [steps, activeStepIndex]);
 
@@ -266,29 +316,96 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   const allComplete = steps.every(s => s.isComplete);
 
-  // Celebration effect
+  // Show send section when all complete
   useEffect(() => {
     if (allComplete && steps.length > 0) {
-      setShowSendCelebration(true);
+      setShowSendSection(true);
     }
   }, [allComplete, steps.length]);
 
-  const handleContinue = () => {
-    if (activeStepIndex !== null && activeStepIndex < steps.length - 1) {
-      setActiveStepIndex(activeStepIndex + 1);
-    } else {
-      setActiveStepIndex(null);
+  const getStepConditionMessage = (step: WizardStep): string | null => {
+    switch (step.id) {
+      case "participants": return hasParticipants ? null : "Add at least one participant";
+      case "fields": return null; // optional
+      case "placeholders": return null; // optional
+      case "properties": return allPropsComplete ? null : "Fill all required properties";
+      case "workflow": return workflowComplete ? null : "Assign all workflow steps";
+      default: return null;
     }
   };
 
-  const handleSkip = () => {
-    handleContinue();
+  const handleContinue = (index: number) => {
+    const step = steps[index];
+    const isLast = index === steps.length - 1;
+
+    // Check condition
+    if (!step.isOptional) {
+      const msg = getStepConditionMessage(step);
+      if (msg && !step.isComplete) {
+        toast.error(msg);
+        return;
+      }
+    }
+
+    // Mark complete
+    markStepCompleted(step.id);
+
+    if (isLast) {
+      setActiveStepIndex(null);
+      setShowSendSection(true);
+    } else {
+      // Find next incomplete step
+      const nextIncomplete = steps.findIndex((s, i) => i > index && !s.isComplete);
+      if (nextIncomplete >= 0) {
+        setActiveStepIndex(nextIncomplete);
+        setTimeout(() => {
+          stepRefs.current[nextIncomplete]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+      } else {
+        setActiveStepIndex(null);
+        setShowSendSection(true);
+      }
+    }
+  };
+
+  const handleSkip = (index: number) => {
+    const step = steps[index];
+    markStepSkipped(step.id);
+    const isLast = index === steps.length - 1;
+    if (isLast) {
+      setActiveStepIndex(null);
+      setShowSendSection(true);
+    } else {
+      const nextIncomplete = steps.findIndex((s, i) => i > index && !s.isComplete);
+      if (nextIncomplete >= 0) {
+        setActiveStepIndex(nextIncomplete);
+      } else {
+        setActiveStepIndex(null);
+        setShowSendSection(true);
+      }
+    }
   };
 
   const handleStepClick = (index: number) => {
-    // Can only click completed steps to re-edit
-    if (steps[index].isComplete || index === activeStepIndex) {
-      setActiveStepIndex(index);
+    const step = steps[index];
+    const isCompleted = step.isComplete && index !== activeStepIndex;
+    const isLocked = activeStepIndex !== null && index > activeStepIndex && !step.isComplete;
+
+    if (isLocked) return;
+
+    if (isCompleted) {
+      // Toggle expanded state for completed steps
+      setExpandedCompletedSteps(prev => {
+        const next = new Set(prev);
+        if (next.has(step.id)) {
+          next.delete(step.id);
+        } else {
+          next.add(step.id);
+        }
+        return next;
+      });
+    } else if (index === activeStepIndex) {
+      // Can't collapse active step
     }
   };
 
@@ -314,10 +431,11 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       },
     ]);
     toast.success("Added as sole signer");
-    // Auto advance
+    markStepCompleted("participants");
     setTimeout(() => {
       if (activeStepIndex === 0) {
-        setActiveStepIndex(1);
+        const nextIncomplete = steps.findIndex((s, i) => i > 0 && !s.isComplete);
+        setActiveStepIndex(nextIncomplete >= 0 ? nextIncomplete : null);
       }
     }, 300);
   };
@@ -345,53 +463,84 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     setEditingPropKey(null);
   };
 
+  // Send flow (same as TopBar)
+  const handleSendClick = () => {
+    const signers = participants.filter((p) => p.role === "signer");
+    const issues: ParticipantIssue[] = [];
+    for (const signer of signers) {
+      const signerIssues: DocumentIssue[] = [];
+      const signerFields = placedFields.filter((f) => f.participantId === signer.id);
+      const primaryDocs = MOCK_DOCS.filter((d) => d.documentType === "primary");
+      for (const doc of primaryDocs) {
+        if (signerFields.length === 0) {
+          signerIssues.push({ documentId: doc.id, documentName: doc.name, documentType: doc.documentType, issueType: "no_fields_primary" });
+        }
+      }
+      if (signerIssues.length > 0) {
+        issues.push({ participant: signer, issues: signerIssues });
+      }
+    }
+    if (issues.length > 0) {
+      setParticipantIssues(issues);
+      setWarningOpen(true);
+    } else {
+      setSendOpen(true);
+    }
+  };
+
   const progressPercent = steps.length > 0 ? (steps.filter(s => s.isComplete).length / steps.length) * 100 : 0;
   const currentStepNum = activeStepIndex !== null ? activeStepIndex + 1 : steps.length;
 
+  /* ── Render participants list for Step 1 ── */
+  const renderParticipantsList = () => {
+    if (!hasParticipants) return null;
+
+    // For now, show flat list (sequential signing can be enhanced later)
+    return (
+      <div className="space-y-1.5">
+        {participants.map(p => (
+          <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+            <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+            <span className="text-xs font-medium truncate flex-1">{p.name}</span>
+            <Badge variant="outline" className="text-[9px] h-4 px-1.5">{p.role}</Badge>
+            <SendMethodIcon method={p.sendingMethod} />
+          </div>
+        ))}
+        <button
+          onClick={() => setParticipantsOpen(true)}
+          className="text-xs text-primary hover:underline mt-1"
+        >
+          Manage participants
+        </button>
+      </div>
+    );
+  };
+
   /* ── Render step content ── */
-  const renderStepContent = (step: WizardStep, index: number) => {
+  const renderStepContent = (step: WizardStep, _index: number, isCompletedExpanded: boolean) => {
     switch (step.id) {
       case "participants":
         return (
           <div className="space-y-3">
-            {/* Quick add self */}
-            <button
-              onClick={handleQuickAddSelf}
-              className="w-full border rounded-lg p-3 hover:bg-muted/50 transition-colors flex items-center justify-between text-left"
-            >
-              <span className="text-sm font-medium">I'm the only signer</span>
-              <span className="text-xs text-primary">→</span>
-            </button>
+            {/* Show participant list if any */}
+            {renderParticipantsList()}
 
-            <div className="flex items-center gap-2">
-              <Separator className="flex-1" />
-              <span className="text-[10px] text-muted-foreground uppercase">or</span>
-              <Separator className="flex-1" />
-            </div>
+            {/* Main buttons */}
+            <div className="space-y-0">
+              <Button className="w-full h-10 gap-2" onClick={() => setParticipantsOpen(true)}>
+                <HugeiconsIcon icon={UserAdd01Icon} size={16} />
+                {hasParticipants ? "Manage participants" : "Add participants"}
+              </Button>
 
-            {/* Existing participants */}
-            {participants.length > 0 && (
-              <div className="space-y-1.5">
-                {participants.map(p => (
-                  <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                    <span className="text-sm truncate flex-1">{p.name}</span>
-                    <Badge variant="outline" className="text-[9px] h-4 px-1.5">{p.role}</Badge>
-                  </div>
-                ))}
+              {!hasParticipants && !isCompletedExpanded && (
                 <button
-                  onClick={() => setParticipantsOpen(true)}
-                  className="text-xs text-primary hover:underline"
+                  onClick={handleQuickAddSelf}
+                  className="w-full text-center text-xs text-primary hover:underline mt-2"
                 >
-                  Edit →
+                  I am the only signer
                 </button>
-              </div>
-            )}
-
-            <Button className="w-full h-9 gap-1.5" onClick={() => setParticipantsOpen(true)}>
-              <User size={14} />
-              {hasParticipants ? "Manage participants" : "Add participants"}
-            </Button>
+              )}
+            </div>
           </div>
         );
 
@@ -478,12 +627,6 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                     );
                   })}
                 </div>
-                {participants.some(p => (fieldsByParticipant.get(p.id) || 0) === 0) && (
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <AlertTriangle size={10} />
-                    {participants.filter(p => (fieldsByParticipant.get(p.id) || 0) === 0).map(p => p.name.split(" ")[0]).join(", ")} ha{participants.filter(p => (fieldsByParticipant.get(p.id) || 0) === 0).length > 1 ? "ve" : "s"} no fields — they'll place their own
-                  </p>
-                )}
               </div>
             )}
           </div>
@@ -492,7 +635,6 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       case "placeholders":
         return (
           <div className="space-y-3">
-            {/* Status */}
             <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/50 text-xs">
               {allVarsFilled ? (
                 <>
@@ -506,8 +648,6 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                 </>
               )}
             </div>
-
-            {/* Placeholder rows */}
             <div className="space-y-2">
               {Array.from(usedTokens).map(token => (
                 <div key={token} className="flex items-center gap-2">
@@ -529,7 +669,6 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       case "properties":
         return (
           <div className="space-y-3">
-            {/* Document type */}
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Document type</label>
               <Select value={documentType} onValueChange={setDocumentType}>
@@ -543,8 +682,6 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Required properties */}
             {documentType && requiredProps.length > 0 && (
               <div className="space-y-1">
                 {requiredProps.map(field => {
@@ -598,7 +735,6 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                 })}
               </div>
             )}
-
             {!documentType && (
               <p className="text-xs text-muted-foreground text-center py-4">Select a document type to see required properties</p>
             )}
@@ -622,11 +758,8 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Workflow steps */}
             {wfSteps.length > 0 && (
               <div className="relative">
-                {/* Step 0: Drafting */}
                 <div className="flex gap-3 relative">
                   <div className="absolute left-[15px] top-[32px] bottom-0 w-px border-l border-dashed border-border" />
                   <div className="h-[30px] w-[30px] rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-primary/15 text-primary">
@@ -673,7 +806,6 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                 })}
               </div>
             )}
-
             {wfSteps.length > 0 && !allAssigned && (
               <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
                 <AlertTriangle size={10} />
@@ -707,25 +839,64 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
           const isActive = index === activeStepIndex;
           const isLocked = activeStepIndex !== null && index > activeStepIndex && !step.isComplete;
           const isCompleted = step.isComplete && !isActive;
+          const isCompletedExpanded = isCompleted && expandedCompletedSteps.has(step.id);
+          const isLastStep = index === steps.length - 1;
 
-          // COMPLETED STATE
+          // COMPLETED STATE (collapsed or expanded)
           if (isCompleted) {
             return (
               <div
                 key={step.id}
-                className="rounded-lg border p-3 bg-emerald-500/5 border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
-                onClick={() => handleStepClick(index)}
+                ref={(el) => { stepRefs.current[index] = el; }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                    <Check size={12} className="text-white" />
+                <div
+                  className={cn(
+                    "rounded-lg border cursor-pointer transition-colors",
+                    isCompletedExpanded
+                      ? "border-emerald-500/30 bg-emerald-500/5 p-3"
+                      : "border-emerald-500/20 bg-emerald-500/5 p-3 hover:bg-emerald-500/10"
+                  )}
+                  onClick={() => handleStepClick(index)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                      <Check size={12} className="text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-muted-foreground">{step.title}</span>
+                      {!isCompletedExpanded && (
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400">{step.completeSummary}</p>
+                      )}
+                    </div>
+                    {isCompletedExpanded ? (
+                      <ChevronUp size={14} className="text-muted-foreground" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground hover:text-primary">Edit →</span>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-muted-foreground">{step.title}</span>
-                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400">{step.completeSummary}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground hover:text-primary">Edit →</span>
                 </div>
+
+                {/* Expanded completed content */}
+                <AnimatePresence>
+                  {isCompletedExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pt-3 px-1">
+                        {renderStepContent(step, index, true)}
+                        <div className="mt-3 text-center">
+                          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center justify-center gap-1">
+                            <Check size={12} /> Done ✓
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           }
@@ -735,7 +906,10 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
             return (
               <Tooltip key={step.id}>
                 <TooltipTrigger asChild>
-                  <div className="rounded-lg border p-3 bg-muted/30 opacity-50 cursor-not-allowed">
+                  <div
+                    ref={(el) => { stepRefs.current[index] = el; }}
+                    className="rounded-lg border p-3 bg-muted/30 opacity-50 cursor-not-allowed"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center flex-shrink-0">
                         <span className="text-[10px] font-bold text-muted-foreground">{index + 1}</span>
@@ -753,10 +927,11 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
           // ACTIVE STATE
           if (isActive) {
-            const canContinue = step.isComplete;
+            const canContinue = step.isComplete || step.isOptional;
             return (
               <div
                 key={step.id}
+                ref={(el) => { stepRefs.current[index] = el; }}
                 className="rounded-xl border-2 border-primary p-4 bg-card shadow-sm"
               >
                 {/* Step header */}
@@ -770,21 +945,24 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
                 {/* Step body */}
                 <div className="mb-3">
-                  {renderStepContent(step, index)}
+                  {renderStepContent(step, index, false)}
                 </div>
 
-                {/* Continue / Skip buttons */}
+                {/* Separator + Continue / Skip */}
+                <Separator className="my-3" />
+
                 <div className="flex flex-col gap-2">
                   <Button
+                    variant="outline"
                     size="sm"
                     className="w-full h-9 text-xs"
                     disabled={!canContinue}
-                    onClick={handleContinue}
+                    onClick={() => handleContinue(index)}
                   >
-                    Continue
+                    {isLastStep ? "Complete ✓" : "Continue →"}
                   </Button>
-                  {step.isOptional && !canContinue && (
-                    <Button variant="ghost" size="sm" className="w-full h-9 text-xs text-muted-foreground" onClick={handleSkip}>
+                  {step.isOptional && !step.isComplete && (
+                    <Button variant="ghost" size="sm" className="w-full h-9 text-xs text-muted-foreground" onClick={() => handleSkip(index)}>
                       {step.skipLabel || "Skip"}
                     </Button>
                   )}
@@ -793,49 +971,60 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
             );
           }
 
-          // Fallback (shouldn't happen)
           return null;
         })}
       </div>
 
       {/* Send section */}
-      {allComplete && (
+      {showSendSection && allComplete && (
         <div className="space-y-3 pt-2">
           <Separator />
-          <AnimatePresence>
-            {showSendCelebration && (
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, type: "spring" }}
+            className="flex flex-col items-center gap-2 py-2"
+          >
+            <div className="h-10 w-10 rounded-full bg-emerald-500/15 flex items-center justify-center">
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5, type: "spring" }}
-                className="flex flex-col items-center gap-2 py-2"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
               >
-                <div className="h-10 w-10 rounded-full bg-emerald-500/15 flex items-center justify-center">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
-                  >
-                    <Check size={20} className="text-emerald-500" />
-                  </motion.div>
-                </div>
-                <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 text-center">
-                  All set! Your document is ready to send
-                </p>
+                <Check size={20} className="text-emerald-500" />
               </motion.div>
-            )}
-          </AnimatePresence>
-          <Button className="w-full h-11 text-base font-semibold shadow-md gap-2">
-            <Send size={16} />
+            </div>
+            <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 text-center">
+              All set! Your document is ready to send
+            </p>
+          </motion.div>
+          <Button
+            className="w-full h-11 text-base font-semibold shadow-md gap-2 rounded-lg"
+            onClick={handleSendClick}
+          >
+            <HugeiconsIcon icon={SentIcon} size={16} />
             Send for signature
           </Button>
           <p className="text-xs text-muted-foreground text-center">
-            or <button className="text-muted-foreground hover:text-foreground underline">Save as draft</button>
+            or <button className="text-muted-foreground hover:text-foreground underline" onClick={() => { toast("Saved as draft"); }}>Save as draft</button>
           </p>
         </div>
       )}
 
       <ParticipantsDialog open={participantsOpen} onOpenChange={setParticipantsOpen} fromEditor />
+
+      {/* Send dialogs */}
+      <MissingFieldsWarningDialog
+        open={warningOpen}
+        onOpenChange={setWarningOpen}
+        participantIssues={participantIssues}
+        onGoBack={() => setWarningOpen(false)}
+        onContinue={() => { setWarningOpen(false); setSendOpen(true); }}
+      />
+      <ReviewSendDialog
+        open={sendOpen}
+        onOpenChange={setSendOpen}
+      />
     </div>
   );
 };
