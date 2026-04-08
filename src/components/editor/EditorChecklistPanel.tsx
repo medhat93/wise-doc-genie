@@ -1013,9 +1013,9 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
                 <div className="flex flex-col gap-2">
                   <Button
-                    variant="outline"
+                    variant={step.isComplete ? "default" : "outline"}
                     size="sm"
-                    className="w-full h-9 text-xs"
+                    className={cn("w-full text-xs", step.isComplete ? "h-10 font-medium" : "h-9")}
                     disabled={!canContinue}
                     onClick={() => handleContinue(index)}
                   >
