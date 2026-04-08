@@ -251,28 +251,13 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     return s.filter(step => step.isVisible);
   }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, hasRequiredProperties, allPropsComplete, workflowEnforced, workflowComplete, selectedWorkflow]);
 
-  // Initialize active step and open steps
+  // Initialize active step
   useEffect(() => {
     if (activeStepIndex === null && steps.length > 0) {
       const firstIncomplete = steps.findIndex(s => !s.isComplete);
       const idx = firstIncomplete >= 0 ? firstIncomplete : steps.length - 1;
       setActiveStepIndex(idx);
       setOpenSteps(new Set([idx]));
-    }
-  }, [steps, activeStepIndex]);
-
-  // Auto-advance when the current active step becomes complete from external changes
-  useEffect(() => {
-    if (activeStepIndex !== null && steps[activeStepIndex]?.isComplete) {
-      const nextIncomplete = steps.findIndex((s, i) => i > activeStepIndex && !s.isComplete);
-      if (nextIncomplete >= 0) {
-        setActiveStepIndex(nextIncomplete);
-        setOpenSteps(prev => {
-          const next = new Set(prev);
-          next.add(nextIncomplete);
-          return next;
-        });
-      }
     }
   }, [steps, activeStepIndex]);
 
@@ -294,12 +279,19 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   const handleContinue = () => {
     if (activeStepIndex !== null) {
-      // Mark current step as manually completed if it's properties
       const currentStep = steps[activeStepIndex];
       if (currentStep?.id === "properties") {
         setManuallyCompletedSteps(prev => new Set(prev).add("properties"));
       }
 
+      // Collapse current step
+      setOpenSteps(prev => {
+        const next = new Set(prev);
+        next.delete(activeStepIndex);
+        return next;
+      });
+
+      // Open next step
       if (activeStepIndex < steps.length - 1) {
         const nextIndex = activeStepIndex + 1;
         setActiveStepIndex(nextIndex);
@@ -309,7 +301,6 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
           return next;
         });
       } else {
-        // Last step — just close it
         setActiveStepIndex(null);
       }
     }
@@ -319,30 +310,19 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     handleContinue();
   };
 
+  // Save & collapse a re-opened completed step
+  const handleSaveStep = (index: number) => {
+    setOpenSteps(prev => {
+      const next = new Set(prev);
+      next.delete(index);
+      return next;
+    });
+  };
+
   const handleStepClick = (index: number) => {
-    // Toggle open/close for completed steps without affecting the active editing step
-    if (steps[index].isComplete) {
-      setOpenSteps(prev => {
-        const next = new Set(prev);
-        if (next.has(index) && index !== activeStepIndex) {
-          next.delete(index);
-        } else {
-          next.add(index);
-        }
-        return next;
-      });
-      // If clicking a completed step, also set it as active for editing
-      if (!openSteps.has(index)) {
-        setActiveStepIndex(index);
-      }
-    } else if (index === activeStepIndex) {
-      // Toggle current active step
-      setOpenSteps(prev => {
-        const next = new Set(prev);
-        if (next.has(index)) next.delete(index);
-        else next.add(index);
-        return next;
-      });
+    if (steps[index].isComplete && !openSteps.has(index)) {
+      // Open a completed step for review
+      setOpenSteps(prev => new Set(prev).add(index));
     }
   };
 
