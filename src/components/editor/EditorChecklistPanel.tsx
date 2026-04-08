@@ -240,7 +240,56 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     }));
   }, [setChecklistState]);
 
-  // Build steps array
+  const unmarkStepCompleted = useCallback((stepId: string) => {
+    setChecklistState(prev => ({
+      ...prev,
+      completedStepIds: prev.completedStepIds.filter(id => id !== stepId),
+      skippedStepIds: prev.skippedStepIds.filter(id => id !== stepId),
+    }));
+  }, [setChecklistState]);
+
+  // Get a snapshot fingerprint for a step's data
+  const getStepFingerprint = useCallback((stepId: string): string => {
+    switch (stepId) {
+      case "participants": return JSON.stringify(participants.map(p => ({ id: p.id, name: p.name, role: p.role, order: p.order })));
+      case "fields": return JSON.stringify(placedFields.map(f => ({ id: f.id, fieldTypeId: f.fieldTypeId, participantId: f.participantId })));
+      case "placeholders": return JSON.stringify(variableValues);
+      case "properties": return JSON.stringify({ documentType, propValues });
+      case "workflow": return JSON.stringify({ selectedWorkflow, workflowAssignees });
+      default: return "";
+    }
+  }, [participants, placedFields, variableValues, documentType, propValues, selectedWorkflow, workflowAssignees]);
+
+  // Detect changes in expanded completed steps and reactivate them
+  useEffect(() => {
+    for (const stepId of expandedCompletedSteps) {
+      const snapshot = stepSnapshots[stepId];
+      if (!snapshot) continue;
+      const current = getStepFingerprint(stepId);
+      if (current !== snapshot) {
+        // Change detected — reactivate this step
+        unmarkStepCompleted(stepId);
+        setExpandedCompletedSteps(prev => {
+          const next = new Set(prev);
+          next.delete(stepId);
+          return next;
+        });
+        // Find the index of this step and make it active
+        const stepIndex = steps.findIndex(s => s.id === stepId);
+        if (stepIndex >= 0) {
+          setActiveStepIndex(stepIndex);
+          setShowSendSection(false);
+        }
+        // Clean up snapshot
+        setStepSnapshots(prev => {
+          const next = { ...prev };
+          delete next[stepId];
+          return next;
+        });
+        break; // handle one at a time
+      }
+    }
+  }, [expandedCompletedSteps, stepSnapshots, getStepFingerprint, unmarkStepCompleted, steps]);
   const steps: WizardStep[] = useMemo(() => {
     const s: WizardStep[] = [
       {
