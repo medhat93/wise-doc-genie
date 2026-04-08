@@ -260,36 +260,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     }
   }, [participants, placedFields, variableValues, documentType, propValues, selectedWorkflow, workflowAssignees]);
 
-  // Detect changes in expanded completed steps and reactivate them
-  useEffect(() => {
-    for (const stepId of expandedCompletedSteps) {
-      const snapshot = stepSnapshots[stepId];
-      if (!snapshot) continue;
-      const current = getStepFingerprint(stepId);
-      if (current !== snapshot) {
-        // Change detected — reactivate this step
-        unmarkStepCompleted(stepId);
-        setExpandedCompletedSteps(prev => {
-          const next = new Set(prev);
-          next.delete(stepId);
-          return next;
-        });
-        // Find the index of this step and make it active
-        const stepIndex = steps.findIndex(s => s.id === stepId);
-        if (stepIndex >= 0) {
-          setActiveStepIndex(stepIndex);
-          setShowSendSection(false);
-        }
-        // Clean up snapshot
-        setStepSnapshots(prev => {
-          const next = { ...prev };
-          delete next[stepId];
-          return next;
-        });
-        break; // handle one at a time
-      }
-    }
-  }, [expandedCompletedSteps, stepSnapshots, getStepFingerprint, unmarkStepCompleted, steps]);
+
   const steps: WizardStep[] = useMemo(() => {
     const s: WizardStep[] = [
       {
