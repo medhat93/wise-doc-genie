@@ -96,6 +96,12 @@ export const COMMENT_SECTIONS: Record<string, { docIndex: number; selector: stri
 
 export type AcknowledgmentLevel = 'none';
 
+/* ── Checklist state ── */
+export interface ChecklistState {
+  completedStepIds: string[];
+  skippedStepIds: string[];
+}
+
 interface EditorContextType {
   participants: Participant[];
   setParticipants: React.Dispatch<React.SetStateAction<Participant[]>>;
