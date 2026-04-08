@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -388,6 +388,26 @@ const EditorToolbar = ({ documents, activeDocId, onScrollToDoc, onOpenComments, 
   const [findOpen, setFindOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Responsive collapse: measure toolbar width and hide groups progressively
+  const [toolbarWidth, setToolbarWidth] = useState(2000);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setToolbarWidth(entry.contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Collapse thresholds — groups disappear from main row into overflow
+  const showDirection = toolbarWidth > 1050;
+  const showAlignment = toolbarWidth > 950;
+  const showInsert = toolbarWidth > 850;
+  const showLists = toolbarWidth > 750;
+  const showColors = toolbarWidth > 650;
+  const hasCollapsed = !showDirection || !showAlignment || !showInsert || !showLists || !showColors;
 
   const toggle = (key: string) =>
     setToggles((p) => ({ ...p, [key]: !p[key] }));
