@@ -179,6 +179,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       documentAcknowledgments, setDocumentAcknowledgments,
       pendingAiQuestion, setPendingAiQuestion,
       aiSuggestions, setAiSuggestions,
+      checklistState, setChecklistState,
     }}>
       {children}
     </EditorContext.Provider>
