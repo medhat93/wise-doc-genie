@@ -798,20 +798,6 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                     )}
                   </div>
                   <span className="text-sm font-semibold flex-1">{step.title}</span>
-                  {isCompleted && (
-                    <button
-                      onClick={() => {
-                        setOpenSteps(prev => {
-                          const next = new Set(prev);
-                          next.delete(index);
-                          return next;
-                        });
-                      }}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      Collapse
-                    </button>
-                  )}
                 </div>
                 <p className="text-xs text-muted-foreground mb-3 ml-[34px]">{step.description}</p>
 
@@ -820,8 +806,18 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                   {renderStepContent(step, index)}
                 </div>
 
-                {/* Continue / Skip buttons — only for the current active step */}
-                {isCurrentActive && !isCompleted && (
+                {/* Buttons */}
+                {isCompleted ? (
+                  /* Re-opened completed step — Save to collapse */
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full h-9 text-xs"
+                    onClick={() => handleSaveStep(index)}
+                  >
+                    Save
+                  </Button>
+                ) : isCurrentActive ? (
                   <div className="flex flex-col gap-2">
                     <Button
                       size="sm"
@@ -837,7 +833,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                       </Button>
                     )}
                   </div>
-                )}
+                ) : null}
               </div>
             );
           }
