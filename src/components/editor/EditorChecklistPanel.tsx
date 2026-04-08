@@ -167,6 +167,9 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
   const [showSendSection, setShowSendSection] = useState(false);
 
+  // Snapshot tracking for re-edit detection
+  const [stepSnapshots, setStepSnapshots] = useState<Record<string, string>>({});
+
   // Send dialog state
   const [sendOpen, setSendOpen] = useState(false);
   const [warningOpen, setWarningOpen] = useState(false);
@@ -237,7 +240,27 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     }));
   }, [setChecklistState]);
 
-  // Build steps array
+  const unmarkStepCompleted = useCallback((stepId: string) => {
+    setChecklistState(prev => ({
+      ...prev,
+      completedStepIds: prev.completedStepIds.filter(id => id !== stepId),
+      skippedStepIds: prev.skippedStepIds.filter(id => id !== stepId),
+    }));
+  }, [setChecklistState]);
+
+  // Get a snapshot fingerprint for a step's data
+  const getStepFingerprint = useCallback((stepId: string): string => {
+    switch (stepId) {
+      case "participants": return JSON.stringify(participants.map(p => ({ id: p.id, name: p.name, role: p.role, order: p.order })));
+      case "fields": return JSON.stringify(placedFields.map(f => ({ id: f.id, fieldTypeId: f.fieldTypeId, participantId: f.participantId })));
+      case "placeholders": return JSON.stringify(variableValues);
+      case "properties": return JSON.stringify({ documentType, propValues });
+      case "workflow": return JSON.stringify({ selectedWorkflow, workflowAssignees });
+      default: return "";
+    }
+  }, [participants, placedFields, variableValues, documentType, propValues, selectedWorkflow, workflowAssignees]);
+
+
   const steps: WizardStep[] = useMemo(() => {
     const s: WizardStep[] = [
       {
@@ -295,6 +318,34 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     ];
     return s.filter(step => step.isVisible);
   }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, hasRequiredProperties, allPropsComplete, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
+
+  // Detect changes in expanded completed steps and reactivate them
+  useEffect(() => {
+    for (const stepId of expandedCompletedSteps) {
+      const snapshot = stepSnapshots[stepId];
+      if (!snapshot) continue;
+      const current = getStepFingerprint(stepId);
+      if (current !== snapshot) {
+        unmarkStepCompleted(stepId);
+        setExpandedCompletedSteps(prev => {
+          const next = new Set(prev);
+          next.delete(stepId);
+          return next;
+        });
+        const stepIndex = steps.findIndex(s => s.id === stepId);
+        if (stepIndex >= 0) {
+          setActiveStepIndex(stepIndex);
+          setShowSendSection(false);
+        }
+        setStepSnapshots(prev => {
+          const next = { ...prev };
+          delete next[stepId];
+          return next;
+        });
+        break;
+      }
+    }
+  }, [expandedCompletedSteps, stepSnapshots, getStepFingerprint, unmarkStepCompleted, steps]);
 
   // Initialize active step
   useEffect(() => {
@@ -394,18 +445,19 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     if (isLocked) return;
 
     if (isCompleted) {
-      // Toggle expanded state for completed steps
       setExpandedCompletedSteps(prev => {
         const next = new Set(prev);
         if (next.has(step.id)) {
           next.delete(step.id);
+          // Remove snapshot on collapse
+          setStepSnapshots(p => { const n = { ...p }; delete n[step.id]; return n; });
         } else {
           next.add(step.id);
+          // Capture snapshot on expand
+          setStepSnapshots(p => ({ ...p, [step.id]: getStepFingerprint(step.id) }));
         }
         return next;
       });
-    } else if (index === activeStepIndex) {
-      // Can't collapse active step
     }
   };
 
@@ -525,22 +577,30 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
             {/* Show participant list if any */}
             {renderParticipantsList()}
 
-            {/* Main buttons */}
-            <div className="space-y-0">
-              <Button className="w-full h-10 gap-2" onClick={() => setParticipantsOpen(true)}>
-                <HugeiconsIcon icon={UserAdd01Icon} size={16} />
-                {hasParticipants ? "Manage participants" : "Add participants"}
-              </Button>
-
-              {!hasParticipants && !isCompletedExpanded && (
-                <button
-                  onClick={handleQuickAddSelf}
-                  className="w-full text-center text-xs text-primary hover:underline mt-2"
-                >
-                  I am the only signer
-                </button>
-              )}
-            </div>
+            {/* Buttons — priority flips based on whether participants exist */}
+            {hasParticipants ? (
+              <div className="space-y-2">
+                <Button variant="outline" className="w-full h-9 gap-2" onClick={() => setParticipantsOpen(true)}>
+                  <HugeiconsIcon icon={UserAdd01Icon} size={16} />
+                  Manage participants
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-0">
+                <Button className="w-full h-10 gap-2" onClick={() => setParticipantsOpen(true)}>
+                  <HugeiconsIcon icon={UserAdd01Icon} size={16} />
+                  Add participants
+                </Button>
+                {!isCompletedExpanded && (
+                  <button
+                    onClick={handleQuickAddSelf}
+                    className="w-full text-center text-xs text-primary hover:underline mt-2"
+                  >
+                    I am the only signer
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         );
 
@@ -953,9 +1013,9 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
                 <div className="flex flex-col gap-2">
                   <Button
-                    variant="outline"
+                    variant={step.isComplete ? "default" : "outline"}
                     size="sm"
-                    className="w-full h-9 text-xs"
+                    className={cn("w-full text-xs", step.isComplete ? "h-10 font-medium" : "h-9")}
                     disabled={!canContinue}
                     onClick={() => handleContinue(index)}
                   >
