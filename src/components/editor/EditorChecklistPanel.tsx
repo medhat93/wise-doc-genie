@@ -393,22 +393,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       case "participants":
         return (
           <div className="space-y-3">
-            {/* Quick add self */}
-            <button
-              onClick={handleQuickAddSelf}
-              className="w-full border rounded-lg p-3 hover:bg-muted/50 transition-colors flex items-center justify-between text-left"
-            >
-              <span className="text-sm font-medium">I'm the only signer</span>
-              <span className="text-xs text-primary">→</span>
-            </button>
-
-            <div className="flex items-center gap-2">
-              <Separator className="flex-1" />
-              <span className="text-[10px] text-muted-foreground uppercase">or</span>
-              <Separator className="flex-1" />
-            </div>
-
-            {/* Existing participants */}
+            {/* Existing participants list */}
             {participants.length > 0 && (
               <div className="space-y-1.5">
                 {participants.map(p => (
@@ -418,19 +403,22 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                     <Badge variant="outline" className="text-[9px] h-4 px-1.5">{p.role}</Badge>
                   </div>
                 ))}
-                <button
-                  onClick={() => setParticipantsOpen(true)}
-                  className="text-xs text-primary hover:underline"
-                >
-                  Edit →
-                </button>
               </div>
             )}
 
             <Button className="w-full h-9 gap-1.5" onClick={() => setParticipantsOpen(true)}>
               <User size={14} />
-              {hasParticipants ? "Manage participants" : "Add participants"}
+              Add participants
             </Button>
+
+            {!hasParticipants && (
+              <button
+                onClick={handleQuickAddSelf}
+                className="w-full text-xs text-primary hover:underline text-center"
+              >
+                I am the only signer
+              </button>
+            )}
           </div>
         );
 
