@@ -79,9 +79,9 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
     case 'draft':
       return [[download, rename, share], mgmt, [trash]];
     case 'approval_waiting':
-      return [[correct, rename, share], [updateExp, markComplete], mgmt, [trash]];
+      return [[rename, share], mgmt, [trash]];
     case 'approval_yours':
-      return [[download, correct, rename, share], [updateExp, markComplete], mgmt, [trash]];
+      return [[download, rename, share], mgmt, [trash]];
     case 'signing_waiting':
       return [[correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]];
     case 'signing_yours':
