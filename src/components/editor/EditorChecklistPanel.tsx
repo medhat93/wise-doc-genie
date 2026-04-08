@@ -577,22 +577,30 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
             {/* Show participant list if any */}
             {renderParticipantsList()}
 
-            {/* Main buttons */}
-            <div className="space-y-0">
-              <Button className="w-full h-10 gap-2" onClick={() => setParticipantsOpen(true)}>
-                <HugeiconsIcon icon={UserAdd01Icon} size={16} />
-                {hasParticipants ? "Manage participants" : "Add participants"}
-              </Button>
-
-              {!hasParticipants && !isCompletedExpanded && (
-                <button
-                  onClick={handleQuickAddSelf}
-                  className="w-full text-center text-xs text-primary hover:underline mt-2"
-                >
-                  I am the only signer
-                </button>
-              )}
-            </div>
+            {/* Buttons — priority flips based on whether participants exist */}
+            {hasParticipants ? (
+              <div className="space-y-2">
+                <Button variant="outline" className="w-full h-9 gap-2" onClick={() => setParticipantsOpen(true)}>
+                  <HugeiconsIcon icon={UserAdd01Icon} size={16} />
+                  Manage participants
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-0">
+                <Button className="w-full h-10 gap-2" onClick={() => setParticipantsOpen(true)}>
+                  <HugeiconsIcon icon={UserAdd01Icon} size={16} />
+                  Add participants
+                </Button>
+                {!isCompletedExpanded && (
+                  <button
+                    onClick={handleQuickAddSelf}
+                    className="w-full text-center text-xs text-primary hover:underline mt-2"
+                  >
+                    I am the only signer
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         );
 
