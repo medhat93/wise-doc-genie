@@ -174,7 +174,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   // Step 4 completion
   const requiredProps = documentType ? (REQUIRED_PROPS[documentType] || DEFAULT_REQUIRED_PROPS) : [];
-  const allPropsComplete = !!documentType && requiredProps.every(f => propValues[f.key]?.trim());
+  const allPropsComplete = (!!documentType && requiredProps.every(f => propValues[f.key]?.trim())) || manuallyCompletedSteps.has("properties");
 
   // Step 5 completion
   const wfSteps = selectedWorkflow !== "none" ? (WORKFLOW_TEMPLATES[selectedWorkflow]?.steps || []) : [];
