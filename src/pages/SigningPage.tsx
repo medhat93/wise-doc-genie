@@ -262,27 +262,8 @@ export default function SigningPage() {
             <span className="text-xs text-muted-foreground ml-auto">{activeDoc.pages} pages</span>
           </div>
 
-          {/* Search bar */}
-          {searchOpen && (
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-card shrink-0">
-              <Search size={14} className="text-muted-foreground shrink-0" />
-              <input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search in document…"
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                autoFocus
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground">
-                  <X size={14} />
-                </button>
-              )}
-              <button onClick={() => { setSearchOpen(false); setSearchQuery(''); }} className="text-muted-foreground hover:text-foreground">
-                <X size={16} />
-              </button>
-            </div>
-          )}
+
+
 
           {/* Document canvas */}
           <div
