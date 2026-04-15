@@ -957,9 +957,10 @@ interface EditorCanvasProps {
   onOpenVersionHistory?: () => void;
   isEsign?: boolean;
   hideZoomBar?: boolean;
+  hideMarginComments?: boolean;
 }
 
-const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpenAi, onOpenVersionHistory, isEsign, hideZoomBar }: EditorCanvasProps) => {
+const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpenAi, onOpenVersionHistory, isEsign, hideZoomBar, hideMarginComments }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
@@ -1181,20 +1182,21 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
   const hasAnyInlineComments = inlineComments.length > 0;
 
   const [sectionPositions, setSectionPositions] = useState<Record<string, number>>({});
-  const doc1Ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const measure = () => {
-      const container = doc1Ref.current;
-      if (!container) return;
-      const containerRect = container.getBoundingClientRect();
       const positions: Record<string, number> = {};
-      const els = container.querySelectorAll("[data-comment-section]");
-      els.forEach((el) => {
-        const ref = el.getAttribute("data-comment-section");
-        if (ref && !positions[ref]) {
-          positions[ref] = el.getBoundingClientRect().top - containerRect.top;
-        }
+      // Measure all docs, not just doc-1
+      Object.entries(docRefs.current).forEach(([, docEl]) => {
+        if (!docEl) return;
+        const containerRect = docEl.getBoundingClientRect();
+        const els = docEl.querySelectorAll("[data-comment-section]");
+        els.forEach((el) => {
+          const ref = el.getAttribute("data-comment-section");
+          if (ref && !positions[ref]) {
+            positions[ref] = el.getBoundingClientRect().top - containerRect.top;
+          }
+        });
       });
       setSectionPositions(positions);
     };
@@ -1271,7 +1273,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                       DOC_BORDER[doc.docType]
                     )}
                   >
-                    <div ref={doc.id === "doc-1" ? doc1Ref : undefined}>
+                    <div>
                       {doc.id === "doc-1" ? (
                         <>
                           <Doc1Content comments={comments} onClickHighlight={handleClickHighlight} variableValues={variableValues} />
@@ -1314,7 +1316,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                   </div>
 
                   {/* Always-expanded margin comments — Google Docs style */}
-                  {!isEsign && hasAnyInlineComments && (
+                  {!isEsign && !hideMarginComments && hasAnyInlineComments && (
                     <div className="w-[240px] flex-shrink-0 relative hidden xl:block">
                       {Object.entries(commentsByDoc[doc.id] || {}).map(([sectionRef, sectionComments], cIdx) => {
                         const yPos = sectionPositions[sectionRef];
