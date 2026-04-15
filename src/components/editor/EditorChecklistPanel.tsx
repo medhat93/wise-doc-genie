@@ -123,14 +123,6 @@ const WORKFLOW_TEMPLATES: Record<string, { label: string; steps: { name: string;
   },
 };
 
-/* ── Sending method icons ── */
-const SendMethodIcon = ({ method }: { method: string }) => {
-  switch (method) {
-    case "email": return <MailIcon size={12} className="text-muted-foreground" />;
-    default: return <MailIcon size={12} className="text-muted-foreground" />;
-  }
-};
-
 /* ── Step definition ── */
 interface WizardStep {
   id: string;
