@@ -167,6 +167,11 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   // Step 4 state (workflow)
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>("none");
   const [workflowAssignees, setWorkflowAssignees] = useState<Record<number, string>>({});
+  
+  // Approval simulation state
+  const [approvalState, setApprovalState] = useState<"idle" | "in_progress" | "completed">("idle");
+  const [approvedStepIndices, setApprovedStepIndices] = useState<number[]>([]);
+  const approvalTimerRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Mock flags
   const workflowEnforced = true;
