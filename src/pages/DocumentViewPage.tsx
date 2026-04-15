@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useWorkspaceMode } from "@/contexts/WorkspaceModeContext";
+import { useWorkspaceMode, WorkspaceModeProvider } from "@/contexts/WorkspaceModeContext";
 import { workspaceDocuments } from "@/data/workspaceDocuments";
 import { WorkspaceDocument } from "@/types/workspace";
 import { Button } from "@/components/ui/button";
@@ -637,4 +637,10 @@ function DocumentViewPage() {
   );
 }
 
-export default DocumentViewPage;
+export default function DocumentViewPageWrapper() {
+  return (
+    <WorkspaceModeProvider>
+      <DocumentViewPage />
+    </WorkspaceModeProvider>
+  );
+}
