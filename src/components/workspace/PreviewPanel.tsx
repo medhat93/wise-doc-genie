@@ -248,7 +248,11 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   const { isESign } = useWorkspaceMode();
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
-  const [activeTab, setActiveTab] = useState('overview');
+  const getDefaultTab = (d: WorkspaceDocument | null) => {
+    if (d && ['approving', 'approved'].includes(d.stage) && !!d.approvalSteps) return 'workflow';
+    return 'participants';
+  };
+  const [activeTab, setActiveTab] = useState(() => getDefaultTab(doc));
   
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [docsExpanded, setDocsExpanded] = useState(false);
@@ -269,6 +273,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       setContractValue(doc.value?.replace('SAR ', '').replace(',', '') || '');
       setFolder(doc.folder || '');
       setExpiryDate(doc.expiresAt ? new Date(doc.expiresAt).toISOString().split('T')[0] : '');
+      setActiveTab(getDefaultTab(doc));
     }
   }, [doc]);
 
@@ -561,12 +566,6 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <div className="px-4 pt-2 border-b border-border shrink-0">
             <TabsList className="w-full justify-start h-9 bg-transparent p-0 gap-4">
-              <TabsTrigger value="overview" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
-                <FileText size={12} /> Overview
-              </TabsTrigger>
-              <TabsTrigger value="activity" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
-                <Clock size={12} /> Activity
-              </TabsTrigger>
               <TabsTrigger value="participants" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
                 <Users size={12} /> Participants
               </TabsTrigger>
@@ -575,6 +574,12 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
                   <GitPullRequest size={12} /> Workflow
                 </TabsTrigger>
               )}
+              <TabsTrigger value="activity" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
+                <Clock size={12} /> Activity
+              </TabsTrigger>
+              <TabsTrigger value="overview" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
+                <FileText size={12} /> Overview
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -592,6 +597,24 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
                   <Badge variant="secondary" className="text-[10px] h-4 px-1.5">Completed</Badge>
                 </div>
               )}
+
+              {/* Tags */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tags</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {doc.tags.length > 0 ? doc.tags.map(t => (
+                    <span key={t} className="group bg-muted border border-border text-xs px-2 py-0.5 rounded-md flex items-center gap-1">
+                      {t}
+                      <X size={10} className="opacity-0 group-hover:opacity-100 cursor-pointer text-muted-foreground hover:text-foreground transition-opacity" />
+                    </span>
+                  )) : null}
+                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border px-2 py-0.5 rounded-md transition-colors">
+                    <Plus size={10} /> Add
+                  </button>
+                </div>
+              </div>
+
+              <Separator />
 
               {/* Documents section — collapsed by default */}
               <div>
@@ -695,24 +718,6 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
                     options={['Low', 'Medium', 'High', 'Critical']}
                     onSave={setPriority}
                   />
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Tags */}
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tags</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {doc.tags.length > 0 ? doc.tags.map(t => (
-                    <span key={t} className="group bg-muted border border-border text-xs px-2 py-0.5 rounded-md flex items-center gap-1">
-                      {t}
-                      <X size={10} className="opacity-0 group-hover:opacity-100 cursor-pointer text-muted-foreground hover:text-foreground transition-opacity" />
-                    </span>
-                  )) : null}
-                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border px-2 py-0.5 rounded-md transition-colors">
-                    <Plus size={10} /> Add
-                  </button>
                 </div>
               </div>
             </TabsContent>
