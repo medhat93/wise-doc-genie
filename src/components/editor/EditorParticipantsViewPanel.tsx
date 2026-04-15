@@ -72,6 +72,7 @@ const SortableParticipantCard = ({
   index,
   onEdit,
   onRemove,
+  onOrderChange,
   confirmRemoveId,
   setConfirmRemoveId,
 }: {
@@ -80,6 +81,7 @@ const SortableParticipantCard = ({
   index: number;
   onEdit: (p: Participant) => void;
   onRemove: (id: string) => void;
+  onOrderChange: (id: string, newOrder: number) => void;
   confirmRemoveId: string | null;
   setConfirmRemoveId: (id: string | null) => void;
 }) => {
@@ -111,15 +113,22 @@ const SortableParticipantCard = ({
         "hover:bg-muted/30"
       )}
     >
-      {/* Drag handle + order number */}
+      {/* Drag handle + editable order number */}
       {workflowEnabled && (
         <div className="flex items-center gap-1 flex-shrink-0">
           <button {...attributes} {...listeners} className="cursor-grab text-muted-foreground hover:text-foreground -ml-0.5">
             <GripVertical size={14} />
           </button>
-          <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-            {index + 1}
-          </span>
+          <input
+            type="number"
+            min={1}
+            value={participant.order}
+            onChange={(e) => {
+              const val = parseInt(e.target.value);
+              if (!isNaN(val) && val >= 1) onOrderChange(participant.id, val);
+            }}
+            className="h-5 w-5 rounded-sm bg-muted text-[10px] font-bold text-muted-foreground text-center border-0 outline-none focus:ring-1 focus:ring-primary appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
         </div>
       )}
 
@@ -192,6 +201,10 @@ const EditorParticipantsViewPanel = () => {
     toast.success("Participant removed");
   }, [setParticipants]);
 
+  const handleOrderChange = useCallback((id: string, newOrder: number) => {
+    setParticipants(prev => prev.map(p => p.id === id ? { ...p, order: newOrder } : p));
+  }, [setParticipants]);
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -254,6 +267,7 @@ const EditorParticipantsViewPanel = () => {
                   index={i}
                   onEdit={setEditingParticipant}
                   onRemove={removeParticipant}
+                  onOrderChange={handleOrderChange}
                   confirmRemoveId={confirmRemoveId}
                   setConfirmRemoveId={setConfirmRemoveId}
                 />
@@ -271,6 +285,7 @@ const EditorParticipantsViewPanel = () => {
               index={i}
               onEdit={setEditingParticipant}
               onRemove={removeParticipant}
+              onOrderChange={handleOrderChange}
               confirmRemoveId={confirmRemoveId}
               setConfirmRemoveId={setConfirmRemoveId}
             />
