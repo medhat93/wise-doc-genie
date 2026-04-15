@@ -172,6 +172,7 @@ const EditorPageInner = () => {
           onOpenVersionHistory={() => setVersionHistoryOpen(true)}
           isEsign={isEsign}
           hideZoomBar={!!selectedFieldId}
+          hideMarginComments={!!selectedFieldId && !!activePanel && activePanel !== "field-settings"}
         />
 
       <VersionHistoryOverlay
