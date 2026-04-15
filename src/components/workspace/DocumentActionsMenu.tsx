@@ -12,7 +12,7 @@ import {
 import {
   Download, Pencil, Share2, Tag, Copy, Users,
   Bell, CalendarDays, CheckCircle, Edit, XCircle, ArrowRight, Lock,
-  FileSearch, Trash2, MoreVertical, Link as LinkIcon,
+  FileSearch, Trash2, MoreVertical, Link as LinkIcon, Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CorrectionDialog from './CorrectionDialog';
@@ -53,8 +53,11 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
   onRename?: () => void;
   onCorrect?: () => void;
   onFollowUp?: () => void;
+  onView?: () => void;
 }, isESign: boolean): MenuGroup[] {
   const { onTrash, onVoid, onParticipants, onRename, onCorrect, onFollowUp } = callbacks;
+
+  const view: MenuItem = { label: 'View document', icon: Eye, onClick: callbacks.onView };
 
   const rename: MenuItem = { label: 'Rename', icon: Pencil, onClick: onRename || (() => toast.success('Document renamed')) };
   const share: MenuItem = { label: 'Share', icon: Share2, onClick: () => toast.success('Share link copied') };
