@@ -598,6 +598,24 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
                 </div>
               )}
 
+              {/* Tags */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tags</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {doc.tags.length > 0 ? doc.tags.map(t => (
+                    <span key={t} className="group bg-muted border border-border text-xs px-2 py-0.5 rounded-md flex items-center gap-1">
+                      {t}
+                      <X size={10} className="opacity-0 group-hover:opacity-100 cursor-pointer text-muted-foreground hover:text-foreground transition-opacity" />
+                    </span>
+                  )) : null}
+                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border px-2 py-0.5 rounded-md transition-colors">
+                    <Plus size={10} /> Add
+                  </button>
+                </div>
+              </div>
+
+              <Separator />
+
               {/* Documents section — collapsed by default */}
               <div>
                 <button
@@ -700,24 +718,6 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
                     options={['Low', 'Medium', 'High', 'Critical']}
                     onSave={setPriority}
                   />
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Tags */}
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tags</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {doc.tags.length > 0 ? doc.tags.map(t => (
-                    <span key={t} className="group bg-muted border border-border text-xs px-2 py-0.5 rounded-md flex items-center gap-1">
-                      {t}
-                      <X size={10} className="opacity-0 group-hover:opacity-100 cursor-pointer text-muted-foreground hover:text-foreground transition-opacity" />
-                    </span>
-                  )) : null}
-                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border px-2 py-0.5 rounded-md transition-colors">
-                    <Plus size={10} /> Add
-                  </button>
                 </div>
               </div>
             </TabsContent>
