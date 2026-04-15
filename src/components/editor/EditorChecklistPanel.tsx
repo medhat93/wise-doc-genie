@@ -236,11 +236,10 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       case "participants": return JSON.stringify(participants.map(p => ({ id: p.id, name: p.name, role: p.role, order: p.order })));
       case "fields": return JSON.stringify(placedFields.map(f => ({ id: f.id, fieldTypeId: f.fieldTypeId, participantId: f.participantId })));
       case "placeholders": return JSON.stringify(variableValues);
-      case "properties": return JSON.stringify({ documentType, propValues });
       case "workflow": return JSON.stringify({ selectedWorkflow, workflowAssignees });
       default: return "";
     }
-  }, [participants, placedFields, variableValues, documentType, propValues, selectedWorkflow, workflowAssignees]);
+  }, [participants, placedFields, variableValues, selectedWorkflow, workflowAssignees]);
 
 
   const steps: WizardStep[] = useMemo(() => {
