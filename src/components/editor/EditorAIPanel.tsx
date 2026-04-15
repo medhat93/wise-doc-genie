@@ -117,6 +117,7 @@ const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
             : `Suggested replacing the termination notice period`,
           timestamp: new Date(),
           sectionRef: s.sectionRef,
+          docId: "doc-1",
           status: "open",
           replies: [],
           type: "inline",
