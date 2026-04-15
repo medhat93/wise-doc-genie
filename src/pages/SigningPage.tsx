@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { PenTool, FileText, Printer, Download, Sparkles, ArrowLeft, MoreHorizontal, XCircle, UserPlus } from 'lucide-react';
+import { PenTool, FileText, Printer, Download, Sparkles, ArrowLeft, MoreHorizontal, XCircle, UserPlus, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import SigningAIPanel from '@/components/signing/SigningAIPanel';
@@ -37,12 +37,50 @@ export default function SigningPage() {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [docTransition, setDocTransition] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const documentRef = useRef<HTMLDivElement>(null);
 
   const activeDoc = SIGNING_DOCUMENTS.find(d => d.id === activeDocId)!;
   const signedFieldCount = signed ? 4 : 0;
 
-  // Show nudge after 1.5s
+  // Highlight search matches in document
+  useEffect(() => {
+    if (!documentRef.current) return;
+    // Clear previous highlights
+    documentRef.current.querySelectorAll('mark[data-search-hl]').forEach(el => {
+      const parent = el.parentNode;
+      if (parent) {
+        parent.replaceChild(document.createTextNode(el.textContent || ''), el);
+        parent.normalize();
+      }
+    });
+    if (!searchQuery || searchQuery.length < 2) return;
+    const walker = document.createTreeWalker(documentRef.current, NodeFilter.SHOW_TEXT);
+    const matches: { node: Text; index: number }[] = [];
+    const query = searchQuery.toLowerCase();
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      const idx = node.textContent?.toLowerCase().indexOf(query) ?? -1;
+      if (idx >= 0) matches.push({ node, index: idx });
+    }
+    let firstMark: HTMLElement | null = null;
+    matches.forEach(({ node, index }) => {
+      const range = document.createRange();
+      range.setStart(node, index);
+      range.setEnd(node, index + searchQuery.length);
+      const mark = document.createElement('mark');
+      mark.setAttribute('data-search-hl', 'true');
+      mark.style.backgroundColor = 'hsl(var(--primary) / 0.25)';
+      mark.style.borderRadius = '2px';
+      mark.style.padding = '0 1px';
+      range.surroundContents(mark);
+      if (!firstMark) firstMark = mark;
+    });
+    if (firstMark) (firstMark as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [searchQuery]);
+
+
   useEffect(() => {
     const t = setTimeout(() => {
       if (!nudgeDismissed && !aiPanelOpen) setShowNudge(true);
@@ -196,6 +234,28 @@ export default function SigningPage() {
             <span className="text-xs text-muted-foreground ml-auto">{activeDoc.pages} pages</span>
           </div>
 
+          {/* Search bar */}
+          {searchOpen && (
+            <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-card shrink-0">
+              <Search size={14} className="text-muted-foreground shrink-0" />
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search in document…"
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                autoFocus
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground">
+                  <X size={14} />
+                </button>
+              )}
+              <button onClick={() => { setSearchOpen(false); setSearchQuery(''); }} className="text-muted-foreground hover:text-foreground">
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
           {/* Document canvas */}
           <div
             ref={documentRef}
@@ -273,6 +333,21 @@ export default function SigningPage() {
               </button>
             </TooltipTrigger>
             <TooltipContent side="left">Download</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => { setSearchOpen(v => !v); setSearchQuery(''); }}
+                className={cn(
+                  'w-9 h-9 rounded-lg flex items-center justify-center transition-colors',
+                  searchOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+                )}
+              >
+                <Search size={18} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left">Search in document</TooltipContent>
           </Tooltip>
         </div>
 
