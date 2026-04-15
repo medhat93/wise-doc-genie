@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, AlertTriangle, ChevronUp, GripVertical, Send, FileText, Search, ShieldCheck, UserCheck, Sparkles, Plus, Lock, Mail as MailIcon } from "lucide-react";
+import { Check, AlertTriangle, ChevronUp, GripVertical, Send, FileText, Search, ShieldCheck, UserCheck, Sparkles, Plus, Lock } from "lucide-react";
 import { PenTool, Type, Calendar, TextCursorInput, CheckSquare, Stamp, Radio, Mail, Building, User, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
