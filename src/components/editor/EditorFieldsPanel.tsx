@@ -114,16 +114,7 @@ const EditorFieldsPanel = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 pb-6">
-      {/* Manage participants button */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-9 text-sm w-full"
-        onClick={() => setParticipantsDialogOpen(true)}
-      >
-        Manage participants
-      </Button>
+    <div className="flex flex-col gap-5 pb-6">
 
       {/* Participant selector dropdown */}
       <Select value={selectedParticipant} onValueChange={setSelectedParticipant}>
