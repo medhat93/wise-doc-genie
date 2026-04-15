@@ -6,6 +6,7 @@ import EditorTopBar from "@/components/editor/EditorTopBar";
 import EditorCanvas from "@/components/editor/EditorCanvas";
 import EditorPanelToolbar, { type PanelId } from "@/components/editor/EditorPanelToolbar";
 import EditorPanel from "@/components/editor/EditorPanel";
+import EditorFieldSettings from "@/components/editor/EditorFieldSettings";
 import { useEditorContext } from "@/components/editor/EditorContext";
 import CorrectionBanner from "@/components/editor/CorrectionBanner";
 import VersionHistoryOverlay from "@/components/editor/VersionHistoryOverlay";
