@@ -1054,9 +1054,6 @@ const EditorParticipantsPanel = () => {
 
   return (
     <div className="flex flex-col gap-4 pb-6">
-      <p className="text-xs text-muted-foreground">
-        Add people who need to sign, review, or receive this document
-      </p>
 
       {/* ── Sequential signing toggle (above participant list) ── */}
       <div className="space-y-1">
