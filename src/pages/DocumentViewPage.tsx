@@ -79,7 +79,8 @@ function DocumentViewPage() {
   const { isESign } = useWorkspaceMode();
 
   const doc = workspaceDocuments.find((d) => d.id === id) || null;
-  const [activePanel, setActivePanel] = useState<ViewPanelId | null>("participants");
+  const defaultPanel: ViewPanelId = doc?.stage === "approving" ? "workflow" : "participants";
+  const [activePanel, setActivePanel] = useState<ViewPanelId | null>(defaultPanel);
   const [title, setTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
