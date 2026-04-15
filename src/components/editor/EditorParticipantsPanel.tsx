@@ -1087,9 +1087,6 @@ const EditorParticipantsPanel = () => {
             <Switch checked={sequential} onCheckedChange={setSequential} />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          {sequential ? "Signers receive documents in order" : "All signers receive at the same time"}
-        </p>
 
         {showSaveWorkflow && (
           <div className="flex items-center gap-2 pt-1 animate-in slide-in-from-top-1 duration-150">
