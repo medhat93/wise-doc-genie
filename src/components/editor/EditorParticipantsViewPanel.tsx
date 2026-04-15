@@ -12,20 +12,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  MoreVertical,
   Mail,
   MessageCircle,
   MessageSquare,
-  Pencil,
   Trash2,
   Users,
-  
   GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
