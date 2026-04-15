@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { PenTool, FileText, Printer, Download, Sparkles, ArrowLeft } from 'lucide-react';
+import { PenTool, FileText, Printer, Download, Sparkles, ArrowLeft, MoreHorizontal, XCircle, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import SigningAIPanel from '@/components/signing/SigningAIPanel';
 import SigningAINudge from '@/components/signing/SigningAINudge';
 import SigningModal from '@/components/signing/SigningModal';
@@ -14,6 +15,8 @@ import DocumentNavigator from '@/components/signing/DocumentNavigator';
 import SupplementDocument from '@/components/signing/SupplementDocument';
 import AttachmentDocument from '@/components/signing/AttachmentDocument';
 import SigningRequirementsDialog from '@/components/signing/SigningRequirementsDialog';
+import RejectDocumentDialog from '@/components/signing/RejectDocumentDialog';
+import TransferDocumentDialog from '@/components/signing/TransferDocumentDialog';
 import { SIGNING_DOCUMENTS } from '@/components/signing/signingDocuments';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -31,6 +34,8 @@ export default function SigningPage() {
   const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
   const [activeDocId, setActiveDocId] = useState(SIGNING_DOCUMENTS[0].id);
   const [reqDialogOpen, setReqDialogOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
   const [docTransition, setDocTransition] = useState(true);
   const documentRef = useRef<HTMLDivElement>(null);
 
@@ -110,14 +115,32 @@ export default function SigningPage() {
           <p className="text-xs text-muted-foreground">{SIGNING_DOCUMENTS.length} documents</p>
         </div>
 
-        <Button
-          onClick={handleSign}
-          className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-semibold gap-2"
-          disabled={signed}
-        >
-          <PenTool size={14} />
-          {signed ? 'Signed ✓' : 'Sign Document'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <MoreHorizontal size={14} />
+                <span className="hidden sm:inline">More</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setRejectOpen(true)} className="gap-2 text-destructive focus:text-destructive">
+                <XCircle size={14} /> Reject
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTransferOpen(true)} className="gap-2">
+                <UserPlus size={14} /> Transfer
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            onClick={handleSign}
+            className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-semibold gap-2"
+            disabled={signed}
+          >
+            <PenTool size={14} />
+            {signed ? 'Signed ✓' : 'Sign Document'}
+          </Button>
+        </div>
       </div>
 
       {/* Main area */}
@@ -275,6 +298,26 @@ export default function SigningPage() {
         onClose={() => setReqDialogOpen(false)}
         onGoToDoc={(docId) => handleSelectDoc(docId)}
         signed={signed}
+      />
+
+      {/* Reject Dialog */}
+      <RejectDocumentDialog
+        open={rejectOpen}
+        onClose={() => setRejectOpen(false)}
+        onReject={(reason) => {
+          setRejectOpen(false);
+          toast.error('Document rejected', { description: 'The sender has been notified.' });
+        }}
+      />
+
+      {/* Transfer Dialog */}
+      <TransferDocumentDialog
+        open={transferOpen}
+        onClose={() => setTransferOpen(false)}
+        onTransfer={(data) => {
+          setTransferOpen(false);
+          toast.success('Transfer sent', { description: `Signing request sent to ${data.name} via ${data.method}.` });
+        }}
       />
 
       {/* Completion overlay */}
