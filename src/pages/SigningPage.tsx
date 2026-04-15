@@ -57,7 +57,11 @@ export default function SigningPage() {
         parent.normalize();
       }
     });
-    if (!searchQuery || searchQuery.length < 2) return;
+    if (!searchQuery || searchQuery.length < 2) {
+      setMatchCount(0);
+      setCurrentMatch(0);
+      return;
+    }
     const walker = document.createTreeWalker(documentRef.current, NodeFilter.SHOW_TEXT);
     const matches: { node: Text; index: number }[] = [];
     const query = searchQuery.toLowerCase();
@@ -66,7 +70,7 @@ export default function SigningPage() {
       const idx = node.textContent?.toLowerCase().indexOf(query) ?? -1;
       if (idx >= 0) matches.push({ node, index: idx });
     }
-    let firstMark: HTMLElement | null = null;
+    const marks: HTMLElement[] = [];
     matches.forEach(({ node, index }) => {
       const range = document.createRange();
       range.setStart(node, index);
@@ -77,9 +81,16 @@ export default function SigningPage() {
       mark.style.borderRadius = '2px';
       mark.style.padding = '0 1px';
       range.surroundContents(mark);
-      if (!firstMark) firstMark = mark;
+      marks.push(mark);
     });
-    if (firstMark) (firstMark as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setMatchCount(marks.length);
+    if (marks.length > 0) {
+      setCurrentMatch(1);
+      marks[0].style.backgroundColor = 'hsl(var(--primary) / 0.5)';
+      marks[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      setCurrentMatch(0);
+    }
   }, [searchQuery]);
 
 
