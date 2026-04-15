@@ -548,11 +548,24 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     if (!hasParticipants) return null;
 
     // For now, show flat list (sequential signing can be enhanced later)
+    // Sort signers by order, then show other roles
+    const sorted = [...participants].sort((a, b) => {
+      if (a.role === "signer" && b.role === "signer") return a.order - b.order;
+      if (a.role === "signer") return -1;
+      if (b.role === "signer") return 1;
+      return 0;
+    });
+
     return (
       <div className="space-y-1.5">
-        {participants.map(p => (
+        {sorted.map(p => (
           <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-            <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+            <span
+              className="h-5 w-5 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white"
+              style={{ backgroundColor: p.color }}
+            >
+              {p.role === "signer" ? p.order : ""}
+            </span>
             <span className="text-xs font-medium truncate flex-1">{p.name}</span>
             <Badge variant="outline" className="text-[9px] h-4 px-1.5">{p.role}</Badge>
             <SendMethodIcon method={p.sendingMethod} />
