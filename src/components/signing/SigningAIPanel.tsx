@@ -137,37 +137,14 @@ export default function SigningAIPanel({ onClose, onCitation }: Props) {
           <span className="text-sm font-semibold">AI Assistant</span>
         </div>
         <div className="flex items-center gap-1">
-          <Button
-            variant={searchOpen ? 'secondary' : 'ghost'}
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => { setSearchOpen(v => !v); setSearchQuery(''); }}
-          >
-            <Search size={14} />
-          </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
             <X size={16} />
           </Button>
         </div>
       </div>
 
-      {searchOpen && (
-        <div className="px-3 py-2 border-b border-border shrink-0">
-          <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search in conversation…"
-              className="pl-8 h-8 text-sm"
-              autoFocus
-            />
-          </div>
-        </div>
-      )}
-
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.filter(msg => !searchQuery || msg.content.toLowerCase().includes(searchQuery.toLowerCase())).map(msg => (
+        {messages.map(msg => (
           <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start gap-2')}>
             {msg.role === 'ai' && (
               <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
