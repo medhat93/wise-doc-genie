@@ -276,6 +276,21 @@ export default function SigningPage() {
             </TooltipTrigger>
             <TooltipContent side="left">Download</TooltipContent>
           </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => { setSearchOpen(v => !v); setSearchQuery(''); }}
+                className={cn(
+                  'w-9 h-9 rounded-lg flex items-center justify-center transition-colors',
+                  searchOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+                )}
+              >
+                <Search size={18} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left">Search in document</TooltipContent>
+          </Tooltip>
         </div>
 
         {/* AI Panel */}
