@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   X, Send, Download, Pencil, MoreVertical, Clock, FileText, Eye,
   PenTool, Bell, XCircle, Plus, CheckCircle, Circle, GitPullRequest,
-  Users, File, AlertTriangle, Ban, Lock, Copy, Check, ChevronDown, ChevronUp, Sparkles, Edit,
-  Link as LinkIcon,
+  Users, File, AlertTriangle, Ban, Lock, Copy, Check, ChevronDown, ChevronUp, Edit,
+  Link as LinkIcon, ArrowUpRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -121,36 +121,20 @@ const participantColors: Record<string, string> = {
   'John Smith': 'bg-emerald-500',
 };
 
-/* ── AI SUMMARY ───────────────────────────────────────────────── */
-function getAISummary(doc: WorkspaceDocument): string {
-  const signers = doc.participants.filter(p => p.role === 'signer');
-  const signed = signers.filter(p => p.status === 'signed');
-  
-  if (doc.stage === 'draft') {
-    return `${doc.category} with ${doc.counterparty || 'counterparty'} covering ${doc.category.toLowerCase()} services. No signatures collected yet.`;
-  }
-  if (['approving', 'approved'].includes(doc.stage)) {
-    const completedSteps = doc.approvalSteps?.filter(s => s.status === 'completed').length || 0;
-    const totalSteps = doc.approvalSteps?.length || 0;
-    return `${doc.category} with ${doc.counterparty || 'counterparty'} currently in ${doc.workflowStep || 'approval'} stage. ${completedSteps} of ${totalSteps} approval steps completed.`;
-  }
-  if (['sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'].includes(doc.stage)) {
-    return `${doc.category} with ${doc.counterparty || 'counterparty'} awaiting ${doc.waitingFor?.name ? `${doc.waitingFor.name}'s` : 'a'} signature. ${signed.length} of ${signers.length} signer${signers.length > 1 ? 's' : ''} ha${signed.length === 1 ? 's' : 've'} completed.`;
-  }
-  if (doc.stage === 'completed') {
-    const lastSigned = signers.find(p => p.signedAt)?.signedAt;
-    return `Fully executed ${doc.category.toLowerCase()} with ${doc.counterparty || 'counterparty'}. All ${signers.length} part${signers.length > 1 ? 'ies' : 'y'} signed${lastSigned ? ` on ${formatDate(lastSigned)}` : ''}.`;
-  }
-  if (doc.stage === 'declined') {
-    return `${doc.category} declined by the counterparty. Reason: terms not acceptable.`;
-  }
-  if (doc.stage === 'voided') {
-    return `${doc.category} was voided. Document is no longer active.`;
-  }
-  if (doc.stage === 'expired') {
-    return `${doc.category} expired without completion. Consider resending with a new expiration date.`;
-  }
-  return `${doc.category} with ${doc.counterparty || 'counterparty'}.`;
+/* ── TAG COLORS ───────────────────────────────────────────────── */
+const tagColors: Record<string, string> = {
+  'urgent': 'bg-red-100 text-red-700 border-red-200',
+  'high-value': 'bg-amber-100 text-amber-700 border-amber-200',
+  'renewal': 'bg-blue-100 text-blue-700 border-blue-200',
+  'enterprise': 'bg-purple-100 text-purple-700 border-purple-200',
+  'legal-review': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  'confidential': 'bg-rose-100 text-rose-700 border-rose-200',
+  'q2-2025': 'bg-teal-100 text-teal-700 border-teal-200',
+  'vendor': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+};
+
+function getTagColor(tag: string) {
+  return tagColors[tag.toLowerCase()] || 'bg-muted text-foreground border-border';
 }
 
 /* ── JIRA-STYLE PROPERTY ROW ──────────────────────────────────── */
@@ -256,6 +240,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [docsExpanded, setDocsExpanded] = useState(false);
+  const [propsExpanded, setPropsExpanded] = useState(false);
   const renameRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -274,6 +259,8 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       setFolder(doc.folder || '');
       setExpiryDate(doc.expiresAt ? new Date(doc.expiresAt).toISOString().split('T')[0] : '');
       setActiveTab(getDefaultTab(doc));
+      setDocsExpanded(false);
+      setPropsExpanded(false);
     }
   }, [doc]);
 
@@ -307,14 +294,8 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
     }
   };
 
-  /* ── FIX 6: Simplified action buttons — 1 primary + more ── */
+  /* ── Action buttons ── */
   function renderActionButtons() {
-    const viewBtn = doc.stage !== 'draft' ? (
-      <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => { onClose(); navigate(`/document/${doc.id}`); }}>
-        <Eye size={12} /> View
-      </Button>
-    ) : null;
-
     const moreMenu = (
       <DocumentActionsMenu
         doc={doc}
@@ -324,7 +305,6 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       />
     );
 
-    // Draft
     if (doc.stage === 'draft') {
       return (
         <>
@@ -334,90 +314,74 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       );
     }
 
-    // Approval — yours (CLM only, filtered out in eSign)
     if (isApproval && isYourAction) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document approved')}><Check size={12} /> Approve</Button>
           <Button variant="outline" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/5" onClick={() => toast.error('Document rejected')}><XCircle size={12} /> Reject</Button>
-          {viewBtn}
           {moreMenu}
         </>
       );
     }
 
-    // Approval — waiting (CLM only)
     if (isApproval) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Reminder sent')}><Bell size={12} /> Remind</Button>
-          {viewBtn}
           {moreMenu}
         </>
       );
     }
 
-    // Signing — yours
     if (isSigning && isYourAction) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => navigate(`/signing/${doc.id}`)}><PenTool size={12} /> Sign</Button>
-          {viewBtn}
           {moreMenu}
         </>
       );
     }
 
-    // Signing — waiting
     if (isSigning) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Reminder sent')}><Bell size={12} /> Remind</Button>
-          {viewBtn}
           {moreMenu}
         </>
       );
     }
 
-    // Completed
     if (doc.stage === 'completed') {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
-          {viewBtn}
           {moreMenu}
         </>
       );
     }
 
-    // Declined
     if (doc.stage === 'declined') {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document duplicated')}><Copy size={12} /> Duplicate</Button>
-          {viewBtn}
           {moreMenu}
         </>
       );
     }
 
-    // Voided
     if (doc.stage === 'voided') {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document duplicated')}><Copy size={12} /> Duplicate</Button>
-          {viewBtn}
           {moreMenu}
         </>
       );
     }
 
-    // Expired
     if (doc.stage === 'expired') {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document resent')}><Send size={12} /> Resend</Button>
-          {viewBtn}
           {moreMenu}
         </>
       );
@@ -426,7 +390,6 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
     return (
       <>
         <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
-        {viewBtn}
         {moreMenu}
       </>
     );
@@ -439,13 +402,126 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   }, {} as Record<string, number>);
   const docSummaryParts = Object.entries(docTypeCounts).map(([type, count]) => `${count} ${type.toLowerCase()}${count > 1 ? 's' : ''}`);
 
+  /* ── Collapsible Documents section ── */
+  const renderDocumentsSection = () => (
+    <div>
+      <button
+        className="flex items-center justify-between w-full py-2 cursor-pointer hover:bg-muted/50 rounded-md px-2 -mx-2"
+        onClick={() => setDocsExpanded(!docsExpanded)}
+      >
+        <div className="flex items-center gap-2">
+          <File size={14} className="text-muted-foreground" />
+          <div className="text-left">
+            <p className="text-sm font-medium">Documents ({subDocs.length})</p>
+            <p className="text-[10px] text-muted-foreground">{docSummaryParts.join(' · ')}</p>
+          </div>
+        </div>
+        {docsExpanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
+      </button>
+      <div className={cn('overflow-hidden transition-all duration-200', docsExpanded ? 'max-h-[600px] opacity-100 mt-1' : 'max-h-0 opacity-0')}>
+        {subDocs.map(sd => {
+          const typeColors = { Primary: 'bg-indigo-100 text-indigo-700', Supplement: 'bg-amber-100 text-amber-700', Attachment: 'bg-gray-100 text-gray-700' };
+          const isSub = sd.type !== 'Primary';
+          const hasRestriction = sd.visibleTo !== 'all' && Array.isArray(sd.visibleTo);
+          return (
+            <div
+              key={sd.id}
+              onClick={() => toast.info(`Open ${sd.name}`)}
+              className={cn(
+                'py-2.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 transition-colors rounded-sm',
+                isSub && 'pl-3 border-l-2',
+                sd.type === 'Supplement' && 'border-l-amber-400',
+                sd.type === 'Attachment' && 'border-l-gray-400',
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <File size={16} className={cn('shrink-0', sd.type === 'Primary' ? 'text-red-500' : sd.type === 'Supplement' ? 'text-blue-500' : 'text-green-500')} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{sd.name}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className={cn('text-[10px] px-1.5 rounded font-medium', typeColors[sd.type])}>{sd.type}</span>
+                    <span className="text-[10px] text-muted-foreground">·</span>
+                    <span className="text-[10px] text-muted-foreground">{sd.pages} {sd.pages === 1 ? 'page' : 'pages'}</span>
+                  </div>
+                </div>
+              </div>
+              {hasRestriction && (
+                <div className="ml-7 mt-1">
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <Eye size={10} className="shrink-0" />
+                    {(sd.visibleTo as string[]).map((name, i) => (
+                      <React.Fragment key={name}>
+                        {i > 0 && <span>,</span>}
+                        <span className={cn('inline-block h-1.5 w-1.5 rounded-full shrink-0', participantColors[name] || 'bg-muted-foreground')} />
+                        <span>{name}{(sd.visibleTo as string[]).length === 1 ? ' only' : ''}</span>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  /* ── Collapsible Properties section ── */
+  const renderPropertiesSection = () => (
+    <div>
+      <button
+        className="flex items-center justify-between w-full py-2 cursor-pointer hover:bg-muted/50 rounded-md px-2 -mx-2"
+        onClick={() => setPropsExpanded(!propsExpanded)}
+      >
+        <div className="flex items-center gap-2">
+          <FileText size={14} className="text-muted-foreground" />
+          <p className="text-sm font-medium">Properties</p>
+        </div>
+        {propsExpanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
+      </button>
+      <div className={cn('overflow-hidden transition-all duration-200', propsExpanded ? 'max-h-[800px] opacity-100 mt-1' : 'max-h-0 opacity-0')}>
+        <div className="space-y-0.5">
+          <PropertyRow
+            label="Document type"
+            value={docType}
+            type="select"
+            options={['Service Agreement', 'NDA', 'Employment', 'Consulting', 'Procurement', 'Lease', 'Partnership', 'Other']}
+            onSave={setDocType}
+          />
+          <PropertyRow label="Counterparty" value={doc.counterparty || ''} onSave={() => {}} />
+          <PropertyRow label="Sender" value={doc.owner} readOnly />
+          <PropertyRow label="Created" value={formatDate(doc.createdAt)} readOnly />
+          <PropertyRow label="Last modified" value={formatDate(doc.modifiedAt)} readOnly />
+          <PropertyRow label="Expiry date" value={expiryDate} type="date" onSave={setExpiryDate} />
+          <PropertyRow label="Folder" value={folder} onSave={setFolder} />
+          <PropertyRow label="Contract value" value={contractValue} type="number" onSave={setContractValue} />
+          <PropertyRow
+            label="Department"
+            value={department}
+            type="select"
+            options={['Legal', 'Finance', 'HR', 'Engineering', 'Sales', 'Procurement']}
+            onSave={setDepartment}
+          />
+          <PropertyRow
+            label="Priority"
+            value={priority}
+            type="select"
+            options={['Low', 'Medium', 'High', 'Critical']}
+            onSave={setPriority}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
     <Sheet open={!!doc} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent side="right" className="w-[400px] p-0 flex flex-col [&>button]:hidden">
-        {/* Header */}
-        <div className="p-4 border-b border-border space-y-2 shrink-0">
-          <div className="flex items-start justify-between">
+        {/* ═══ HEADER ═══ */}
+        <div className="p-4 pb-3 border-b border-border space-y-2 shrink-0">
+          {/* ROW 1: Title + Open document + Close */}
+          <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               {isRenaming ? (
                 <Input
@@ -454,17 +530,17 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
                   onChange={e => setRenameValue(e.target.value)}
                   onBlur={commitRename}
                   onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setIsRenaming(false); }}
-                  className="text-lg font-semibold h-auto p-0 border-0 border-b-2 border-primary rounded-none focus-visible:ring-0 shadow-none"
+                  className="text-base font-semibold h-auto p-0 border-0 border-b-2 border-primary rounded-none focus-visible:ring-0 shadow-none"
                 />
               ) : (
-                <h3 className="text-lg font-semibold leading-tight line-clamp-2">{doc.name}</h3>
+                <h3 className="text-base font-semibold leading-tight truncate">{doc.name}</h3>
               )}
-              {doc.counterparty && <p className="text-sm text-muted-foreground mt-0.5">{doc.counterparty}</p>}
+              {doc.counterparty && <p className="text-xs text-muted-foreground truncate mt-0.5">{doc.counterparty}</p>}
             </div>
-            <div className="flex items-center gap-1 shrink-0 -mr-2 -mt-1">
+            <div className="flex items-center gap-1 shrink-0 -mt-1">
               {doc.stage !== 'draft' && (
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { onClose(); navigate(`/document/${doc.id}`); }}>
-                  <Eye size={16} />
+                <Button variant="ghost" className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground" onClick={() => { onClose(); navigate(`/document/${doc.id}`); }}>
+                  <ArrowUpRight size={12} /> Open document
                 </Button>
               )}
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
@@ -472,97 +548,48 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
               </Button>
             </div>
           </div>
-          <Badge className={cn('rounded-full h-6 px-2 text-[11px] gap-1', stage.className)}>
-            <StageIcon size={12} />
-            {stage.label}
-          </Badge>
-          <div className="flex items-center gap-1 mt-3">
+
+          {/* ROW 2: Status badge + inline tags */}
+          <div className="flex items-center flex-wrap gap-1.5">
+            <Badge className={cn('rounded-full h-5 px-2 text-[11px] gap-1 shrink-0', stage.className)}>
+              <StageIcon size={10} />
+              {stage.label}
+            </Badge>
+            {doc.tags.map(t => (
+              <span key={t} className={cn('group h-5 px-2 text-xs rounded-full flex items-center gap-1 border', getTagColor(t))}>
+                {t}
+                <X size={8} className="opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity" onClick={() => toast.success(`Tag "${t}" removed`)} />
+              </span>
+            ))}
+            <button
+              className="h-5 px-2 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border rounded-full flex items-center gap-1 transition-colors"
+              onClick={() => toast.info('Tag popover')}
+            >
+              <Plus size={8} /> Add tag
+            </button>
+          </div>
+
+          {/* ROW 3: Action buttons */}
+          <div className="flex items-center gap-1 pt-1">
             {renderActionButtons()}
           </div>
         </div>
 
-        {/* eSign mode: single scrollable view, no tabs */}
+        {/* ═══ eSign mode: single scrollable view, no tabs ═══ */}
         {isESign ? (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {/* Documents section (collapsed by default) */}
-            <div>
-              <button
-                className="flex items-center justify-between w-full py-2 cursor-pointer hover:bg-muted/50 rounded-md px-2 -mx-2"
-                onClick={() => setDocsExpanded(!docsExpanded)}
-              >
-                <div className="flex items-center gap-2">
-                  <File size={14} className="text-muted-foreground" />
-                  <div className="text-left">
-                    <p className="text-sm font-medium">{subDocs.length} documents</p>
-                    <p className="text-[10px] text-muted-foreground">{docSummaryParts.join(' · ')}</p>
-                  </div>
-                </div>
-                {docsExpanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
-              </button>
-              <div className={cn('overflow-hidden transition-all duration-200', docsExpanded ? 'max-h-[600px] opacity-100 mt-1' : 'max-h-0 opacity-0')}>
-                {subDocs.map(sd => {
-                  const typeColors = { Primary: 'bg-indigo-100 text-indigo-700', Supplement: 'bg-amber-100 text-amber-700', Attachment: 'bg-gray-100 text-gray-700' };
-                  return (
-                    <div key={sd.id} onClick={() => toast.info(`Open ${sd.name}`)} className="py-2.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 transition-colors rounded-sm">
-                      <div className="flex items-center gap-3">
-                        <File size={16} className="shrink-0 text-muted-foreground" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{sd.name}</p>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className={cn('text-[10px] px-1.5 rounded font-medium', typeColors[sd.type])}>{sd.type}</span>
-                            <span className="text-[10px] text-muted-foreground">·</span>
-                            <span className="text-[10px] text-muted-foreground">{sd.pages} {sd.pages === 1 ? 'page' : 'pages'}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
+            {renderDocumentsSection()}
             <Separator />
-
             {/* Participants (always visible) */}
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Participants</p>
               <SigningTimeline doc={doc} />
             </div>
-
-            <Separator />
-
-            {/* Tags */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tags</p>
-              <div className="flex flex-wrap gap-1.5">
-                {doc.tags.length > 0 ? doc.tags.map(t => (
-                  <span key={t} className="group bg-muted border border-border text-xs px-2 py-0.5 rounded-md flex items-center gap-1">
-                    {t}
-                    <X size={10} className="opacity-0 group-hover:opacity-100 cursor-pointer text-muted-foreground hover:text-foreground transition-opacity" />
-                  </span>
-                )) : null}
-                <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border px-2 py-0.5 rounded-md transition-colors">
-                  <Plus size={10} /> Add
-                </button>
-              </div>
-            </div>
           </div>
         ) : (
           <>
-        {/* CLM: AI Summary — above tabs */}
-        <div className="px-4 py-3 border-b border-border shrink-0">
-          <div className="bg-violet-50/50 rounded-md p-2.5 border border-violet-100 flex gap-2">
-            <Sparkles size={14} className="text-violet-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {getAISummary(doc)}
-                <span className="text-[9px] text-violet-400 italic ml-1">AI generated</span>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* CLM Tabs */}
+        {/* ═══ CLM Tabs: Participants | Workflow | Activity ═══ */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <div className="px-4 pt-2 border-b border-border shrink-0">
             <TabsList className="w-full justify-start h-9 bg-transparent p-0 gap-4">
@@ -577,152 +604,27 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
               <TabsTrigger value="activity" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
                 <Clock size={12} /> Activity
               </TabsTrigger>
-              <TabsTrigger value="overview" className="text-xs gap-1 rounded-none pb-2 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none text-muted-foreground hover:text-foreground">
-                <FileText size={12} /> Overview
-              </TabsTrigger>
             </TabsList>
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {/* ═══ TAB 1: OVERVIEW ═══ */}
-            <TabsContent value="overview" className="p-4 space-y-4 mt-0">
-              {/* Follow-up parent link */}
-              {doc.followUpTo && (
-                <div className="bg-muted/30 rounded-lg p-3 flex items-center gap-2 text-sm">
-                  <span>🔗</span>
-                  <span className="text-muted-foreground">Parent document:</span>
-                  <button className="text-primary hover:underline font-medium" onClick={() => toast.info(`Open ${doc.followUpTo!.name}`)}>
-                    {doc.followUpTo.name}
-                  </button>
-                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5">Completed</Badge>
-                </div>
-              )}
+            {/* ═══ PARTICIPANTS TAB (with Documents + Properties below) ═══ */}
+            <TabsContent value="participants" className="p-4 mt-0 space-y-0">
+              {/* Section 1: Participants */}
+              <SigningTimeline doc={doc} />
 
-              {/* Tags */}
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tags</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {doc.tags.length > 0 ? doc.tags.map(t => (
-                    <span key={t} className="group bg-muted border border-border text-xs px-2 py-0.5 rounded-md flex items-center gap-1">
-                      {t}
-                      <X size={10} className="opacity-0 group-hover:opacity-100 cursor-pointer text-muted-foreground hover:text-foreground transition-opacity" />
-                    </span>
-                  )) : null}
-                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border px-2 py-0.5 rounded-md transition-colors">
-                    <Plus size={10} /> Add
-                  </button>
-                </div>
+              {/* Section 2: Documents (collapsed) */}
+              <div className="mt-4 pt-4 border-t border-border">
+                {renderDocumentsSection()}
               </div>
 
-              <Separator />
-
-              {/* Documents section — collapsed by default */}
-              <div>
-                <button
-                  className="flex items-center justify-between w-full py-2 cursor-pointer hover:bg-muted/50 rounded-md px-2 -mx-2"
-                  onClick={() => setDocsExpanded(!docsExpanded)}
-                >
-                  <div className="flex items-center gap-2">
-                    <File size={14} className="text-muted-foreground" />
-                    <div className="text-left">
-                      <p className="text-sm font-medium">{subDocs.length} documents</p>
-                      <p className="text-[10px] text-muted-foreground">{docSummaryParts.join(' · ')}</p>
-                    </div>
-                  </div>
-                  {docsExpanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
-                </button>
-
-                <div
-                  className={cn(
-                    'overflow-hidden transition-all duration-200',
-                    docsExpanded ? 'max-h-[600px] opacity-100 mt-1' : 'max-h-0 opacity-0'
-                  )}
-                >
-                  {subDocs.map(sd => {
-                    const typeColors = { Primary: 'bg-indigo-100 text-indigo-700', Supplement: 'bg-amber-100 text-amber-700', Attachment: 'bg-gray-100 text-gray-700' };
-                    const isSub = sd.type !== 'Primary';
-                    const hasRestriction = sd.visibleTo !== 'all' && Array.isArray(sd.visibleTo);
-                    return (
-                      <div
-                        key={sd.id}
-                        onClick={() => toast.info(`Open ${sd.name}`)}
-                        className={cn(
-                          'py-2.5 border-b border-border/30 cursor-pointer hover:bg-muted/30 transition-colors rounded-sm',
-                          isSub && 'pl-3 border-l-2',
-                          sd.type === 'Supplement' && 'border-l-amber-400',
-                          sd.type === 'Attachment' && 'border-l-gray-400',
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <File size={16} className={cn('shrink-0', sd.type === 'Primary' ? 'text-red-500' : sd.type === 'Supplement' ? 'text-blue-500' : 'text-green-500')} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{sd.name}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className={cn('text-[10px] px-1.5 rounded font-medium', typeColors[sd.type])}>{sd.type}</span>
-                              <span className="text-[10px] text-muted-foreground">·</span>
-                              <span className="text-[10px] text-muted-foreground">{sd.pages} {sd.pages === 1 ? 'page' : 'pages'}</span>
-                            </div>
-                          </div>
-                        </div>
-                        {hasRestriction && (
-                          <div className="ml-7 mt-1">
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                              <Eye size={10} className="shrink-0" />
-                              {(sd.visibleTo as string[]).map((name, i) => (
-                                <React.Fragment key={name}>
-                                  {i > 0 && <span>,</span>}
-                                  <span className={cn('inline-block h-1.5 w-1.5 rounded-full shrink-0', participantColors[name] || 'bg-muted-foreground')} />
-                                  <span>{name}{(sd.visibleTo as string[]).length === 1 ? ' only' : ''}</span>
-                                </React.Fragment>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Jira-style inline properties */}
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Properties</p>
-                <div className="space-y-0.5">
-                  <PropertyRow
-                    label="Document type"
-                    value={docType}
-                    type="select"
-                    options={['Service Agreement', 'NDA', 'Employment', 'Consulting', 'Procurement', 'Lease', 'Partnership', 'Other']}
-                    onSave={setDocType}
-                  />
-                  <PropertyRow label="Counterparty" value={doc.counterparty || ''} onSave={() => {}} />
-                  <PropertyRow label="Sender" value={doc.owner} readOnly />
-                  <PropertyRow label="Created" value={formatDate(doc.createdAt)} readOnly />
-                  <PropertyRow label="Last modified" value={formatDate(doc.modifiedAt)} readOnly />
-                  <PropertyRow label="Expiry date" value={expiryDate} type="date" onSave={setExpiryDate} />
-                  <PropertyRow label="Folder" value={folder} onSave={setFolder} />
-                  <PropertyRow label="Contract value" value={contractValue} type="number" onSave={setContractValue} />
-                  <PropertyRow
-                    label="Department"
-                    value={department}
-                    type="select"
-                    options={['Legal', 'Finance', 'HR', 'Engineering', 'Sales', 'Procurement']}
-                    onSave={setDepartment}
-                  />
-                  <PropertyRow
-                    label="Priority"
-                    value={priority}
-                    type="select"
-                    options={['Low', 'Medium', 'High', 'Critical']}
-                    onSave={setPriority}
-                  />
-                </div>
+              {/* Section 3: Properties (collapsed) */}
+              <div className="mt-4 pt-4 border-t border-border">
+                {renderPropertiesSection()}
               </div>
             </TabsContent>
 
-            {/* ═══ TAB 2: ACTIVITY ═══ */}
+            {/* ═══ ACTIVITY TAB ═══ */}
             <TabsContent value="activity" className="p-4 mt-0">
               <div className="relative">
                 <div className="absolute left-[9px] top-2 bottom-2 w-px bg-border" />
@@ -742,12 +644,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
               </div>
             </TabsContent>
 
-            {/* ═══ TAB 3: PARTICIPANTS ═══ */}
-            <TabsContent value="participants" className="p-4 mt-0 space-y-4">
-              <SigningTimeline doc={doc} />
-            </TabsContent>
-
-            {/* ═══ TAB 4: WORKFLOW ═══ */}
+            {/* ═══ WORKFLOW TAB ═══ */}
             {hasWorkflow && (
               <TabsContent value="workflow" className="p-4 mt-0 space-y-4">
                 <div>
@@ -834,7 +731,6 @@ function SigningTimeline({ doc }: { doc: WorkspaceDocument }) {
   const isApproval = ['approving', 'approved'].includes(doc.stage);
   const isSigning = ['sent', 'partially_signed', 'waiting', 'requires_action', 'expiring'].includes(doc.stage);
 
-  // For signing/approval — use sequential timeline
   const isSequential = isSigning || isApproval;
   const timelineParticipants = isApproval ? [...approvers, ...signers] : [...signers];
   const actionLabel = isApproval ? 'approved' : 'signed';
@@ -846,7 +742,6 @@ function SigningTimeline({ doc }: { doc: WorkspaceDocument }) {
     if (p.status === 'signed') return 'completed';
     if (p.status === 'declined') return 'declined';
     if (p.status === 'viewed' || p.status === 'pending') {
-      // Check if this is the "current" one we're waiting on
       if (doc.waitingFor?.name === p.name) return 'current';
       if (p.status === 'viewed') return 'current';
     }
@@ -864,7 +759,6 @@ function SigningTimeline({ doc }: { doc: WorkspaceDocument }) {
 
             return (
               <div key={p.id} className="flex gap-3 relative group">
-                {/* Connector line */}
                 {!isLast && (
                   <div className={cn(
                     'absolute left-[11px] top-8 bottom-0 w-0.5',
@@ -874,12 +768,6 @@ function SigningTimeline({ doc }: { doc: WorkspaceDocument }) {
                   )} />
                 )}
 
-                {/* Step label */}
-                <div className="absolute -left-1 top-1 text-[9px] text-muted-foreground w-6 text-right hidden">
-                  {i + 1}
-                </div>
-
-                {/* Node */}
                 <div className={cn(
                   'relative z-10 mt-1 h-6 w-6 rounded-full flex items-center justify-center shrink-0',
                   status === 'completed' && 'bg-green-500',
@@ -892,7 +780,6 @@ function SigningTimeline({ doc }: { doc: WorkspaceDocument }) {
                   {status === 'declined' && <X size={12} className="text-white" />}
                 </div>
 
-                {/* Participant card */}
                 <div className="flex-1 pb-4 min-w-0">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-7 w-7">
@@ -934,7 +821,6 @@ function SigningTimeline({ doc }: { doc: WorkspaceDocument }) {
           })}
         </div>
 
-        {/* Viewers (simple list below) */}
         {viewers.length > 0 && (
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Viewers</p>
@@ -950,7 +836,6 @@ function SigningTimeline({ doc }: { doc: WorkspaceDocument }) {
           </div>
         )}
 
-        {/* Progress */}
         <div className="pt-2 border-t border-border">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs text-muted-foreground">{completedCount} of {totalAction} {actionLabel}</span>
@@ -962,7 +847,6 @@ function SigningTimeline({ doc }: { doc: WorkspaceDocument }) {
     );
   }
 
-  // Parallel / grouped list (draft, completed, etc.)
   const grouped = {
     signed: allParticipants.filter(p => p.status === 'signed'),
     pending: allParticipants.filter(p => ['pending', 'viewed'].includes(p.status)),
@@ -1010,7 +894,6 @@ function SigningTimeline({ doc }: { doc: WorkspaceDocument }) {
         );
       })}
 
-      {/* Progress */}
       <div className="pt-2 border-t border-border">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-muted-foreground">
