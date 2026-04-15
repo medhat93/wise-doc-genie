@@ -315,16 +315,16 @@ const ShareDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: 
                   <span className="text-sm truncate block">{p.name}</span>
                 </div>
                 <Select value={p.permission} onValueChange={(v) => handlePermissionChange(idx, v)}>
-                  <SelectTrigger className="h-7 text-xs w-[110px] border-0 bg-transparent hover:bg-muted shadow-none">
-                    <SelectValue />
+                  <SelectTrigger className="h-7 text-xs w-[100px] border-0 bg-transparent hover:bg-muted shadow-none">
+                    <SelectValue>
+                      {PERMISSION_LEVELS.find(l => l.value === p.permission)?.label}
+                    </SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent align="end" className="w-[200px]">
                     {PERMISSION_LEVELS.map(level => (
-                      <SelectItem key={level.value} value={level.value}>
-                        <div className="flex flex-col">
-                          <span className="text-sm">{level.label}</span>
-                          <span className="text-[10px] text-muted-foreground">{level.description}</span>
-                        </div>
+                      <SelectItem key={level.value} value={level.value} className="py-2">
+                        <span className="text-sm font-medium">{level.label}</span>
+                        <p className="text-[10px] text-muted-foreground leading-tight">{level.description}</p>
                       </SelectItem>
                     ))}
                     {p.permission !== "manage" && (
