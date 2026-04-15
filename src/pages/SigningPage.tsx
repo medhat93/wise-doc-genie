@@ -39,6 +39,8 @@ export default function SigningPage() {
   const [docTransition, setDocTransition] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [matchCount, setMatchCount] = useState(0);
+  const [currentMatch, setCurrentMatch] = useState(0);
   const documentRef = useRef<HTMLDivElement>(null);
 
   const activeDoc = SIGNING_DOCUMENTS.find(d => d.id === activeDocId)!;
