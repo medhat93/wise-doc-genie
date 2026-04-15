@@ -50,6 +50,7 @@ const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
+  const [quotedText, setQuotedText] = useState<string | null>(null);
   const [isChatStreaming, setIsChatStreaming] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
@@ -59,14 +60,10 @@ const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
   useEffect(() => {
     if (pendingAiQuestion) {
       setActiveAction("ask");
-      const userMessage: ChatMessage = {
-        role: "user",
-        content: pendingAiQuestion.question,
-        selectedText: pendingAiQuestion.selectedText,
-      };
-      setChatMessages((prev) => [...prev, userMessage]);
+      setQuotedText(pendingAiQuestion.selectedText || null);
+      setChatInput("");
       setPendingAiQuestion(null);
-      handleAiResponse(pendingAiQuestion.question, pendingAiQuestion.selectedText);
+      setTimeout(() => chatInputRef.current?.focus(), 100);
     }
   }, [pendingAiQuestion, setPendingAiQuestion]);
 
@@ -182,11 +179,17 @@ const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
 
   const handleChatSubmit = () => {
     if (!chatInput.trim() || isChatStreaming) return;
-    const userMessage: ChatMessage = { role: "user", content: chatInput.trim() };
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: chatInput.trim(),
+      selectedText: quotedText || undefined,
+    };
     setChatMessages((prev) => [...prev, userMessage]);
     const q = chatInput.trim();
+    const selText = quotedText || undefined;
     setChatInput("");
-    handleAiResponse(q);
+    setQuotedText(null);
+    handleAiResponse(q, selText);
   };
 
   const handleAcceptAll = () => {
@@ -341,13 +344,26 @@ const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
             <div ref={chatEndRef} />
           </div>
 
+          {quotedText && (
+            <div className="flex-shrink-0 mb-1.5 rounded-md border bg-muted/40 px-2.5 py-2 relative">
+              <button
+                onClick={() => setQuotedText(null)}
+                className="absolute top-1 right-1 h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              >
+                <span className="text-xs">×</span>
+              </button>
+              <p className="text-[10px] font-medium text-muted-foreground mb-0.5">Selected text</p>
+              <p className="text-xs text-foreground line-clamp-3 italic">"{quotedText}"</p>
+            </div>
+          )}
+
           <div className="flex gap-2 flex-shrink-0">
             <Input
               ref={chatInputRef}
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleChatSubmit(); }}
-              placeholder="Ask about this document..."
+              placeholder={quotedText ? "What should AI do with this text..." : "Ask about this document..."}
               className="text-xs h-9"
               disabled={isChatStreaming}
             />
