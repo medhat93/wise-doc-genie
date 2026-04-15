@@ -71,56 +71,52 @@ const FIELD_CATEGORIES: { label: string; fields: SidebarFieldType[] }[] = [
   },
 ];
 
-/* ── Document types for Step 4 ── */
-const DOCUMENT_TYPES = [
-  "Service Agreement", "NDA", "Employment Contract", "Consulting Agreement",
-  "Procurement Contract", "Lease Agreement", "Partnership Agreement", "Other",
-];
+/* ── Workflow templates for Step 4 ── */
+interface WorkflowStepDef {
+  name: string;
+  icon: React.ElementType;
+  action: "approver" | "reviewer" | "signer";
+  tags?: string[];
+}
 
-const REQUIRED_PROPS: Record<string, { key: string; label: string; type: "text" | "number" | "date" | "dropdown"; options?: string[] }[]> = {
-  "Service Agreement": [
-    { key: "counterparty", label: "Counterparty", type: "text" },
-    { key: "contractValue", label: "Contract value", type: "number" },
-    { key: "effectiveDate", label: "Effective date", type: "date" },
-    { key: "department", label: "Department", type: "dropdown", options: ["Legal", "Finance", "HR", "Engineering", "Sales"] },
-  ],
-  "NDA": [
-    { key: "counterparty", label: "Counterparty", type: "text" },
-    { key: "confidentialityPeriod", label: "Confidentiality period", type: "dropdown", options: ["1 year", "2 years", "3 years", "5 years", "Indefinite"] },
-  ],
-};
-
-const DEFAULT_REQUIRED_PROPS = [
-  { key: "counterparty", label: "Counterparty", type: "text" as const },
-  { key: "effectiveDate", label: "Effective date", type: "date" as const },
-];
-
-/* ── Workflow templates for Step 5 ── */
-const WORKFLOW_TEMPLATES: Record<string, { label: string; steps: { name: string; icon: React.ElementType }[] }> = {
+const WORKFLOW_TEMPLATES: Record<string, { label: string; steps: WorkflowStepDef[] }> = {
+  agreement2026: {
+    label: "Agreement contract 2026",
+    steps: [
+      { name: "Legal Review", icon: Search, action: "reviewer", tags: ["CONDITIONS", "SLA", "RESET", "LOCK"] },
+      { name: "Manager Approval", icon: UserCheck, action: "approver", tags: ["SLA"] },
+    ],
+  },
   standard: {
     label: "Standard Approval — 2 Steps",
     steps: [
-      { name: "Legal Review", icon: Search },
-      { name: "Manager Approval", icon: UserCheck },
+      { name: "Legal Review", icon: Search, action: "reviewer", tags: ["CONDITIONS"] },
+      { name: "Manager Approval", icon: UserCheck, action: "approver" },
     ],
   },
   legal: {
     label: "Legal Review — 3 Steps",
     steps: [
-      { name: "Paralegal Review", icon: Search },
-      { name: "Senior Legal Review", icon: ShieldCheck },
-      { name: "Legal Director Approval", icon: UserCheck },
+      { name: "Paralegal Review", icon: Search, action: "reviewer", tags: ["SLA"] },
+      { name: "Senior Legal Review", icon: ShieldCheck, action: "reviewer", tags: ["CONDITIONS", "LOCK"] },
+      { name: "Legal Director Approval", icon: UserCheck, action: "approver" },
     ],
   },
   executive: {
     label: "Executive Approval — 4 Steps",
     steps: [
-      { name: "Department Review", icon: Search },
-      { name: "VP Approval", icon: UserCheck },
-      { name: "Legal Review", icon: ShieldCheck },
-      { name: "Executive Sign-off", icon: UserCheck },
+      { name: "Department Review", icon: Search, action: "reviewer" },
+      { name: "VP Approval", icon: UserCheck, action: "approver", tags: ["SLA"] },
+      { name: "Legal Review", icon: ShieldCheck, action: "reviewer", tags: ["CONDITIONS", "RESET"] },
+      { name: "Executive Sign-off", icon: UserCheck, action: "approver" },
     ],
   },
+};
+
+const ACTION_STYLES: Record<string, { label: string; className: string }> = {
+  approver: { label: "Approver", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  reviewer: { label: "Reviewer", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  signer: { label: "Signer", className: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" },
 };
 
 /* ── Step definition ── */
@@ -168,18 +164,13 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const [warningOpen, setWarningOpen] = useState(false);
   const [participantIssues, setParticipantIssues] = useState<ParticipantIssue[]>([]);
 
-  // Step 4 state
-  const [documentType, setDocumentType] = useState("");
-  const [propValues, setPropValues] = useState<Record<string, string>>({});
-  const [editingPropKey, setEditingPropKey] = useState<string | null>(null);
-
-  // Step 5 state
+  // Step 4 state (workflow)
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>("none");
   const [workflowAssignees, setWorkflowAssignees] = useState<Record<number, string>>({});
 
   // Mock flags
-  const workflowEnforced = false;
-  const hasRequiredProperties = true;
+  const workflowEnforced = true;
+
 
   // Refs for scrolling
   const stepRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -194,9 +185,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   const activeParticipant = participants.find(p => p.id === selectedParticipantId) || participants[0];
 
-  // Step 4 completion
-  const requiredProps = documentType ? (REQUIRED_PROPS[documentType] || DEFAULT_REQUIRED_PROPS) : [];
-  const allPropsComplete = !!documentType && requiredProps.every(f => propValues[f.key]?.trim());
+  // Workflow completion
 
   // Step 5 completion
   const wfSteps = selectedWorkflow !== "none" ? (WORKFLOW_TEMPLATES[selectedWorkflow]?.steps || []) : [];
@@ -247,11 +236,10 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       case "participants": return JSON.stringify(participants.map(p => ({ id: p.id, name: p.name, role: p.role, order: p.order })));
       case "fields": return JSON.stringify(placedFields.map(f => ({ id: f.id, fieldTypeId: f.fieldTypeId, participantId: f.participantId })));
       case "placeholders": return JSON.stringify(variableValues);
-      case "properties": return JSON.stringify({ documentType, propValues });
       case "workflow": return JSON.stringify({ selectedWorkflow, workflowAssignees });
       default: return "";
     }
-  }, [participants, placedFields, variableValues, documentType, propValues, selectedWorkflow, workflowAssignees]);
+  }, [participants, placedFields, variableValues, selectedWorkflow, workflowAssignees]);
 
 
   const steps: WizardStep[] = useMemo(() => {
@@ -291,17 +279,9 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
         skipLabel: "Skip — fill placeholders later",
       },
       {
-        id: "properties",
-        title: "Fill required properties",
-        description: "Complete the required document properties",
-        isVisible: hasRequiredProperties,
-        isComplete: allPropsComplete || isStepManuallyCompleted("properties"),
-        completeSummary: allPropsComplete ? "All required properties filled" : "",
-      },
-      {
         id: "workflow",
-        title: "Apply approval workflow",
-        description: "Select and configure an approval workflow before sending",
+        title: "Fill the required workflow",
+        description: "Complete the required document workflow",
         isVisible: workflowEnforced,
         isComplete: workflowComplete || isStepManuallyCompleted("workflow"),
         completeSummary: workflowComplete
@@ -310,7 +290,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       },
     ];
     return s.filter(step => step.isVisible);
-  }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, hasRequiredProperties, allPropsComplete, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
+  }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
 
   // Detect changes in expanded completed steps and reactivate them
   useEffect(() => {
@@ -372,7 +352,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       case "participants": return hasParticipants ? null : "Add at least one participant";
       case "fields": return null; // optional
       case "placeholders": return null; // optional
-      case "properties": return allPropsComplete ? null : "Fill all required properties";
+      case "workflow": return workflowComplete ? null : "Select a workflow and assign all steps";
       case "workflow": return workflowComplete ? null : "Assign all workflow steps";
       default: return null;
     }
@@ -503,10 +483,8 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     e.dataTransfer.effectAllowed = "copy";
   };
 
-  const handleSaveProp = (key: string, value: string) => {
-    setPropValues(prev => ({ ...prev, [key]: value }));
-    setEditingPropKey(null);
-  };
+
+
 
   // Send flow (same as TopBar)
   const handleSendClick = () => {
@@ -731,86 +709,11 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
           </div>
         );
 
-      case "properties":
-        return (
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Document type</label>
-              <Select value={documentType} onValueChange={setDocumentType}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Select type..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {DOCUMENT_TYPES.map(t => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {documentType && requiredProps.length > 0 && (
-              <div className="space-y-1">
-                {requiredProps.map(field => {
-                  const isEditing = editingPropKey === field.key;
-                  const val = propValues[field.key] || "";
-                  return (
-                    <div
-                      key={field.key}
-                      className={cn(
-                        "flex items-center min-h-[36px] rounded-md px-2 -mx-2 transition-colors",
-                        !isEditing && "hover:bg-muted/50 cursor-pointer"
-                      )}
-                      onClick={() => !isEditing && setEditingPropKey(field.key)}
-                    >
-                      <span className="text-xs text-muted-foreground w-[120px] shrink-0">{field.label}</span>
-                      <div className="flex-1">
-                        {isEditing ? (
-                          field.type === "dropdown" && field.options ? (
-                            <Select value={val} onValueChange={(v) => handleSaveProp(field.key, v)}>
-                              <SelectTrigger className="h-7 text-xs">
-                                <SelectValue placeholder="Select..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {field.options.map(o => (
-                                  <SelectItem key={o} value={o}>{o}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Input
-                              type={field.type === "date" ? "date" : "text"}
-                              value={val}
-                              onChange={(e) => setPropValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-                              onBlur={() => setEditingPropKey(null)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") setEditingPropKey(null);
-                                if (e.key === "Escape") setEditingPropKey(null);
-                              }}
-                              className="h-7 text-xs"
-                              autoFocus
-                            />
-                          )
-                        ) : (
-                          <span className={cn("text-sm", val ? "text-foreground" : "text-muted-foreground/60 italic")}>
-                            {val || "Click to set"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {!documentType && (
-              <p className="text-xs text-muted-foreground text-center py-4">Select a document type to see required properties</p>
-            )}
-          </div>
-        );
-
       case "workflow":
         return (
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-medium mb-1.5 block">Choose a workflow</label>
+              <label className="text-xs font-medium mb-1.5 block">Select workflow</label>
               <Select value={selectedWorkflow} onValueChange={(v) => { setSelectedWorkflow(v); setWorkflowAssignees({}); }}>
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Select workflow" />
@@ -825,45 +728,84 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
             </div>
             {wfSteps.length > 0 && (
               <div className="relative">
+                {/* Step 0: Drafting */}
                 <div className="flex gap-3 relative">
-                  <div className="absolute left-[15px] top-[32px] bottom-0 w-px border-l border-dashed border-border" />
-                  <div className="h-[30px] w-[30px] rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-primary/15 text-primary">
-                    <FileText size={14} />
+                  <div className="absolute left-[13px] top-[28px] bottom-0 w-px border-l border-dashed border-border" />
+                  <div className="h-[26px] w-[26px] rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-foreground text-background text-[10px] font-bold">
+                    0
                   </div>
                   <div className="flex-1 pb-4">
-                    <div className="bg-muted/50 border rounded-lg p-2.5">
-                      <span className="text-xs font-medium">Step 0: Drafting</span>
-                      <p className="text-[10px] text-muted-foreground">You</p>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge variant="secondary" className="h-5 text-[10px] gap-1 bg-foreground text-background">
+                          <FileText size={10} />
+                          Drafting
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground font-medium">Owner</p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground">AM</div>
+                          <span className="text-xs">Ahmad Medhat</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
+                {/* Workflow steps */}
                 {wfSteps.map((step, i) => {
-                  const Icon = step.icon;
                   const isLast = i === wfSteps.length - 1;
+                  const actionStyle = ACTION_STYLES[step.action] || ACTION_STYLES.approver;
                   return (
                     <div key={i} className="flex gap-3 relative">
                       {!isLast && (
-                        <div className="absolute left-[15px] top-[32px] bottom-0 w-px border-l border-dashed border-border" />
+                        <div className="absolute left-[13px] top-[28px] bottom-0 w-px border-l border-dashed border-border" />
                       )}
-                      <div className="h-[30px] w-[30px] rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-muted text-muted-foreground">
-                        <Icon size={14} />
+                      <div className="h-[26px] w-[26px] rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-primary text-primary-foreground text-[10px] font-bold">
+                        {i + 1}
                       </div>
-                      <div className={cn("flex-1", !isLast && "pb-4")}>
-                        <div className="bg-muted/50 border rounded-lg p-2.5 space-y-1.5">
-                          <span className="text-xs font-medium">Step {i + 1}: {step.name}</span>
-                          <Select
-                            value={workflowAssignees[i + 1] || ""}
-                            onValueChange={(v) => setWorkflowAssignees(prev => ({ ...prev, [i + 1]: v }))}
-                          >
-                            <SelectTrigger className="h-7 text-xs">
-                              <SelectValue placeholder="Select assignee..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="ahmed">Ahmed Al-Rashid</SelectItem>
-                              <SelectItem value="sarah">Sarah Johnson</SelectItem>
-                              <SelectItem value="mohammed">Mohammed Al-Faisal</SelectItem>
-                            </SelectContent>
-                          </Select>
+                      <div className={cn("flex-1", !isLast && "pb-5")}>
+                        <div className="space-y-2">
+                          <span className="text-sm font-semibold">{step.name}</span>
+
+                          {/* Tags row */}
+                          {step.tags && step.tags.length > 0 && (
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {step.tags.map(tag => (
+                                <Badge key={tag} variant="outline" className="h-5 text-[9px] font-bold tracking-wider rounded-md">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Owner */}
+                          <div>
+                            <p className="text-[10px] text-muted-foreground font-medium">Owner</p>
+                            <div className="mt-1">
+                              <Select
+                                value={workflowAssignees[i + 1] || ""}
+                                onValueChange={(v) => setWorkflowAssignees(prev => ({ ...prev, [i + 1]: v }))}
+                              >
+                                <SelectTrigger className="h-8 text-xs w-full">
+                                  <SelectValue placeholder="Select owner..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="ahmed">Ahmed Al-Rashid</SelectItem>
+                                  <SelectItem value="sarah">Sarah Johnson</SelectItem>
+                                  <SelectItem value="mohammed">Mohammed Al-Faisal</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          {/* Action */}
+                          <div>
+                            <p className="text-[10px] text-muted-foreground font-medium">Action</p>
+                            <Badge className={cn("mt-1 text-[10px] h-5", actionStyle.className)}>
+                              {actionStyle.label}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -874,7 +816,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
             {wfSteps.length > 0 && !allAssigned && (
               <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
                 <AlertTriangle size={10} />
-                All steps must have assignees
+                All steps must have owners assigned
               </p>
             )}
           </div>
