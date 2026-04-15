@@ -523,8 +523,9 @@ const ParticipantFormCard = ({
 
 /* ══════════ MAIN PANEL ══════════ */
 const EditorParticipantsPanel = () => {
-  const { participants, setParticipants } = useEditorContext();
-  const [sequential, setSequential] = useState(false);
+  const { participants, setParticipants, sequentialSigning, setSequentialSigning } = useEditorContext();
+  const sequential = sequentialSigning;
+  const setSequential = setSequentialSigning;
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<AddFormState>(INITIAL_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);

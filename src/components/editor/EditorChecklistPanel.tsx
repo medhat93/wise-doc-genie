@@ -155,6 +155,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const navigate = useNavigate();
   const {
     participants, setParticipants,
+    sequentialSigning,
     placedFields, setPlacedFields,
     usedVariables,
     variableValues, setVariableValues,
