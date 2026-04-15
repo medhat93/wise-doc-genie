@@ -357,16 +357,16 @@ const EditorFieldSettings = ({ onClose, showBackButton }: EditorFieldSettingsPro
             <ChevronDown size={12} className={cn("transition-transform", positionOpen && "rotate-180")} />
           </CollapsibleTrigger>
           <CollapsibleContent className="pb-3">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
               {([
                 { label: "X", value: Math.round(field.x) },
                 { label: "Y", value: Math.round(field.y) },
                 { label: "Width", value: Math.round(field.width) },
                 { label: "Height", value: Math.round(field.height) },
               ]).map((item) => (
-                <div key={item.label} className="space-y-0.5">
-                  <label className="text-[10px] text-muted-foreground">{item.label}</label>
-                  <Input value={item.value} readOnly className="h-7 text-xs bg-muted/50 font-mono" />
+                <div key={item.label} className="flex items-center justify-between gap-2">
+                  <label className="text-[10px] text-muted-foreground w-10">{item.label}</label>
+                  <Input value={item.value} readOnly className="h-7 text-xs bg-muted/50 font-mono flex-1" />
                 </div>
               ))}
             </div>
