@@ -22,6 +22,7 @@ export interface Comment {
   text: string;
   timestamp: Date;
   sectionRef: string;
+  docId: string;
   status: "open" | "resolved";
   replies: CommentReply[];
   type: "inline" | "general";
