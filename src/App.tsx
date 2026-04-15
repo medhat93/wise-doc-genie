@@ -9,6 +9,7 @@ import CreateDocument from "./pages/CreateDocument";
 import EditorPage from "./pages/EditorPage";
 import WorkspacePage from "./pages/WorkspacePage";
 import SigningPage from "./pages/SigningPage";
+import DocumentViewPage from "./pages/DocumentViewPage";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/create" element={<CreateDocument />} />
             
             <Route path="/editor" element={<EditorPage />} />
+            <Route path="/document/:id" element={<DocumentViewPage />} />
             <Route path="/workspace" element={<Navigate to="/" replace />} />
             <Route path="/signing/:id" element={<SigningPage />} />
             <Route path="*" element={<NotFound />} />
