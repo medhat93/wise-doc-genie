@@ -1409,14 +1409,6 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                         </div>
                                       </div>
                                       <p className="mt-0.5 text-[11px] leading-relaxed text-foreground/80">{comment.text}</p>
-                                      {/* Inline suggestion diff */}
-                                      {isSuggestionType && comment.suggestedText && (
-                                        <div className="mt-1.5 rounded-md bg-muted/30 px-2 py-1.5 text-[10px] leading-relaxed">
-                                          <span className="text-red-500 line-through">{comment.text}</span>
-                                          {" "}
-                                          <span className="text-emerald-600 font-medium">{comment.suggestedText}</span>
-                                        </div>
-                                      )}
                                     </div>
                                   </div>
                                   {comment.replies.length > 0 && (
