@@ -185,9 +185,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   const activeParticipant = participants.find(p => p.id === selectedParticipantId) || participants[0];
 
-  // Step 4 completion
-  const requiredProps = documentType ? (REQUIRED_PROPS[documentType] || DEFAULT_REQUIRED_PROPS) : [];
-  const allPropsComplete = !!documentType && requiredProps.every(f => propValues[f.key]?.trim());
+  // Workflow completion
 
   // Step 5 completion
   const wfSteps = selectedWorkflow !== "none" ? (WORKFLOW_TEMPLATES[selectedWorkflow]?.steps || []) : [];
