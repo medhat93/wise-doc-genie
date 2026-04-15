@@ -273,6 +273,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       setContractValue(doc.value?.replace('SAR ', '').replace(',', '') || '');
       setFolder(doc.folder || '');
       setExpiryDate(doc.expiresAt ? new Date(doc.expiresAt).toISOString().split('T')[0] : '');
+      setActiveTab(getDefaultTab(doc));
     }
   }, [doc]);
 
