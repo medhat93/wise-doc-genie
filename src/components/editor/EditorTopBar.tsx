@@ -251,41 +251,100 @@ const ShareDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: 
   const [copied, setCopied] = useState(false);
   const handleCopy = () => { setCopied(true); toast.success("Link copied"); setTimeout(() => setCopied(false), 2000); };
 
+  const PERMISSION_LEVELS = [
+    { value: "manage", label: "Manage", description: "Full control, same as owner" },
+    { value: "edit", label: "Edit", description: "Can edit document content" },
+    { value: "comment", label: "Comment", description: "Can add comments only" },
+    { value: "view", label: "View", description: "Read-only access" },
+  ];
+
+  const [people, setPeople] = useState([
+    { name: "Ahmed Al-Rashid", initials: "AA", color: "#4F46E5", permission: "manage" },
+    { name: "Sarah Johnson", initials: "SJ", color: "#DC2626", permission: "edit" },
+    { name: "Mohammed Al-Faisal", initials: "MA", color: "#059669", permission: "comment" },
+  ]);
+
+  const handlePermissionChange = (idx: number, value: string) => {
+    setPeople(prev => prev.map((p, i) => i === idx ? { ...p, permission: value } : p));
+  };
+
+  const handleRemove = (idx: number) => {
+    if (people[idx].permission === "manage") return;
+    setPeople(prev => prev.filter((_, i) => i !== idx));
+    toast("Access removed");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Share Document</DialogTitle>
           <DialogDescription>Invite people or copy a link to share this document.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
+          {/* Invite row */}
           <div className="flex gap-2">
             <Input placeholder="Email or name" className="h-9 text-sm flex-1" />
             <Select defaultValue="view">
-              <SelectTrigger className="h-9 text-sm w-[120px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm w-[110px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="view">Can view</SelectItem>
-                <SelectItem value="comment">Can comment</SelectItem>
-                <SelectItem value="edit">Can edit</SelectItem>
+                {PERMISSION_LEVELS.map(p => (
+                  <SelectItem key={p.value} value={p.value}>
+                    <div>
+                      <span className="text-sm">{p.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Button size="sm" className="h-9">Invite</Button>
           </div>
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">People with access</p>
-            {[
-              { name: "Ahmed Al-Rashid", role: "Owner" },
-              { name: "Sarah Johnson", role: "Can edit" },
-            ].map((p) => (
-              <div key={p.name} className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center text-[10px] font-semibold text-primary">
-                  {p.name.split(" ").map((n) => n[0]).join("")}
+
+          {/* People list */}
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground mb-2">People with access</p>
+            {people.map((p, idx) => (
+              <div key={p.name} className="flex items-center gap-2 group rounded-md px-1 py-1.5 hover:bg-muted/50 -mx-1">
+                <div
+                  className="h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0"
+                  style={{ backgroundColor: p.color }}
+                >
+                  {p.initials}
                 </div>
-                <span className="text-sm flex-1">{p.name}</span>
-                <span className="text-xs text-muted-foreground">{p.role}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm truncate block">{p.name}</span>
+                </div>
+                <Select value={p.permission} onValueChange={(v) => handlePermissionChange(idx, v)}>
+                  <SelectTrigger className="h-7 text-xs w-[110px] border-0 bg-transparent hover:bg-muted shadow-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERMISSION_LEVELS.map(level => (
+                      <SelectItem key={level.value} value={level.value}>
+                        <div className="flex flex-col">
+                          <span className="text-sm">{level.label}</span>
+                          <span className="text-[10px] text-muted-foreground">{level.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                    {p.permission !== "manage" && (
+                      <>
+                        <div className="border-t my-1" />
+                        <button
+                          onClick={() => handleRemove(idx)}
+                          className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded-sm cursor-pointer"
+                        >
+                          <Trash2 size={12} /> Remove access
+                        </button>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             ))}
           </div>
+
+          {/* Copy link */}
           <div className="flex items-center gap-2 border rounded-lg p-2">
             <Link size={14} className="text-muted-foreground" />
             <span className="text-xs text-muted-foreground flex-1 truncate">https://app.signit.com/doc/msa-2026...</span>
