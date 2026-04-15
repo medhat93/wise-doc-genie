@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { PenTool, FileText, Printer, Download, Sparkles, ArrowLeft, MoreHorizontal, XCircle, UserPlus } from 'lucide-react';
+import { PenTool, FileText, Printer, Download, Sparkles, ArrowLeft, MoreHorizontal, XCircle, UserPlus, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import SigningAIPanel from '@/components/signing/SigningAIPanel';
@@ -37,6 +37,8 @@ export default function SigningPage() {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [docTransition, setDocTransition] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const documentRef = useRef<HTMLDivElement>(null);
 
   const activeDoc = SIGNING_DOCUMENTS.find(d => d.id === activeDocId)!;
