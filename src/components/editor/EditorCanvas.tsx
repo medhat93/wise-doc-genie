@@ -1225,7 +1225,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                     onDrop={(e) => handleDrop(e, doc.id)}
                     onDragOver={handleDragOver}
                     className={cn(
-                      "max-w-[816px] mx-auto bg-card shadow-sm border rounded-sm min-h-[800px] p-12 md:p-16 relative",
+                      "max-w-[816px] w-full bg-card shadow-sm border rounded-sm min-h-[800px] p-12 md:p-16 relative flex-shrink-0",
                       DOC_BORDER[doc.docType]
                     )}
                   >
