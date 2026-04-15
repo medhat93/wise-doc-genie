@@ -623,13 +623,7 @@ function WorkspacePageInner() {
                             myAction && 'border-l-2 border-l-green-500',
                             previewDoc?.id === doc.id && 'bg-muted/50'
                           )}
-                          onClick={() => {
-                            if (doc.stage === 'draft') {
-                              setPreviewDoc(doc);
-                            } else {
-                              navigate(`/document/${doc.id}`);
-                            }
-                          }}
+                          onClick={() => setPreviewDoc(doc)}
                         >
                           {/* Checkbox */}
                           <td className="px-3 py-3" onClick={e => e.stopPropagation()}>

@@ -304,6 +304,12 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
 
   /* ── FIX 6: Simplified action buttons — 1 primary + more ── */
   function renderActionButtons() {
+    const viewBtn = doc.stage !== 'draft' ? (
+      <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => { onClose(); navigate(`/document/${doc.id}`); }}>
+        <Eye size={12} /> View
+      </Button>
+    ) : null;
+
     const moreMenu = (
       <DocumentActionsMenu
         doc={doc}
@@ -329,6 +335,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document approved')}><Check size={12} /> Approve</Button>
           <Button variant="outline" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/5" onClick={() => toast.error('Document rejected')}><XCircle size={12} /> Reject</Button>
+          {viewBtn}
           {moreMenu}
         </>
       );
@@ -339,7 +346,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Reminder sent')}><Bell size={12} /> Remind</Button>
-          {!isESign && <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>}
+          {viewBtn}
           {moreMenu}
         </>
       );
@@ -350,7 +357,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => navigate(`/signing/${doc.id}`)}><PenTool size={12} /> Sign</Button>
-          {!isESign && <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>}
+          {viewBtn}
           {moreMenu}
         </>
       );
@@ -361,7 +368,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Reminder sent')}><Bell size={12} /> Remind</Button>
-          {!isESign && <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => setCorrectionOpen(true)}><Edit size={12} /> Correct</Button>}
+          {viewBtn}
           {moreMenu}
         </>
       );
@@ -372,7 +379,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
-          {!isESign && <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate(`/create?mode=followup&parentId=${doc.id}&childType=supplement`)}><LinkIcon size={12} /> Follow-up</Button>}
+          {viewBtn}
           {moreMenu}
         </>
       );
@@ -383,6 +390,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document duplicated')}><Copy size={12} /> Duplicate</Button>
+          {viewBtn}
           {moreMenu}
         </>
       );
@@ -393,6 +401,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document duplicated')}><Copy size={12} /> Duplicate</Button>
+          {viewBtn}
           {moreMenu}
         </>
       );
@@ -403,6 +412,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
       return (
         <>
           <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Document resent')}><Send size={12} /> Resend</Button>
+          {viewBtn}
           {moreMenu}
         </>
       );
@@ -411,6 +421,7 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
     return (
       <>
         <Button className="h-7 text-xs gap-1" onClick={() => toast.success('Download started')}><Download size={12} /> Download</Button>
+        {viewBtn}
         {moreMenu}
       </>
     );

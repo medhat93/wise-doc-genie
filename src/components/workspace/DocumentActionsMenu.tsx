@@ -12,7 +12,7 @@ import {
 import {
   Download, Pencil, Share2, Tag, Copy, Users,
   Bell, CalendarDays, CheckCircle, Edit, XCircle, ArrowRight, Lock,
-  FileSearch, Trash2, MoreVertical, Link as LinkIcon,
+  FileSearch, Trash2, MoreVertical, Link as LinkIcon, Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CorrectionDialog from './CorrectionDialog';
@@ -53,8 +53,11 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
   onRename?: () => void;
   onCorrect?: () => void;
   onFollowUp?: () => void;
+  onView?: () => void;
 }, isESign: boolean): MenuGroup[] {
   const { onTrash, onVoid, onParticipants, onRename, onCorrect, onFollowUp } = callbacks;
+
+  const view: MenuItem = { label: 'View document', icon: Eye, onClick: callbacks.onView };
 
   const rename: MenuItem = { label: 'Rename', icon: Pencil, onClick: onRename || (() => toast.success('Document renamed')) };
   const share: MenuItem = { label: 'Share', icon: Share2, onClick: () => toast.success('Share link copied') };
@@ -92,21 +95,21 @@ function getMenuGroups(stageKey: StageKey, doc: WorkspaceDocument, callbacks: {
     case 'draft':
       return filterGroups([[download, rename, share], mgmt, [trash]]);
     case 'approval_waiting':
-      return filterGroups([[rename, share], mgmt, [trash]]);
+      return filterGroups([[view, rename, share], mgmt, [trash]]);
     case 'approval_yours':
-      return filterGroups([[download, rename, share], mgmt, [trash]]);
+      return filterGroups([[view, download, rename, share], mgmt, [trash]]);
     case 'signing_waiting':
-      return filterGroups([[correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]]);
+      return filterGroups([[view, correct, rename, share], [updateExp, remind, markComplete, voidDoc], mgmt, [audit], [trash]]);
     case 'signing_yours':
-      return filterGroups([[rename, share], [correct, updateExp, markComplete, voidDoc], mgmt, [audit], [trash]]);
+      return filterGroups([[view, rename, share], [correct, updateExp, markComplete, voidDoc], mgmt, [audit], [trash]]);
     case 'completed':
-      return filterGroups([[rename, share], [followUp, transfer, vault, audit], mgmt, [trash]]);
+      return filterGroups([[view, rename, share], [followUp, transfer, vault, audit], mgmt, [trash]]);
     case 'declined':
-      return filterGroups([[rename, share], [audit], [tags, participants], [trash]]);
+      return filterGroups([[view, rename, share], [audit], [tags, participants], [trash]]);
     case 'voided':
-      return filterGroups([[rename, share], [audit], [tags, participants], [trash]]);
+      return filterGroups([[view, rename, share], [audit], [tags, participants], [trash]]);
     case 'expired':
-      return filterGroups([[duplicate, rename, share], [updateExp, audit], mgmt, [trash]]);
+      return filterGroups([[view, duplicate, rename, share], [updateExp, audit], mgmt, [trash]]);
   }
 }
 
@@ -133,6 +136,7 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
     onRename,
     onCorrect: () => setCorrectionOpen(true),
     onFollowUp: () => navigate(`/create?mode=followup&parentId=${doc.id}&childType=supplement`),
+    onView: () => navigate(`/document/${doc.id}`),
   }, isESign);
 
   return (
