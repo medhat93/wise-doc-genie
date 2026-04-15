@@ -6,6 +6,7 @@ import EditorTopBar from "@/components/editor/EditorTopBar";
 import EditorCanvas from "@/components/editor/EditorCanvas";
 import EditorPanelToolbar, { type PanelId } from "@/components/editor/EditorPanelToolbar";
 import EditorPanel from "@/components/editor/EditorPanel";
+import EditorFieldSettings from "@/components/editor/EditorFieldSettings";
 import { useEditorContext } from "@/components/editor/EditorContext";
 import CorrectionBanner from "@/components/editor/CorrectionBanner";
 import VersionHistoryOverlay from "@/components/editor/VersionHistoryOverlay";
@@ -110,9 +111,6 @@ const EditorPageInner = () => {
 
   const handleFieldSelect = (fieldId: string | null) => {
     setSelectedFieldId(fieldId);
-    if (fieldId) {
-      setActivePanel("annotations");
-    }
   };
 
   const handleOpenComments = useCallback(() => {
@@ -144,6 +142,27 @@ const EditorPageInner = () => {
 
       <div className="flex flex-1 overflow-hidden">
 
+        {/* Left — Field settings panel (appears on annotation click) */}
+        {!isMobile && (
+          <AnimatePresence>
+            {selectedFieldId && (
+              <motion.div
+                key="field-settings-left"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 300, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="border-r bg-card flex flex-col overflow-hidden flex-shrink-0"
+              >
+                <EditorFieldSettings
+                  onClose={() => setSelectedFieldId(null)}
+                  showBackButton={false}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+
         {/* Center — Document canvas (full width now) */}
         <EditorCanvas
           showToolbar={!isEsign}
@@ -152,6 +171,7 @@ const EditorPageInner = () => {
           onOpenAi={handleOpenAi}
           onOpenVersionHistory={() => setVersionHistoryOpen(true)}
           isEsign={isEsign}
+          hideZoomBar={!!selectedFieldId}
         />
 
       <VersionHistoryOverlay

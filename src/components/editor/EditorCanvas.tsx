@@ -882,9 +882,10 @@ interface EditorCanvasProps {
   onOpenAi?: () => void;
   onOpenVersionHistory?: () => void;
   isEsign?: boolean;
+  hideZoomBar?: boolean;
 }
 
-const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpenAi, onOpenVersionHistory, isEsign }: EditorCanvasProps) => {
+const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpenAi, onOpenVersionHistory, isEsign, hideZoomBar }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
@@ -1277,12 +1278,14 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
           <div className="h-20" />
         </div>
 
-        <ZoomBar
-          zoom={zoom}
-          onZoomChange={setZoom}
-          searchOpen={searchOpen}
-          onSearchToggle={() => setSearchOpen(prev => !prev)}
-        />
+        {!hideZoomBar && (
+          <ZoomBar
+            zoom={zoom}
+            onZoomChange={setZoom}
+            searchOpen={searchOpen}
+            onSearchToggle={() => setSearchOpen(prev => !prev)}
+          />
+        )}
       </div>
     </div>
   );
