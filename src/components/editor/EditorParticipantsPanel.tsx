@@ -1060,8 +1060,8 @@ const EditorParticipantsPanel = () => {
 
       {/* ── Sequential signing toggle (above participant list) ── */}
       <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">Sequential signing</p>
+      <div className="flex items-center justify-between">
+          <p className="text-sm font-medium">Set workflow</p>
           <div className="flex items-center gap-2">
             {sequential && (
               <DropdownMenu>
