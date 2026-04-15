@@ -1171,12 +1171,14 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
 
   const activeDoc = MOCK_DOCUMENTS.find((d) => d.id === activeDocId) ?? null;
 
-  // Comments for margin bubbles (ALWAYS visible now)
+  // Comments for margin bubbles — grouped by docId then sectionRef
   const inlineComments = comments.filter((c) => c.type === "inline");
-  const commentsBySection = inlineComments.reduce<Record<string, Comment[]>>((acc, c) => {
-    (acc[c.sectionRef] = acc[c.sectionRef] || []).push(c);
+  const commentsByDoc = inlineComments.reduce<Record<string, Record<string, Comment[]>>>((acc, c) => {
+    if (!acc[c.docId]) acc[c.docId] = {};
+    (acc[c.docId][c.sectionRef] = acc[c.docId][c.sectionRef] || []).push(c);
     return acc;
   }, {});
+  const hasAnyInlineComments = inlineComments.length > 0;
 
   const [sectionPositions, setSectionPositions] = useState<Record<string, number>>({});
   const doc1Ref = useRef<HTMLDivElement>(null);
