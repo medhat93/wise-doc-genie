@@ -303,7 +303,7 @@ const EditorSmartFieldsPanel = () => {
                     )}>
                       [{v.token}]
                     </span>
-                    <div className="flex items-center gap-0.5 ml-auto opacity-0 group-hover/item:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-0.5 ml-auto">
                       <button
                         onClick={() => handleCopy(v.token)}
                         className="h-6 w-6 flex items-center justify-center rounded hover:bg-accent text-muted-foreground hover:text-foreground"
