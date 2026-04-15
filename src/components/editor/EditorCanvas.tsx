@@ -1290,9 +1290,9 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                   </div>
 
                   {/* Always-expanded margin comments — Google Docs style */}
-                  {doc.id === "doc-1" && !isEsign && Object.keys(commentsBySection).length > 0 && (
+                  {!isEsign && Object.keys(commentsBySection).length > 0 && (
                     <div className="w-[240px] flex-shrink-0 relative hidden xl:block">
-                      {Object.entries(commentsBySection).map(([sectionRef, sectionComments], cIdx) => {
+                      {doc.id === "doc-1" && Object.entries(commentsBySection).map(([sectionRef, sectionComments], cIdx) => {
                         const yPos = sectionPositions[sectionRef];
                         if (yPos === undefined) return null;
                         const primaryComment = sectionComments[0];
