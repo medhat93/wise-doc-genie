@@ -1289,7 +1289,9 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                           >
                             {/* Comment card — borderless Google Docs style */}
                             <div className="w-[240px] group/card rounded-lg hover:bg-muted/40 transition-colors overflow-hidden">
-                              {sectionComments.map((comment) => (
+                              {sectionComments.map((comment, commentIdx) => {
+                                const isSuggestionType = comment.annotationType === "suggestion" || comment.annotationType === "ai_suggestion";
+                                return (
                                 <div key={comment.id} className="px-2.5 py-2">
                                   <div className="flex items-start gap-2">
                                     <div
@@ -1309,6 +1311,42 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                       <p className="mt-0.5 text-[11px] leading-relaxed text-foreground/80">{comment.text}</p>
                                     </div>
                                   </div>
+                                  {/* Hover actions */}
+                                  {commentIdx === 0 && (
+                                    <div className="flex items-center gap-1 mt-1.5 pl-7 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                      {isSuggestionType ? (
+                                        <>
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); toast.success("Suggestion accepted"); }}
+                                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 hover:bg-emerald-500/10 transition-colors"
+                                          >
+                                            <Check size={11} /> Accept
+                                          </button>
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); toast("Suggestion rejected"); }}
+                                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                                          >
+                                            <X size={11} /> Reject
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); toast.success("Comment resolved"); }}
+                                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 hover:bg-emerald-500/10 transition-colors"
+                                          >
+                                            <Check size={11} /> Resolve
+                                          </button>
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); toast("Comment deleted"); }}
+                                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                          >
+                                            <Trash2 size={11} /> Delete
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
                                   {comment.replies.length > 0 && (
                                     <div className="mt-1.5 space-y-1.5 pl-7">
                                       {comment.replies.map((reply) => (
@@ -1329,7 +1367,8 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                     </div>
                                   )}
                                 </div>
-                              ))}
+                                );
+                              })}
                               {/* Inline reply — shown on hover */}
                               <div className="opacity-0 group-hover/card:opacity-100 transition-opacity">
                                 <MarginReplyInput
