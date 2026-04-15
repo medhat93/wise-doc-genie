@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -10,28 +8,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   PenTool,
   Type,
   Calendar,
-  TextCursorInput,
   CheckSquare,
-  Stamp,
-  ChevronDown,
-  Radio,
-  Trash2,
-  Clock,
+  CircleDot,
   Mail,
   User,
   Building2,
   Paperclip,
   ListFilter,
-  CircleDot,
-  X,
+  Users,
+  Stamp,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import ParticipantsDialog from "@/components/ParticipantsDialog";
@@ -42,7 +31,7 @@ export interface FieldType {
   label: string;
   description: string;
   icon: React.ElementType;
-  category: "signature" | "text" | "other";
+  category: "signature" | "info" | "other";
   defaultWidth: number;
   defaultHeight: number;
 }
@@ -69,17 +58,17 @@ interface ParticipantOption {
 const FIELD_TYPES: FieldType[] = [
   // Signature fields
   { id: "signature", label: "Signature", description: "Full signature", icon: PenTool, category: "signature", defaultWidth: 200, defaultHeight: 50 },
+  { id: "reservation-signature", label: "Reservation signature", description: "Reservation signature", icon: PenTool, category: "signature", defaultWidth: 200, defaultHeight: 50 },
   { id: "initials", label: "Initials", description: "Initials only", icon: Type, category: "signature", defaultWidth: 100, defaultHeight: 40 },
-  { id: "stamp", label: "Stamp", description: "Company stamp", icon: User, category: "signature", defaultWidth: 120, defaultHeight: 50 },
-  { id: "digital-stamp", label: "Digital stamp", description: "Digital stamp", icon: Clock, category: "signature", defaultWidth: 120, defaultHeight: 50 },
+  { id: "stamp", label: "Stamp", description: "Company stamp", icon: Stamp, category: "signature", defaultWidth: 120, defaultHeight: 50 },
   { id: "signature-date", label: "Signature date", description: "Signature date", icon: Calendar, category: "signature", defaultWidth: 120, defaultHeight: 36 },
-  // Text fields
-  { id: "name", label: "Name", description: "Name field", icon: PenTool, category: "text", defaultWidth: 160, defaultHeight: 36 },
-  { id: "email", label: "Email", description: "Email field", icon: Mail, category: "text", defaultWidth: 180, defaultHeight: 36 },
-  { id: "title", label: "Title", description: "Title field", icon: User, category: "text", defaultWidth: 160, defaultHeight: 36 },
-  { id: "company", label: "Company", description: "Company field", icon: Building2, category: "text", defaultWidth: 160, defaultHeight: 36 },
-  { id: "date", label: "Date", description: "Date field", icon: Calendar, category: "text", defaultWidth: 120, defaultHeight: 36 },
-  { id: "text", label: "Text field", description: "Free text input", icon: Type, category: "text", defaultWidth: 180, defaultHeight: 36 },
+  // Signer's information
+  { id: "name", label: "Name", description: "Name field", icon: User, category: "info", defaultWidth: 160, defaultHeight: 36 },
+  { id: "email", label: "Email", description: "Email field", icon: Mail, category: "info", defaultWidth: 180, defaultHeight: 36 },
+  { id: "title", label: "Title", description: "Title field", icon: User, category: "info", defaultWidth: 160, defaultHeight: 36 },
+  { id: "company", label: "Company", description: "Company field", icon: Building2, category: "info", defaultWidth: 160, defaultHeight: 36 },
+  { id: "date", label: "Date", description: "Date field", icon: Calendar, category: "info", defaultWidth: 120, defaultHeight: 36 },
+  { id: "text", label: "Text field", description: "Free text input", icon: Type, category: "info", defaultWidth: 180, defaultHeight: 36 },
   // Others
   { id: "checkbox", label: "Checkbox", description: "Checkbox", icon: CheckSquare, category: "other", defaultWidth: 30, defaultHeight: 30 },
   { id: "radio", label: "Radio", description: "Radio options", icon: CircleDot, category: "other", defaultWidth: 140, defaultHeight: 36 },
@@ -102,7 +91,7 @@ const INITIAL_PLACED_FIELDS: PlacedField[] = [
 
 const CATEGORIES = [
   { key: "signature" as const, label: "SIGNATURE FIELDS" },
-  { key: "text" as const, label: "TEXT FIELDS" },
+  { key: "info" as const, label: "SIGNER'S INFORMATION" },
   { key: "other" as const, label: "OTHERS" },
 ];
 
@@ -124,35 +113,8 @@ const EditorFieldsPanel = () => {
     e.dataTransfer.effectAllowed = "copy";
   };
 
-  const removePlacedField = (id: string) => {
-    setPlacedFields((prev) => prev.filter((f) => f.id !== id));
-    toast.success("Field removed");
-  };
-
-  // Check if signature field is full-width (only item in its row)
-  const isFullWidth = (ft: FieldType) => {
-    const categoryFields = FIELD_TYPES.filter(f => f.category === ft.category);
-    const idx = categoryFields.indexOf(ft);
-    // First item in signature category is full width
-    if (ft.category === "signature" && idx === 0) return true;
-    return false;
-  };
-
   return (
-    <div className="flex flex-col gap-4 pb-6">
-      <p className="text-xs text-muted-foreground">
-        Drag & drop fields to place them in the document
-      </p>
-
-      {/* Manage participants button */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-9 text-sm w-full"
-        onClick={() => setParticipantsDialogOpen(true)}
-      >
-        Manage participants
-      </Button>
+    <div className="flex flex-col gap-5 pb-6">
 
       {/* Participant selector dropdown */}
       <Select value={selectedParticipant} onValueChange={setSelectedParticipant}>
@@ -180,33 +142,26 @@ const EditorFieldsPanel = () => {
         </SelectContent>
       </Select>
 
-      {/* Field categories */}
+      {/* Field categories - single column list */}
       {CATEGORIES.map((cat) => {
         const fields = FIELD_TYPES.filter(f => f.category === cat.key);
         return (
-          <div key={cat.key} className="space-y-2">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{cat.label}</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {fields.map((ft) => {
-                const Icon = ft.icon;
-                const fullWidth = isFullWidth(ft);
-                return (
-                  <div
-                    key={ft.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, ft)}
-                    className={cn(
-                      "border rounded-lg px-3 py-2.5 cursor-grab active:cursor-grabbing hover:bg-accent/50 transition-colors flex items-center gap-2.5",
-                      fullWidth && "col-span-2"
-                    )}
-                    style={{ borderLeftWidth: 3, borderLeftColor: activeParticipant.color }}
-                  >
-                    <Icon size={16} className="text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm font-medium">{ft.label}</span>
-                  </div>
-                );
-              })}
-            </div>
+          <div key={cat.key} className="space-y-1">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{cat.label}</p>
+            {fields.map((ft) => {
+              const Icon = ft.icon;
+              return (
+                <div
+                  key={ft.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, ft)}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-md cursor-grab active:cursor-grabbing hover:bg-accent/50 transition-colors"
+                >
+                  <Icon size={18} className="text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm">{ft.label}</span>
+                </div>
+              );
+            })}
           </div>
         );
       })}
