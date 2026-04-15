@@ -792,13 +792,22 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                 {wfSteps.map((step, i) => {
                   const isLast = i === wfSteps.length - 1;
                   const actionStyle = ACTION_STYLES[step.action] || ACTION_STYLES.approver;
+                  const isStepApproved = approvedStepIndices.includes(i);
+                  const isNextToApprove = approvalState === "in_progress" && !isStepApproved && (i === 0 || approvedStepIndices.includes(i - 1));
                   return (
                     <div key={i} className="flex gap-3 relative">
                       {!isLast && (
                         <div className="absolute left-[13px] top-[28px] bottom-0 w-px border-l border-dashed border-border" />
                       )}
-                      <div className="h-[26px] w-[26px] rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-primary text-primary-foreground text-[10px] font-bold">
-                        {i + 1}
+                      <div className={cn(
+                        "h-[26px] w-[26px] rounded-full flex items-center justify-center flex-shrink-0 z-10 text-[10px] font-bold",
+                        isStepApproved
+                          ? "bg-emerald-500 text-white"
+                          : isNextToApprove
+                          ? "bg-amber-500 text-white"
+                          : "bg-primary text-primary-foreground"
+                      )}>
+                        {isStepApproved ? <Check size={12} /> : i + 1}
                       </div>
                       <div className={cn("flex-1", !isLast && "pb-5")}>
                         <div className="space-y-2">
