@@ -602,36 +602,62 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign, onOpenVersion
             Draft
           </span>
 
-          {/* Editing mode selector */}
+          {/* Editing mode dropdown (Google Docs style) */}
           {!isEsign && (
-            <div className="hidden md:flex items-center h-7 rounded-md border bg-muted/50 p-0.5 ml-2 flex-shrink-0">
-              {([
-                { key: "editing" as const, label: "Editing", tooltip: "Edit directly" },
-                { key: "suggesting" as const, label: "Suggesting", tooltip: "Suggest changes" },
-                { key: "viewing" as const, label: "Viewing", tooltip: "View only" },
-              ]).map(mode => (
-                <Tooltip key={mode.key}>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => {
-                        setEditingMode(mode.key);
-                        if (mode.key === "suggesting") toast("Suggesting mode — your changes will appear as suggestions");
-                        if (mode.key === "viewing") toast("View only mode");
-                      }}
-                      className={cn(
-                        "h-[22px] px-2 rounded text-[10px] font-medium transition-all",
-                        editingMode === mode.key
-                          ? "bg-card text-foreground shadow-sm border"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {mode.label}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">{mode.tooltip}</TooltipContent>
-                </Tooltip>
-              ))}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="hidden md:inline-flex items-center gap-1 h-7 px-2.5 rounded-md border bg-muted/50 text-xs font-medium text-foreground hover:bg-muted transition-colors ml-2 flex-shrink-0">
+                  <PencilEdit01Icon
+                    style={{ width: 13, height: 13 }}
+                    className={cn(
+                      editingMode === "editing" && "text-foreground",
+                      editingMode === "suggesting" && "text-primary",
+                      editingMode === "viewing" && "text-muted-foreground"
+                    )}
+                  />
+                  <span>{editingMode === "editing" ? "Editing" : editingMode === "suggesting" ? "Suggesting" : "Viewing"}</span>
+                  <ChevronDown size={12} className="text-muted-foreground ml-0.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuItem
+                  onClick={() => setEditingMode("editing")}
+                  className={cn("gap-3", editingMode === "editing" && "bg-accent")}
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Editing</p>
+                    <p className="text-[11px] text-muted-foreground">Edit document directly</p>
+                  </div>
+                  {editingMode === "editing" && <Check size={14} className="text-primary flex-shrink-0" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditingMode("suggesting");
+                    toast("Suggesting mode — your changes will appear as suggestions");
+                  }}
+                  className={cn("gap-3", editingMode === "suggesting" && "bg-accent")}
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Suggesting</p>
+                    <p className="text-[11px] text-muted-foreground">Suggest changes for review</p>
+                  </div>
+                  {editingMode === "suggesting" && <Check size={14} className="text-primary flex-shrink-0" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditingMode("viewing");
+                    toast("View only mode");
+                  }}
+                  className={cn("gap-3", editingMode === "viewing" && "bg-accent")}
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Viewing</p>
+                    <p className="text-[11px] text-muted-foreground">Read-only, no edits allowed</p>
+                  </div>
+                  {editingMode === "viewing" && <Check size={14} className="text-primary flex-shrink-0" />}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           {/* Tags */}
