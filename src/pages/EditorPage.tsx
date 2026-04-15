@@ -111,9 +111,6 @@ const EditorPageInner = () => {
 
   const handleFieldSelect = (fieldId: string | null) => {
     setSelectedFieldId(fieldId);
-    if (fieldId) {
-      setActivePanel("annotations");
-    }
   };
 
   const handleOpenComments = useCallback(() => {
