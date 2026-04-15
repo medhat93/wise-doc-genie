@@ -50,6 +50,7 @@ const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
+  const [quotedText, setQuotedText] = useState<string | null>(null);
   const [isChatStreaming, setIsChatStreaming] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
@@ -59,10 +60,9 @@ const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
   useEffect(() => {
     if (pendingAiQuestion) {
       setActiveAction("ask");
-      // Quote the selected text in the input and let the user write their prompt
+      setQuotedText(pendingAiQuestion.selectedText || null);
       setChatInput("");
       setPendingAiQuestion(null);
-      // Focus the input after a tick
       setTimeout(() => chatInputRef.current?.focus(), 100);
     }
   }, [pendingAiQuestion, setPendingAiQuestion]);
@@ -179,11 +179,17 @@ const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
 
   const handleChatSubmit = () => {
     if (!chatInput.trim() || isChatStreaming) return;
-    const userMessage: ChatMessage = { role: "user", content: chatInput.trim() };
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: chatInput.trim(),
+      selectedText: quotedText || undefined,
+    };
     setChatMessages((prev) => [...prev, userMessage]);
     const q = chatInput.trim();
+    const selText = quotedText || undefined;
     setChatInput("");
-    handleAiResponse(q);
+    setQuotedText(null);
+    handleAiResponse(q, selText);
   };
 
   const handleAcceptAll = () => {
