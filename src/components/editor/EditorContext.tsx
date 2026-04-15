@@ -155,6 +155,7 @@ const INITIAL_VARIABLE_VALUES: Record<string, string> = {
 
 export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [sequentialSigning, setSequentialSigning] = useState(false);
   const [placedFields, setPlacedFields] = useState<PlacedField[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [previousPanelId, setPreviousPanelId] = useState<string | null>(null);
@@ -170,6 +171,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   return (
     <EditorContext.Provider value={{
       participants, setParticipants,
+      sequentialSigning, setSequentialSigning,
       placedFields, setPlacedFields,
       selectedFieldId, setSelectedFieldId,
       previousPanelId, setPreviousPanelId,
