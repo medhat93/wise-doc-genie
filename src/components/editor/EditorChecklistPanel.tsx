@@ -811,7 +811,20 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                       </div>
                       <div className={cn("flex-1", !isLast && "pb-5")}>
                         <div className="space-y-2">
-                          <span className="text-sm font-semibold">{step.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">{step.name}</span>
+                            {isStepApproved && (
+                              <Badge className="h-4 text-[9px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                Approved
+                              </Badge>
+                            )}
+                            {isNextToApprove && (
+                              <Badge className="h-4 text-[9px] bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 gap-1">
+                                <span className="animate-spin h-2 w-2 border border-amber-600 border-t-transparent rounded-full inline-block" />
+                                In review
+                              </Badge>
+                            )}
+                          </div>
 
                           {/* Tags row */}
                           {step.tags && step.tags.length > 0 && (
