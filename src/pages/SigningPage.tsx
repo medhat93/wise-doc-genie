@@ -344,20 +344,68 @@ export default function SigningPage() {
             <TooltipContent side="left">Download</TooltipContent>
           </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => { setSearchOpen(v => !v); setSearchQuery(''); }}
-                className={cn(
-                  'w-9 h-9 rounded-lg flex items-center justify-center transition-colors',
-                  searchOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
-                )}
-              >
-                <Search size={18} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="left">Search in document</TooltipContent>
-          </Tooltip>
+          <div className="relative">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => { setSearchOpen(v => !v); setSearchQuery(''); setCurrentMatch(0); setMatchCount(0); }}
+                  className={cn(
+                    'w-9 h-9 rounded-lg flex items-center justify-center transition-colors',
+                    searchOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                  <Search size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left">Search in document</TooltipContent>
+            </Tooltip>
+
+            {/* Floating search card */}
+            {searchOpen && (
+              <div className="absolute right-full mr-3 top-0 w-[260px] bg-card shadow-lg border border-border rounded-lg overflow-hidden z-50">
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold">Document search</span>
+                    <button
+                      onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Results {currentMatch} of {matchCount}
+                  </p>
+                  <div className="flex items-center gap-1.5 bg-muted/50 border border-border rounded-md px-2.5 py-1.5">
+                    <Search size={14} className="text-muted-foreground shrink-0" />
+                    <input
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Search on document..."
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground min-w-0"
+                      autoFocus
+                    />
+                    {matchCount > 0 && (
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <button
+                          onClick={() => navigateMatch('next')}
+                          className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                        >
+                          <ChevronDown size={14} />
+                        </button>
+                        <button
+                          onClick={() => navigateMatch('prev')}
+                          className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                        >
+                          <ChevronUp size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* AI Panel */}
