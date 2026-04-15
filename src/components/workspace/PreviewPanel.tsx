@@ -445,9 +445,16 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
               )}
               {doc.counterparty && <p className="text-sm text-muted-foreground mt-0.5">{doc.counterparty}</p>}
             </div>
-            <Button variant="ghost" size="icon" className="shrink-0 -mr-2 -mt-1 h-7 w-7" onClick={onClose}>
-              <X size={16} />
-            </Button>
+            <div className="flex items-center gap-1 shrink-0 -mr-2 -mt-1">
+              {doc.stage !== 'draft' && (
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { onClose(); navigate(`/document/${doc.id}`); }}>
+                  <Eye size={16} />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+                <X size={16} />
+              </Button>
+            </div>
           </div>
           <Badge className={cn('rounded-full h-6 px-2 text-[11px] gap-1', stage.className)}>
             <StageIcon size={12} />
