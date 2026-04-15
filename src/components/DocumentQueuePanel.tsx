@@ -42,7 +42,7 @@ import {
   SentIcon,
   Search01Icon,
 } from "@hugeicons/core-free-icons";
-import { FileText, FilePlus, Lock, MoreVertical } from "lucide-react";
+import { FileText, FilePlus, RotateCw, Lock, MoreVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AiIcon from "@/components/AiIcon";
 import DocumentPreviewDialog from "@/components/DocumentPreviewDialog";
@@ -310,6 +310,14 @@ function SortableDocCard({
                   </>
                 )}
               </DropdownMenuItem>
+              {isPdf && doc.status === "complete" && (
+                <DropdownMenuItem
+                  onClick={(e) => { e.stopPropagation(); onRotate(doc); }}
+                >
+                  <RotateCw size={14} className="mr-2" />
+                  Rotate pages
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
@@ -385,7 +393,7 @@ const DocumentQueuePanel = ({
   followUpChildType,
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
-  
+  const [rotateDoc, setRotateDoc] = useState<UploadedDocument | null>(null);
   const [linkSearch, setLinkSearch] = useState("");
   const [linkedDoc, setLinkedDoc] = useState<{ name: string; status: string } | null>(null);
   const [linkDismissed, setLinkDismissed] = useState(false);
@@ -656,7 +664,7 @@ const DocumentQueuePanel = ({
                         onRemove={handleRemove}
                         onPreview={setPreviewDoc}
                         onToggleSupplement={handleToggleSupplement}
-                        onRotate={() => setPreviewDoc(doc)}
+                        onRotate={setRotateDoc}
                         followUpParentName={followUpParentName || (linkedDoc && doc.documentType === 'supplement' ? linkedDoc.name : undefined)}
                       />
                     </motion.div>
@@ -707,6 +715,13 @@ const DocumentQueuePanel = ({
         onOpenChange={(open) => !open && setPreviewDoc(null)}
       />
 
+      {/* Rotation preview dialog */}
+      <DocumentPreviewDialog
+        doc={rotateDoc}
+        open={!!rotateDoc}
+        onOpenChange={(open) => !open && setRotateDoc(null)}
+        rotationMode
+      />
     </div>
   );
 };
