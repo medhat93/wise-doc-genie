@@ -219,15 +219,21 @@ const Doc1Content = ({ comments, onClickHighlight, variableValues }: { comments:
   </>
 );
 
-const Doc2Content = () => (
+const Doc2Content = ({ comments, onClickHighlight }: { comments: Comment[]; onClickHighlight: (ref: string) => void }) => (
   <>
     <h1 className="text-2xl font-bold text-foreground mb-1">Schedule A: Pricing & Fee Structure</h1>
     <p className="text-xs text-muted-foreground mb-8">Attached to: Master Services Agreement</p>
-    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">1. Service Fees</h2>
+    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">
+      <CommentHighlight sectionRef="Schedule: Service Fees" comments={comments} onClickHighlight={onClickHighlight}>
+        1. Service Fees
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      The following table outlines the fees applicable to each category of services provided under
-      this Agreement. All fees are quoted in United States Dollars (USD) and are exclusive of
-      applicable taxes unless otherwise noted.
+      <CommentHighlight sectionRef="Schedule: Service Fees" comments={comments} onClickHighlight={onClickHighlight}>
+        The following table outlines the fees applicable to each category of services provided under
+        this Agreement. All fees are quoted in United States Dollars (USD) and are exclusive of
+        applicable taxes unless otherwise noted.
+      </CommentHighlight>
     </p>
     <div className="border rounded-md overflow-hidden mb-6">
       <table className="w-full text-sm">
@@ -256,17 +262,29 @@ const Doc2Content = () => (
         </tbody>
       </table>
     </div>
-    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">2. Payment Schedule</h2>
+    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">
+      <CommentHighlight sectionRef="Schedule: Payment Schedule" comments={comments} onClickHighlight={onClickHighlight}>
+        2. Payment Schedule
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      Payments shall be made in three installments: 30% upon execution of the Statement of Work,
-      40% upon delivery of the initial milestone, and 30% upon final delivery and acceptance of
-      all Deliverables. Net payment terms are thirty (30) days from invoice date.
+      <CommentHighlight sectionRef="Schedule: Payment Schedule" comments={comments} onClickHighlight={onClickHighlight}>
+        Payments shall be made in three installments: 30% upon execution of the Statement of Work,
+        40% upon delivery of the initial milestone, and 30% upon final delivery and acceptance of
+        all Deliverables. Net payment terms are thirty (30) days from invoice date.
+      </CommentHighlight>
     </p>
-    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">3. Expense Policy</h2>
+    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">
+      <CommentHighlight sectionRef="Schedule: Expense Policy" comments={comments} onClickHighlight={onClickHighlight}>
+        3. Expense Policy
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      Reasonable travel and accommodation expenses incurred in connection with the Services shall
-      be reimbursed at cost, subject to prior written approval. Expenses exceeding $500 per
-      occurrence require advance authorization from the Client.
+      <CommentHighlight sectionRef="Schedule: Expense Policy" comments={comments} onClickHighlight={onClickHighlight}>
+        Reasonable travel and accommodation expenses incurred in connection with the Services shall
+        be reimbursed at cost, subject to prior written approval. Expenses exceeding $500 per
+        occurrence require advance authorization from the Client.
+      </CommentHighlight>
     </p>
   </>
 );
