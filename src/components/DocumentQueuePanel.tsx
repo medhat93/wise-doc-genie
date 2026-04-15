@@ -310,14 +310,6 @@ function SortableDocCard({
                   </>
                 )}
               </DropdownMenuItem>
-              {isPdf && doc.status === "complete" && (
-                <DropdownMenuItem
-                  onClick={(e) => { e.stopPropagation(); onRotate(doc); }}
-                >
-                  <RotateCw size={14} className="mr-2" />
-                  Rotate pages
-                </DropdownMenuItem>
-              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
