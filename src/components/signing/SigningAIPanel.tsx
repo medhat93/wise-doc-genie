@@ -3,7 +3,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sparkles, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { Textarea } from '@/components/ui/textarea';
 
 interface ChatMessage {
   id: string;
@@ -72,8 +71,6 @@ interface Props {
 }
 
 export default function SigningAIPanel({ onClose, onCitation }: Props) {
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(true);
