@@ -35,10 +35,6 @@ interface EditorPanelProps {
 }
 
 const EditorPanel = ({ panelId, onClose, docType, onSwitchPanel }: EditorPanelProps) => {
-  const { selectedFieldId, setSelectedFieldId } = useEditorContext();
-
-  const showFieldSettings = panelId === "annotations" && !!selectedFieldId;
-
   return (
     <motion.div
       initial={{ width: 0, opacity: 0 }}
@@ -47,10 +43,8 @@ const EditorPanel = ({ panelId, onClose, docType, onSwitchPanel }: EditorPanelPr
       transition={{ duration: 0.25, ease: "easeInOut" }}
       className="border-l bg-card flex flex-col overflow-hidden flex-shrink-0"
     >
-      {showFieldSettings ? (
-        <EditorFieldSettings onClose={() => setSelectedFieldId(null)} showBackButton />
-      ) : (
-        <>
+      <>
+
           {/* Header */}
           <div className="h-12 px-4 flex items-center justify-between border-b flex-shrink-0">
             <span className="font-semibold text-sm">{PANEL_TITLES[panelId]}</span>
@@ -86,8 +80,7 @@ const EditorPanel = ({ panelId, onClose, docType, onSwitchPanel }: EditorPanelPr
               </div>
             )}
           </div>
-        </>
-      )}
+      </>
     </motion.div>
   );
 };
