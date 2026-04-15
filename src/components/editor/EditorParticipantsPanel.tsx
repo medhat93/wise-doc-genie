@@ -268,6 +268,8 @@ const ParticipantFormCard = ({
   onCancel,
   submitLabel,
   isDisabled,
+  showVisibility,
+  visibilityContent,
 }: {
   form: AddFormState;
   updateForm: (u: Partial<AddFormState>) => void;
@@ -275,248 +277,274 @@ const ParticipantFormCard = ({
   onCancel: () => void;
   submitLabel: string;
   isDisabled: boolean;
+  showVisibility?: boolean;
+  visibilityContent?: React.ReactNode;
 }) => (
-  <div className="border rounded-lg p-3 bg-card space-y-3 animate-in slide-in-from-top-2 duration-200">
-    {/* Row 1: Role, Language, Sending method, Close */}
-    <div className="flex items-center gap-2 flex-wrap">
-      <Select value={form.role} onValueChange={(v) => updateForm({ role: v as ParticipantRole })}>
-        <SelectTrigger className="h-7 w-[100px] text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="signer" className="text-xs">Signer</SelectItem>
-          <SelectItem value="approver" className="text-xs">Approver</SelectItem>
-          <SelectItem value="viewer" className="text-xs">Viewer</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select value={form.language} onValueChange={(v) => updateForm({ language: v as "en" | "ar" })}>
-        <SelectTrigger className="h-7 w-[90px] text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="en" className="text-xs">English</SelectItem>
-          <SelectItem value="ar" className="text-xs">Arabic</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select value={form.sendingMethod} onValueChange={(v) => updateForm({ sendingMethod: v as SendingMethod })}>
-        <SelectTrigger className="h-7 w-[100px] text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="email" className="text-xs">Email</SelectItem>
-          <SelectItem value="sms" className="text-xs">SMS</SelectItem>
-          <SelectItem value="whatsapp" className="text-xs">WhatsApp</SelectItem>
-        </SelectContent>
-      </Select>
-      <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto" onClick={onCancel}>
-        <X size={14} />
-      </Button>
+  <div className="border rounded-lg bg-card animate-in slide-in-from-top-2 duration-200">
+    {/* Toolbar row: drag handle | Role | Language | Sending method | Eye | Trash */}
+    <div className="flex items-center gap-0 border-b px-1 py-1">
+      <span className="px-1.5 text-muted-foreground">
+        <GripVertical size={14} />
+      </span>
+      <Separator orientation="vertical" className="h-5 mx-1" />
+      <div className="flex items-center gap-0.5 text-xs">
+        <span className="text-muted-foreground text-[11px] pl-1">Role:</span>
+        <Select value={form.role} onValueChange={(v) => updateForm({ role: v as ParticipantRole })}>
+          <SelectTrigger className="h-7 w-auto border-0 shadow-none px-1 text-xs font-medium text-[hsl(var(--brand-indigo))] gap-0.5 focus:ring-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="signer" className="text-xs">Signer</SelectItem>
+            <SelectItem value="approver" className="text-xs">Approver</SelectItem>
+            <SelectItem value="viewer" className="text-xs">Viewer</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Separator orientation="vertical" className="h-5 mx-1" />
+      <div className="flex items-center gap-0.5 text-xs">
+        <span className="text-muted-foreground text-[11px]">Language:</span>
+        <Select value={form.language} onValueChange={(v) => updateForm({ language: v as "en" | "ar" })}>
+          <SelectTrigger className="h-7 w-auto border-0 shadow-none px-1 text-xs font-medium text-[hsl(var(--brand-indigo))] gap-0.5 focus:ring-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="en" className="text-xs">English</SelectItem>
+            <SelectItem value="ar" className="text-xs">Arabic</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Separator orientation="vertical" className="h-5 mx-1" />
+      <div className="flex items-center gap-0.5 text-xs">
+        <span className="text-muted-foreground text-[11px]">Sending method:</span>
+        <Select value={form.sendingMethod} onValueChange={(v) => updateForm({ sendingMethod: v as SendingMethod })}>
+          <SelectTrigger className="h-7 w-auto border-0 shadow-none px-1 text-xs font-medium text-[hsl(var(--brand-indigo))] gap-0.5 focus:ring-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="email" className="text-xs">Email</SelectItem>
+            <SelectItem value="sms" className="text-xs">SMS</SelectItem>
+            <SelectItem value="whatsapp" className="text-xs">WhatsApp</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="ml-auto flex items-center gap-0.5">
+        {showVisibility && visibilityContent}
+        <Separator orientation="vertical" className="h-5 mx-0.5" />
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onCancel}>
+          <Trash2 size={14} className="text-muted-foreground" />
+        </Button>
+      </div>
     </div>
 
-    {/* Row 2: Name with contact autocomplete */}
-    <div className="space-y-2">
-      <div className="relative">
-        <Input
-          placeholder="Name"
-          value={form.name}
-          onChange={(e) => updateForm({ name: e.target.value })}
-          className="h-8 text-xs"
-          autoComplete="off"
-        />
-        {form.name.length >= 1 && (() => {
-          const matches = CONTACTS.filter(c =>
-            c.name.toLowerCase().includes(form.name.toLowerCase()) &&
-            c.name.toLowerCase() !== form.name.toLowerCase()
-          );
-          if (matches.length === 0) return null;
-          return (
-            <div className="absolute z-50 top-full left-0 right-0 mt-1 border rounded-lg bg-popover shadow-md max-h-[160px] overflow-y-auto">
-              {matches.map((c) => (
-                <button
-                  key={c.email}
-                  type="button"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent transition-colors"
-                  onClick={() => {
-                    updateForm({
-                      name: c.name,
-                      email: c.email,
-                      phoneNumber: c.phone.replace(/^\+\d+\s*/, ""),
-                    });
-                  }}
-                >
-                  <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                    <span className="text-[9px] font-semibold text-primary">
-                      {c.name.split(" ").map(n => n[0]).join("")}
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium truncate">{c.name}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{c.email}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* Row 3: Email or Phone */}
-      {form.sendingMethod === "email" ? (
-        <Input
-          placeholder="Email"
-          type="email"
-          value={form.email}
-          onChange={(e) => updateForm({ email: e.target.value })}
-          className="h-8 text-xs"
-        />
-      ) : (
-        <div className="flex gap-1">
-          <Select value={form.phoneCode} onValueChange={(v) => updateForm({ phoneCode: v })}>
-            <SelectTrigger className="h-8 w-[72px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="+966" className="text-xs">+966</SelectItem>
-              <SelectItem value="+1" className="text-xs">+1</SelectItem>
-              <SelectItem value="+44" className="text-xs">+44</SelectItem>
-              <SelectItem value="+971" className="text-xs">+971</SelectItem>
-            </SelectContent>
-          </Select>
-          <Input
-            placeholder="Phone number"
-            value={form.phoneNumber}
-            onChange={(e) => updateForm({ phoneNumber: e.target.value })}
-            className="h-8 text-xs flex-1"
-          />
-        </div>
-      )}
-    </div>
-
-    {/* Row 3: Verification */}
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-medium text-muted-foreground">Needs to verify</span>
-        <Switch
-          checked={form.needsVerification}
-          onCheckedChange={(checked) => updateForm({
-            needsVerification: checked,
-            verificationMethod: "sms",
-            verificationSpecs: "without_id",
-            nationalId: "",
-          })}
-          className="scale-75 origin-right"
-        />
-      </div>
-      {form.needsVerification && (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="text-[9px] text-muted-foreground mb-0.5 block">Verification method</label>
-              <Select
-                value={form.verificationMethod}
-                onValueChange={(v) => {
-                  const method = v as VerificationMethodType;
-                  updateForm({
-                    verificationMethod: method,
-                    verificationSpecs: hasSpecs(method) ? "without_id" : "without_id",
-                    nationalId: "",
-                  });
-                }}
-              >
-                <SelectTrigger className="h-7 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(VERIFICATION_METHOD_LABELS) as VerificationMethodType[]).map((m) => (
-                    <SelectItem key={m} value={m} className="text-xs">{VERIFICATION_METHOD_LABELS[m]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {hasSpecs(form.verificationMethod) && (
-              <div className="flex-1">
-                <label className="text-[9px] text-muted-foreground mb-0.5 block">Verification specs</label>
-                <Select
-                  value={form.verificationSpecs}
-                  onValueChange={(v) => updateForm({ verificationSpecs: v as VerificationSpecs })}
-                >
-                  <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(Object.keys(VERIFICATION_SPECS_LABELS) as VerificationSpecs[]).map((s) => (
-                      <SelectItem key={s} value={s} className="text-xs">
-                        <div className="flex items-center gap-1">
-                          {VERIFICATION_SPECS_LABELS[s].label}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info size={10} className="text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent side="right" className="max-w-[200px] text-xs">
-                              {VERIFICATION_SPECS_LABELS[s].tooltip}
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          {needsNationalId(form.verificationMethod, form.verificationSpecs) && (
+    {/* Form body */}
+    <div className="p-4 space-y-3">
+      {/* Name + Email side by side */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs font-medium mb-1 block">Name</label>
+          <div className="relative">
             <Input
-              placeholder="National ID number"
-              value={form.nationalId}
-              onChange={(e) => updateForm({ nationalId: e.target.value })}
-              className="h-7 text-xs"
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => updateForm({ name: e.target.value })}
+              className="h-9 text-sm"
+              autoComplete="off"
             />
-          )}
+            {form.name.length >= 1 && (() => {
+              const matches = CONTACTS.filter(c =>
+                c.name.toLowerCase().includes(form.name.toLowerCase()) &&
+                c.name.toLowerCase() !== form.name.toLowerCase()
+              );
+              if (matches.length === 0) return null;
+              return (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 border rounded-lg bg-popover shadow-md max-h-[160px] overflow-y-auto">
+                  {matches.map((c) => (
+                    <button
+                      key={c.email}
+                      type="button"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent transition-colors"
+                      onClick={() => {
+                        updateForm({
+                          name: c.name,
+                          email: c.email,
+                          phoneNumber: c.phone.replace(/^\+\d+\s*/, ""),
+                        });
+                      }}
+                    >
+                      <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[9px] font-semibold text-primary">
+                          {c.name.split(" ").map(n => n[0]).join("")}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium truncate">{c.name}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{c.email}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
 
-          {(form.verificationMethod === "sms" || form.verificationMethod === "whatsapp") && form.sendingMethod === "email" && (
+        <div>
+          <label className="text-xs font-medium mb-1 block">
+            {form.sendingMethod === "email" ? "Email" : "Phone"}
+          </label>
+          {form.sendingMethod === "email" ? (
+            <Input
+              placeholder="Email"
+              type="email"
+              value={form.email}
+              onChange={(e) => updateForm({ email: e.target.value })}
+              className="h-9 text-sm"
+            />
+          ) : (
             <div className="flex gap-1">
               <Select value={form.phoneCode} onValueChange={(v) => updateForm({ phoneCode: v })}>
-                <SelectTrigger className="h-7 w-[68px] text-xs">
+                <SelectTrigger className="h-9 w-[72px] text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="+966" className="text-xs">+966</SelectItem>
                   <SelectItem value="+1" className="text-xs">+1</SelectItem>
                   <SelectItem value="+44" className="text-xs">+44</SelectItem>
+                  <SelectItem value="+971" className="text-xs">+971</SelectItem>
                 </SelectContent>
               </Select>
               <Input
-                placeholder="Phone for verification"
+                placeholder="Phone number"
                 value={form.phoneNumber}
                 onChange={(e) => updateForm({ phoneNumber: e.target.value })}
-                className="h-7 text-xs flex-1"
+                className="h-9 text-sm flex-1"
               />
             </div>
           )}
-
-          {showNafathBanner(form.verificationMethod) && (
-            <div className="flex items-start gap-2 rounded-lg p-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
-              <Info size={14} className="flex-shrink-0 mt-0.5" />
-              <p className="text-[10px] leading-relaxed">
-                {form.verificationMethod === "absher"
-                  ? "Absher service is available only for Saudi citizens or expats with an active Absher account."
-                  : "Nafath service is available only for Saudi citizens or expats with an active Nafath account."}
-              </p>
-            </div>
-          )}
         </div>
-      )}
-    </div>
+      </div>
 
-    {/* Row 4: Submit / Cancel */}
-    <div className="flex items-center gap-2">
-      <Button size="sm" className="h-7 text-xs" onClick={onSubmit} disabled={isDisabled}>
-        {submitLabel}
-      </Button>
-      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onCancel}>
-        Cancel
-      </Button>
+      {/* Verification section - bordered box */}
+      <div className={cn(
+        "rounded-lg border p-3 space-y-3",
+        form.needsVerification ? "bg-card" : "bg-muted/30"
+      )}>
+        <div className="flex items-center gap-3">
+          <Switch
+            checked={form.needsVerification}
+            onCheckedChange={(checked) => updateForm({
+              needsVerification: checked,
+              verificationMethod: "sms",
+              verificationSpecs: "without_id",
+              nationalId: "",
+            })}
+          />
+          <span className="text-sm font-medium">Needs to verify</span>
+        </div>
+
+        {form.needsVerification && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Verification method</label>
+                <Select
+                  value={form.verificationMethod}
+                  onValueChange={(v) => {
+                    const method = v as VerificationMethodType;
+                    updateForm({
+                      verificationMethod: method,
+                      verificationSpecs: hasSpecs(method) ? "without_id" : "without_id",
+                      nationalId: "",
+                    });
+                  }}
+                >
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(VERIFICATION_METHOD_LABELS) as VerificationMethodType[]).map((m) => (
+                      <SelectItem key={m} value={m} className="text-xs">{VERIFICATION_METHOD_LABELS[m]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {hasSpecs(form.verificationMethod) && (
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Verification specs</label>
+                  <Select
+                    value={form.verificationSpecs}
+                    onValueChange={(v) => updateForm({ verificationSpecs: v as VerificationSpecs })}
+                  >
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(VERIFICATION_SPECS_LABELS) as VerificationSpecs[]).map((s) => (
+                        <SelectItem key={s} value={s} className="text-xs">
+                          <div className="flex items-center gap-1">
+                            {VERIFICATION_SPECS_LABELS[s].label}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info size={10} className="text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="max-w-[200px] text-xs">
+                                {VERIFICATION_SPECS_LABELS[s].tooltip}
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {needsNationalId(form.verificationMethod, form.verificationSpecs) && (
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">National ID</label>
+                  <Input
+                    placeholder="National ID"
+                    value={form.nationalId}
+                    onChange={(e) => updateForm({ nationalId: e.target.value })}
+                    className="h-9 text-sm"
+                  />
+                </div>
+              )}
+            </div>
+
+            {(form.verificationMethod === "sms" || form.verificationMethod === "whatsapp") && form.sendingMethod === "email" && (
+              <div className="flex gap-1">
+                <Select value={form.phoneCode} onValueChange={(v) => updateForm({ phoneCode: v })}>
+                  <SelectTrigger className="h-9 w-[72px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="+966" className="text-xs">+966</SelectItem>
+                    <SelectItem value="+1" className="text-xs">+1</SelectItem>
+                    <SelectItem value="+44" className="text-xs">+44</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Phone for verification"
+                  value={form.phoneNumber}
+                  onChange={(e) => updateForm({ phoneNumber: e.target.value })}
+                  className="h-9 text-sm flex-1"
+                />
+              </div>
+            )}
+
+            {showNafathBanner(form.verificationMethod) && (
+              <div className="flex items-start gap-2 rounded-lg p-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                <Info size={14} className="flex-shrink-0 mt-0.5" />
+                <p className="text-xs leading-relaxed">
+                  {form.verificationMethod === "absher"
+                    ? "Absher service is available only for Saudi citizens or expats with an active Absher account."
+                    : "Nafath service is available only for Saudi citizens or expats with an active Nafath account."}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   </div>
 );
@@ -833,33 +861,37 @@ const EditorParticipantsPanel = () => {
             )}
             {MOCK_DOCUMENTS.some(d => d.docType === "supplement") && (() => {
               const docsVisible = MOCK_DOCUMENTS.filter(d => (visibility[d.id] || []).includes(p.id)).length;
-              const allVisible = docsVisible === MOCK_DOCUMENTS.length;
               return (
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-6 px-2 text-[10px] gap-1 flex-shrink-0">
-                      <Eye size={12} />
-                      {allVisible ? "All" : `${docsVisible}/${MOCK_DOCUMENTS.length}`}
-                    </Button>
-                  </PopoverTrigger>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
+                          <Eye size={14} className="text-muted-foreground" />
+                        </Button>
+                      </PopoverTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">Control document visibility</TooltipContent>
+                  </Tooltip>
                   <PopoverContent className="w-56 p-2" align="end">
                     <p className="text-xs font-medium mb-2">Documents visible to {p.name.split(" ")[0]}</p>
                     {MOCK_DOCUMENTS.map((doc) => {
                       const visibleIds = visibility[doc.id] || [];
                       const isChecked = visibleIds.includes(p.id);
+                      const isPrimary = doc.docType === "primary";
                       const isLastDoc = docsVisible === 1 && isChecked;
                       return (
                         <label
                           key={doc.id}
                           className={cn(
                             "flex items-center gap-2 px-1 py-1 rounded hover:bg-accent cursor-pointer",
-                            isLastDoc && "opacity-50 cursor-not-allowed"
+                            (isPrimary || isLastDoc) && "opacity-50 cursor-not-allowed"
                           )}
                         >
                           <Checkbox
-                            checked={isChecked}
+                            checked={isPrimary ? true : isChecked}
                             onCheckedChange={() => toggleDocVisibility(doc.id, p.id)}
-                            disabled={isLastDoc}
+                            disabled={isPrimary || isLastDoc}
                           />
                           <span className="text-xs truncate flex-1">{doc.name}</span>
                           <Badge
