@@ -164,18 +164,13 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const [warningOpen, setWarningOpen] = useState(false);
   const [participantIssues, setParticipantIssues] = useState<ParticipantIssue[]>([]);
 
-  // Step 4 state
-  const [documentType, setDocumentType] = useState("");
-  const [propValues, setPropValues] = useState<Record<string, string>>({});
-  const [editingPropKey, setEditingPropKey] = useState<string | null>(null);
-
-  // Step 5 state
+  // Step 4 state (workflow)
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>("none");
   const [workflowAssignees, setWorkflowAssignees] = useState<Record<number, string>>({});
 
   // Mock flags
-  const workflowEnforced = false;
-  const hasRequiredProperties = true;
+  const workflowEnforced = true;
+
 
   // Refs for scrolling
   const stepRefs = useRef<Record<number, HTMLDivElement | null>>({});
