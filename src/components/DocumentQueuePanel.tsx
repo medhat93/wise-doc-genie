@@ -385,7 +385,7 @@ const DocumentQueuePanel = ({
   followUpChildType,
 }: DocumentQueuePanelProps) => {
   const [previewDoc, setPreviewDoc] = useState<UploadedDocument | null>(null);
-  const [rotateDoc, setRotateDoc] = useState<UploadedDocument | null>(null);
+  
   const [linkSearch, setLinkSearch] = useState("");
   const [linkedDoc, setLinkedDoc] = useState<{ name: string; status: string } | null>(null);
   const [linkDismissed, setLinkDismissed] = useState(false);
