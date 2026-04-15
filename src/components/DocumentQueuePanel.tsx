@@ -707,13 +707,6 @@ const DocumentQueuePanel = ({
         onOpenChange={(open) => !open && setPreviewDoc(null)}
       />
 
-      {/* Rotation preview dialog */}
-      <DocumentPreviewDialog
-        doc={rotateDoc}
-        open={!!rotateDoc}
-        onOpenChange={(open) => !open && setRotateDoc(null)}
-        rotationMode
-      />
     </div>
   );
 };
