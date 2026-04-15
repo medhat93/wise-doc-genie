@@ -1293,9 +1293,9 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                           ))}
                         </>
                       ) : doc.id === "doc-2" ? (
-                        <Doc2Content />
+                        <Doc2Content comments={comments} onClickHighlight={handleClickHighlight} />
                       ) : (
-                        <Doc3Content />
+                        <Doc3Content comments={comments} onClickHighlight={handleClickHighlight} />
                       )}
                     </div>
                     {docFields.map((f) => (
