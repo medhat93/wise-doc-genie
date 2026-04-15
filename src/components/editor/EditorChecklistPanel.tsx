@@ -165,7 +165,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const [participantIssues, setParticipantIssues] = useState<ParticipantIssue[]>([]);
 
   // Step 4 state (workflow)
-  const [selectedWorkflow, setSelectedWorkflow] = useState<string>("none");
+  const [selectedWorkflow, setSelectedWorkflow] = useState<string>("agreement2026");
   const [workflowAssignees, setWorkflowAssignees] = useState<Record<number, string>>({});
   
   // Approval simulation state
@@ -748,20 +748,6 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       case "workflow":
         return (
           <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium mb-1.5 block">Select workflow</label>
-              <Select value={selectedWorkflow} onValueChange={(v) => { setSelectedWorkflow(v); setWorkflowAssignees({}); setApprovalState("idle"); setApprovedStepIndices([]); approvalTimerRef.current.forEach(t => clearTimeout(t)); }}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Select workflow" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No workflow</SelectItem>
-                  {Object.entries(WORKFLOW_TEMPLATES).map(([key, wf]) => (
-                    <SelectItem key={key} value={key}>{wf.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             {wfSteps.length > 0 && (
               <div className="relative">
                 {/* Step 0: Drafting */}
