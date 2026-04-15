@@ -1244,21 +1244,31 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
         />
       )}
 
-      <div
-        ref={scrollRef}
-        className={cn("flex-1 overflow-y-auto overflow-x-hidden relative", isEsign ? "bg-muted/40" : "bg-muted/20")}
-        onScroll={handleScroll}
-        onClick={handleCanvasClick}
-        onMouseUp={handleMouseUp}
-        data-editor-canvas
-      >
-        <ScrollIndicator doc={showIndicator ? activeDoc : null} />
-
+      <div className="flex-1 relative overflow-hidden">
         <AnimatePresence>
           {searchOpen && (
             <SearchBar open={searchOpen} onClose={() => setSearchOpen(false)} />
           )}
         </AnimatePresence>
+
+        {!hideZoomBar && (
+          <ZoomBar
+            zoom={zoom}
+            onZoomChange={setZoom}
+            searchOpen={searchOpen}
+            onSearchToggle={() => setSearchOpen(prev => !prev)}
+          />
+        )}
+
+        <div
+          ref={scrollRef}
+          className={cn("absolute inset-0 overflow-y-auto overflow-x-hidden", isEsign ? "bg-muted/40" : "bg-muted/20")}
+          onScroll={handleScroll}
+          onClick={handleCanvasClick}
+          onMouseUp={handleMouseUp}
+          data-editor-canvas
+        >
+          <ScrollIndicator doc={showIndicator ? activeDoc : null} />
 
         <AnimatePresence>
           {selectionToolbar && (
