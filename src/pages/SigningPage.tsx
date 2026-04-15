@@ -44,7 +44,43 @@ export default function SigningPage() {
   const activeDoc = SIGNING_DOCUMENTS.find(d => d.id === activeDocId)!;
   const signedFieldCount = signed ? 4 : 0;
 
-  // Show nudge after 1.5s
+  // Highlight search matches in document
+  useEffect(() => {
+    if (!documentRef.current) return;
+    // Clear previous highlights
+    documentRef.current.querySelectorAll('mark[data-search-hl]').forEach(el => {
+      const parent = el.parentNode;
+      if (parent) {
+        parent.replaceChild(document.createTextNode(el.textContent || ''), el);
+        parent.normalize();
+      }
+    });
+    if (!searchQuery || searchQuery.length < 2) return;
+    const walker = document.createTreeWalker(documentRef.current, NodeFilter.SHOW_TEXT);
+    const matches: { node: Text; index: number }[] = [];
+    const query = searchQuery.toLowerCase();
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      const idx = node.textContent?.toLowerCase().indexOf(query) ?? -1;
+      if (idx >= 0) matches.push({ node, index: idx });
+    }
+    let firstMark: HTMLElement | null = null;
+    matches.forEach(({ node, index }) => {
+      const range = document.createRange();
+      range.setStart(node, index);
+      range.setEnd(node, index + searchQuery.length);
+      const mark = document.createElement('mark');
+      mark.setAttribute('data-search-hl', 'true');
+      mark.style.backgroundColor = 'hsl(var(--primary) / 0.25)';
+      mark.style.borderRadius = '2px';
+      mark.style.padding = '0 1px';
+      range.surroundContents(mark);
+      if (!firstMark) firstMark = mark;
+    });
+    if (firstMark) (firstMark as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [searchQuery]);
+
+
   useEffect(() => {
     const t = setTimeout(() => {
       if (!nudgeDismissed && !aiPanelOpen) setShowNudge(true);
