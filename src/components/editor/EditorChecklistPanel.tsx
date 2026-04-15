@@ -750,6 +750,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
           <div className="space-y-3">
             {wfSteps.length > 0 && (
               <div className="relative">
+                <p className="text-xs font-medium text-foreground mb-3">{WORKFLOW_TEMPLATES[selectedWorkflow]?.label}</p>
                 {/* Step 0: Drafting */}
                 <div className="flex gap-3 relative">
                   <div className="absolute left-[13px] top-[28px] bottom-0 w-px border-l border-dashed border-border" />
