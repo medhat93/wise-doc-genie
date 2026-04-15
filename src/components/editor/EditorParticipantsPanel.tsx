@@ -1136,15 +1136,21 @@ const EditorParticipantsPanel = () => {
 
       {/* ── Add participant button / form ── */}
       {!showAddForm ? (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs gap-1.5 w-full"
-          onClick={() => { setShowAddForm(true); setEditingId(null); }}
-        >
-          <Plus size={14} />
-          Add new participant
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1.5 border-[hsl(var(--brand-indigo))] text-[hsl(var(--brand-indigo))] hover:bg-[hsl(var(--brand-indigo))]/5"
+            onClick={() => { setShowAddForm(true); setEditingId(null); }}
+          >
+            <Plus size={14} />
+            Add new signer
+          </Button>
+          <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground" onClick={handleAddMe}>
+            <User size={14} />
+            Add me as a signer
+          </Button>
+        </div>
       ) : (
         <ParticipantFormCard
           form={form}
@@ -1155,12 +1161,6 @@ const EditorParticipantsPanel = () => {
           isDisabled={!form.name.trim()}
         />
       )}
-
-      {/* Add me */}
-      <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 w-full text-muted-foreground hover:text-foreground" onClick={handleAddMe}>
-        <User size={14} />
-        Add me as a signer
-      </Button>
 
 
 
