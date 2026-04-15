@@ -57,7 +57,7 @@ const MOCK_COMMENTS: Comment[] = [
     id: "c2", author: "Mohammed Al-Faisal", authorInitials: "MA", authorColor: "#059669",
     text: "Payment terms should be NET-30, not NET-60",
     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), sectionRef: "Section 3: Payment Terms",
-    status: "resolved", type: "inline", annotationType: "comment", replies: [],
+    status: "open", type: "inline", annotationType: "comment", replies: [],
   },
   {
     id: "c3", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5",
@@ -71,6 +71,43 @@ const MOCK_COMMENTS: Comment[] = [
     timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), sectionRef: "Section 3: Payment Terms",
     status: "open", type: "inline", annotationType: "suggestion",
     suggestedText: "Client shall pay within fifteen (15) days of the invoice date.",
+    replies: [],
+  },
+  {
+    id: "c4", author: "Layla Hassan", authorInitials: "LH", authorColor: "#7C3AED",
+    text: "Definition of 'Deliverables' should include digital assets and source code",
+    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), sectionRef: "Section 1: Definitions",
+    status: "open", type: "inline", annotationType: "comment", replies: [],
+  },
+  {
+    id: "s2", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5",
+    text: "Consider adding a mutual NDA clause reference here",
+    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), sectionRef: "Section 4: Confidentiality",
+    status: "open", type: "inline", annotationType: "suggestion",
+    suggestedText: "Each party agrees to hold in confidence all Confidential Information as further defined in the mutual NDA executed between the parties.",
+    replies: [{
+      id: "r2", author: "Mohammed Al-Faisal", authorInitials: "MA", authorColor: "#059669",
+      text: "Good idea — I'll cross-reference the existing NDA.",
+      timestamp: new Date(Date.now() - 7 * 60 * 60 * 1000),
+    }],
+  },
+  {
+    id: "c5", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626",
+    text: "Cap liability at 2x the total contract value per industry standard",
+    timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000), sectionRef: "Section 6: Liability",
+    status: "open", type: "inline", annotationType: "comment",
+    replies: [{
+      id: "r3", author: "Layla Hassan", authorInitials: "LH", authorColor: "#7C3AED",
+      text: "Legal approved a 2x cap. Let's proceed.",
+      timestamp: new Date(Date.now() - 9 * 60 * 60 * 1000),
+    }],
+  },
+  {
+    id: "s3", author: "Mohammed Al-Faisal", authorInitials: "MA", authorColor: "#059669",
+    text: "Reduce notice period from 30 to 15 days for termination for cause",
+    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000), sectionRef: "Section 5: Termination",
+    status: "open", type: "inline", annotationType: "suggestion",
+    suggestedText: "Either party may terminate this Agreement with fifteen (15) days' prior written notice for cause.",
     replies: [],
   },
   {
@@ -89,9 +126,12 @@ const MOCK_COMMENTS: Comment[] = [
 
 /* ── Section-to-highlight mapping ── */
 export const COMMENT_SECTIONS: Record<string, { docIndex: number; selector: string }> = {
+  "Section 1: Definitions": { docIndex: 0, selector: "1. Definitions" },
   "Section 2: Scope of Services": { docIndex: 0, selector: "2. Scope of Services" },
   "Section 3: Payment Terms": { docIndex: 0, selector: "3. Payment Terms" },
+  "Section 4: Confidentiality": { docIndex: 0, selector: "4. Confidentiality" },
   "Section 5: Termination": { docIndex: 0, selector: "5. Term and Termination" },
+  "Section 6: Liability": { docIndex: 0, selector: "6. Limitation of Liability" },
 };
 
 export type AcknowledgmentLevel = 'none';
