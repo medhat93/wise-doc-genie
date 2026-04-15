@@ -165,7 +165,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const [participantIssues, setParticipantIssues] = useState<ParticipantIssue[]>([]);
 
   // Step 4 state (workflow)
-  const [selectedWorkflow, setSelectedWorkflow] = useState<string>("none");
+  const [selectedWorkflow, setSelectedWorkflow] = useState<string>("agreement2026");
   const [workflowAssignees, setWorkflowAssignees] = useState<Record<number, string>>({});
   
   // Approval simulation state
