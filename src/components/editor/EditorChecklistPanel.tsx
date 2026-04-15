@@ -71,56 +71,52 @@ const FIELD_CATEGORIES: { label: string; fields: SidebarFieldType[] }[] = [
   },
 ];
 
-/* ── Document types for Step 4 ── */
-const DOCUMENT_TYPES = [
-  "Service Agreement", "NDA", "Employment Contract", "Consulting Agreement",
-  "Procurement Contract", "Lease Agreement", "Partnership Agreement", "Other",
-];
+/* ── Workflow templates for Step 4 ── */
+interface WorkflowStepDef {
+  name: string;
+  icon: React.ElementType;
+  action: "approver" | "reviewer" | "signer";
+  tags?: string[];
+}
 
-const REQUIRED_PROPS: Record<string, { key: string; label: string; type: "text" | "number" | "date" | "dropdown"; options?: string[] }[]> = {
-  "Service Agreement": [
-    { key: "counterparty", label: "Counterparty", type: "text" },
-    { key: "contractValue", label: "Contract value", type: "number" },
-    { key: "effectiveDate", label: "Effective date", type: "date" },
-    { key: "department", label: "Department", type: "dropdown", options: ["Legal", "Finance", "HR", "Engineering", "Sales"] },
-  ],
-  "NDA": [
-    { key: "counterparty", label: "Counterparty", type: "text" },
-    { key: "confidentialityPeriod", label: "Confidentiality period", type: "dropdown", options: ["1 year", "2 years", "3 years", "5 years", "Indefinite"] },
-  ],
-};
-
-const DEFAULT_REQUIRED_PROPS = [
-  { key: "counterparty", label: "Counterparty", type: "text" as const },
-  { key: "effectiveDate", label: "Effective date", type: "date" as const },
-];
-
-/* ── Workflow templates for Step 5 ── */
-const WORKFLOW_TEMPLATES: Record<string, { label: string; steps: { name: string; icon: React.ElementType }[] }> = {
+const WORKFLOW_TEMPLATES: Record<string, { label: string; steps: WorkflowStepDef[] }> = {
+  agreement2026: {
+    label: "Agreement contract 2026",
+    steps: [
+      { name: "Legal Review", icon: Search, action: "reviewer", tags: ["CONDITIONS", "SLA", "RESET", "LOCK"] },
+      { name: "Manager Approval", icon: UserCheck, action: "approver", tags: ["SLA"] },
+    ],
+  },
   standard: {
     label: "Standard Approval — 2 Steps",
     steps: [
-      { name: "Legal Review", icon: Search },
-      { name: "Manager Approval", icon: UserCheck },
+      { name: "Legal Review", icon: Search, action: "reviewer", tags: ["CONDITIONS"] },
+      { name: "Manager Approval", icon: UserCheck, action: "approver" },
     ],
   },
   legal: {
     label: "Legal Review — 3 Steps",
     steps: [
-      { name: "Paralegal Review", icon: Search },
-      { name: "Senior Legal Review", icon: ShieldCheck },
-      { name: "Legal Director Approval", icon: UserCheck },
+      { name: "Paralegal Review", icon: Search, action: "reviewer", tags: ["SLA"] },
+      { name: "Senior Legal Review", icon: ShieldCheck, action: "reviewer", tags: ["CONDITIONS", "LOCK"] },
+      { name: "Legal Director Approval", icon: UserCheck, action: "approver" },
     ],
   },
   executive: {
     label: "Executive Approval — 4 Steps",
     steps: [
-      { name: "Department Review", icon: Search },
-      { name: "VP Approval", icon: UserCheck },
-      { name: "Legal Review", icon: ShieldCheck },
-      { name: "Executive Sign-off", icon: UserCheck },
+      { name: "Department Review", icon: Search, action: "reviewer" },
+      { name: "VP Approval", icon: UserCheck, action: "approver", tags: ["SLA"] },
+      { name: "Legal Review", icon: ShieldCheck, action: "reviewer", tags: ["CONDITIONS", "RESET"] },
+      { name: "Executive Sign-off", icon: UserCheck, action: "approver" },
     ],
   },
+};
+
+const ACTION_STYLES: Record<string, { label: string; className: string }> = {
+  approver: { label: "Approver", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  reviewer: { label: "Reviewer", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  signer: { label: "Signer", className: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" },
 };
 
 /* ── Step definition ── */
