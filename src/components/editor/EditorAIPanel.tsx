@@ -59,14 +59,11 @@ const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
   useEffect(() => {
     if (pendingAiQuestion) {
       setActiveAction("ask");
-      const userMessage: ChatMessage = {
-        role: "user",
-        content: pendingAiQuestion.question,
-        selectedText: pendingAiQuestion.selectedText,
-      };
-      setChatMessages((prev) => [...prev, userMessage]);
+      // Quote the selected text in the input and let the user write their prompt
+      setChatInput("");
       setPendingAiQuestion(null);
-      handleAiResponse(pendingAiQuestion.question, pendingAiQuestion.selectedText);
+      // Focus the input after a tick
+      setTimeout(() => chatInputRef.current?.focus(), 100);
     }
   }, [pendingAiQuestion, setPendingAiQuestion]);
 

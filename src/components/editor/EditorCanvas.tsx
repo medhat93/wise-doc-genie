@@ -473,27 +473,9 @@ const SelectionToolbar = ({
 }: {
   position: { x: number; y: number };
   onComment: () => void;
-  onAskAi: (question: string) => void;
+  onAskAi: () => void;
   onDismiss: () => void;
 }) => {
-  const [showAiInput, setShowAiInput] = useState(false);
-  const [aiQuestion, setAiQuestion] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (showAiInput) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [showAiInput]);
-
-  const handleSubmit = () => {
-    if (aiQuestion.trim()) {
-      onAskAi(aiQuestion.trim());
-      setShowAiInput(false);
-      setAiQuestion("");
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 4 }}
@@ -504,59 +486,33 @@ const SelectionToolbar = ({
       style={{ left: position.x, top: position.y }}
       onMouseDown={(e) => e.preventDefault()}
     >
-      {showAiInput ? (
-        <div className="flex items-center gap-1 px-1">
-          <Sparkles size={14} className="text-primary shrink-0" />
-          <input
-            ref={inputRef}
-            value={aiQuestion}
-            onChange={(e) => setAiQuestion(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSubmit();
-              if (e.key === "Escape") { setShowAiInput(false); setAiQuestion(""); }
-            }}
-            placeholder="Ask AI about this text..."
-            className="text-xs bg-transparent border-none outline-none w-[200px] text-foreground placeholder:text-muted-foreground"
-          />
+      <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
+        <Bold size={14} />
+      </button>
+      <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
+        <Italic size={14} />
+      </button>
+      <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
+        <Highlighter size={14} />
+      </button>
+      <div className="w-px h-5 bg-border mx-0.5" />
+      <button
+        className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent"
+        onClick={onComment}
+      >
+        <MessageSquare size={14} />
+      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
           <button
-            className="h-6 w-6 flex items-center justify-center rounded text-primary hover:bg-primary/10 disabled:opacity-40"
-            onClick={handleSubmit}
-            disabled={!aiQuestion.trim()}
+            className="h-8 w-8 flex items-center justify-center rounded-md text-primary hover:bg-primary/10"
+            onClick={onAskAi}
           >
-            <ArrowRight size={12} />
+            <Sparkles size={14} />
           </button>
-        </div>
-      ) : (
-        <>
-          <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
-            <Bold size={14} />
-          </button>
-          <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
-            <Italic size={14} />
-          </button>
-          <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent">
-            <Highlighter size={14} />
-          </button>
-          <div className="w-px h-5 bg-border mx-0.5" />
-          <button
-            className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent"
-            onClick={onComment}
-          >
-            <MessageSquare size={14} />
-          </button>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className="h-8 w-8 flex items-center justify-center rounded-md text-primary hover:bg-primary/10"
-                onClick={() => setShowAiInput(true)}
-              >
-                <Sparkles size={14} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">Ask AI</TooltipContent>
-          </Tooltip>
-        </>
-      )}
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="text-xs">Ask AI</TooltipContent>
+      </Tooltip>
     </motion.div>
   );
 };
@@ -1109,9 +1065,9 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     onOpenComments?.();
   }, [selectionToolbar, setPendingCommentRef, onOpenComments]);
 
-  const handleSelectionAskAi = useCallback((question: string) => {
+  const handleSelectionAskAi = useCallback(() => {
     if (!selectionToolbar) return;
-    setPendingAiQuestion({ question, selectedText: selectionToolbar.text });
+    setPendingAiQuestion({ question: "", selectedText: selectionToolbar.text });
     setSelectionToolbar(null);
     window.getSelection()?.removeAllRanges();
     onOpenAi?.();
