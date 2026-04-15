@@ -201,6 +201,10 @@ const EditorParticipantsViewPanel = () => {
     toast.success("Participant removed");
   }, [setParticipants]);
 
+  const handleOrderChange = useCallback((id: string, newOrder: number) => {
+    setParticipants(prev => prev.map(p => p.id === id ? { ...p, order: newOrder } : p));
+  }, [setParticipants]);
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
