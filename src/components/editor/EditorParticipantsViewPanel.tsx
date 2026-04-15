@@ -267,6 +267,7 @@ const EditorParticipantsViewPanel = () => {
                   index={i}
                   onEdit={setEditingParticipant}
                   onRemove={removeParticipant}
+                  onOrderChange={handleOrderChange}
                   confirmRemoveId={confirmRemoveId}
                   setConfirmRemoveId={setConfirmRemoveId}
                 />
@@ -284,6 +285,7 @@ const EditorParticipantsViewPanel = () => {
               index={i}
               onEdit={setEditingParticipant}
               onRemove={removeParticipant}
+              onOrderChange={handleOrderChange}
               confirmRemoveId={confirmRemoveId}
               setConfirmRemoveId={setConfirmRemoveId}
             />
