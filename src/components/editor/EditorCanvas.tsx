@@ -1498,6 +1498,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
           <div className="h-20" />
         </div>
       </div>
+      </div>
     </div>
   );
 };
