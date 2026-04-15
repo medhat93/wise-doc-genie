@@ -149,7 +149,7 @@ const EditorPageInner = () => {
               <motion.div
                 key="field-settings-left"
                 initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 300, opacity: 1 }}
+                animate={{ width: 240, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="border-r bg-card flex flex-col overflow-hidden flex-shrink-0"
