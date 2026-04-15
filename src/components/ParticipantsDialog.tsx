@@ -103,8 +103,7 @@ const ParticipantsDialog = ({ open, onOpenChange, fromEditor = false }: Particip
               className="w-full mb-4 border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors flex items-center justify-between group"
             >
               <div className="flex items-center gap-2">
-                <User size={16} className="text-muted-foreground" />
-                <span className="text-sm font-medium">Quick add: I'm the only signer</span>
+                <span className="text-sm font-medium">I will sign it by myself only</span>
               </div>
               <ArrowRight size={16} className="text-muted-foreground group-hover:text-foreground transition-colors" />
             </button>
@@ -113,24 +112,23 @@ const ParticipantsDialog = ({ open, onOpenChange, fromEditor = false }: Particip
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="text-xs" onClick={handleSkip}>
-                Skip for now
-              </Button>
-              {participants.length === 0 && (
-                <span className="text-xs text-muted-foreground">
-                  You can add participants later from the editor
-                </span>
-              )}
-            </div>
-            <Button size="sm" className="gap-1.5" onClick={handleContinue}>
-              {fromEditor ? "Done" : (
-                <>
-                  Continue to editor
-                  <ArrowRight size={14} />
-                </>
-              )}
+          <div className="p-4 border-t flex items-center justify-end gap-3 flex-shrink-0">
+            {participants.length === 0 && (
+              <span className="text-xs text-muted-foreground mr-auto">
+                You can add participants later from the editor
+              </span>
+            )}
+            <Button variant="outline" size="sm" className="text-xs" onClick={handleSkip}>
+              Skip for now
+            </Button>
+            <Button
+              size="sm"
+              className="gap-1.5 bg-[hsl(var(--brand-indigo))] hover:bg-[hsl(var(--brand-indigo))]/90"
+              onClick={handleContinue}
+              disabled={participants.length === 0}
+            >
+              Save and continue
+              <ArrowRight size={14} />
             </Button>
           </div>
         </DialogPrimitive.Content>
