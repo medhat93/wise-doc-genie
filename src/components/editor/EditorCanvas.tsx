@@ -1497,15 +1497,6 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
 
           <div className="h-20" />
         </div>
-
-        {!hideZoomBar && (
-          <ZoomBar
-            zoom={zoom}
-            onZoomChange={setZoom}
-            searchOpen={searchOpen}
-            onSearchToggle={() => setSearchOpen(prev => !prev)}
-          />
-        )}
       </div>
     </div>
   );
