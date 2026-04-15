@@ -166,16 +166,6 @@ const SortableParticipantCard = ({
           <TooltipContent side="top" className="text-xs">{SENDING_TOOLTIPS[participant.sendingMethod]}</TooltipContent>
         </Tooltip>
 
-        {hasVerification && (
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <span className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground">
-                <Shield size={12} />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">Identity verification enabled</TooltipContent>
-          </Tooltip>
-        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
