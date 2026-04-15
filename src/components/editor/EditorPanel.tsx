@@ -1,9 +1,8 @@
-import { ArrowLeft, X } from "lucide-react";
+import { X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { PanelId } from "./EditorPanelToolbar";
 import EditorAIPanel from "./EditorAIPanel";
-import EditorFieldSettings from "./EditorFieldSettings";
 import EditorSmartFieldsPanel from "./EditorSmartFieldsPanel";
 import EditorPropertiesPanel from "./EditorPropertiesPanel";
 import EditorCommentsPanel from "./EditorCommentsPanel";
@@ -12,7 +11,6 @@ import EditorFieldsSidebar from "./EditorFieldsSidebar";
 import EditorParticipantsViewPanel from "./EditorParticipantsViewPanel";
 import EditorTasksPanel from "./EditorTasksPanel";
 import EditorChecklistPanel from "./EditorChecklistPanel";
-import { useEditorContext } from "./EditorContext";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   checklist: "Ready to send",
