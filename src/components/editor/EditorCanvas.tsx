@@ -735,7 +735,7 @@ const ThreadPin = ({
 const MarginReplyInput = ({ sectionRef, onReply }: { sectionRef: string; onReply: (text: string) => void }) => {
   const [text, setText] = useState("");
   return (
-    <div className="px-2.5 py-2 bg-background/60">
+    <div className="px-2.5 py-1.5">
       <div className="flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1">
         <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[7px] font-semibold text-primary-foreground">
           AA
