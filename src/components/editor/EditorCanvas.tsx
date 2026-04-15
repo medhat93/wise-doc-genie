@@ -122,11 +122,17 @@ const Doc1Content = ({ comments, onClickHighlight, variableValues }: { comments:
       This Agreement sets forth the terms and conditions under which the
       Service Provider shall provide services to the Client.
     </p>
-    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">1. Definitions</h2>
+    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
+      <CommentHighlight sectionRef="Section 1: Definitions" comments={comments} onClickHighlight={onClickHighlight}>
+        1. Definitions
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      "Services" means the professional services described in each Statement of Work executed
-      under this Agreement. "Deliverables" means all work product, reports, and materials
-      produced by the Service Provider in connection with the Services.
+      <CommentHighlight sectionRef="Section 1: Definitions" comments={comments} onClickHighlight={onClickHighlight}>
+        "Services" means the professional services described in each Statement of Work executed
+        under this Agreement. "Deliverables" means all work product, reports, and materials
+        produced by the Service Provider in connection with the Services.
+      </CommentHighlight>
     </p>
     <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
       <CommentHighlight sectionRef="Section 2: Scope of Services" comments={comments} onClickHighlight={onClickHighlight}>
@@ -152,11 +158,17 @@ const Doc1Content = ({ comments, onClickHighlight, variableValues }: { comments:
         thirty (30) days of the invoice date. Late payments shall accrue interest at the rate of 1.5% per month.
       </CommentHighlight>
     </p>
-    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">4. Confidentiality</h2>
+    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
+      <CommentHighlight sectionRef="Section 4: Confidentiality" comments={comments} onClickHighlight={onClickHighlight}>
+        4. Confidentiality
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      Each party agrees to hold in confidence all Confidential Information received from the
-      other party. "Confidential Information" includes any non-public technical, business, or
-      financial information disclosed by either party during the term of this Agreement.
+      <CommentHighlight sectionRef="Section 4: Confidentiality" comments={comments} onClickHighlight={onClickHighlight}>
+        Each party agrees to hold in confidence all Confidential Information received from the
+        other party. "Confidential Information" includes any non-public technical, business, or
+        financial information disclosed by either party during the term of this Agreement.
+      </CommentHighlight>
     </p>
     <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
       <CommentHighlight sectionRef="Section 5: Termination" comments={comments} onClickHighlight={onClickHighlight}>
@@ -170,11 +182,17 @@ const Doc1Content = ({ comments, onClickHighlight, variableValues }: { comments:
         thirty (30) days' prior written notice.
       </CommentHighlight>
     </p>
-    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">6. Limitation of Liability</h2>
+    <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
+      <CommentHighlight sectionRef="Section 6: Liability" comments={comments} onClickHighlight={onClickHighlight}>
+        6. Limitation of Liability
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      In no event shall either party be liable for any indirect, incidental, special, consequential,
-      or punitive damages, regardless of the cause of action or the theory of liability, even if
-      such party has been advised of the possibility of such damages.
+      <CommentHighlight sectionRef="Section 6: Liability" comments={comments} onClickHighlight={onClickHighlight}>
+        In no event shall either party be liable for any indirect, incidental, special, consequential,
+        or punitive damages, regardless of the cause of action or the theory of liability, even if
+        such party has been advised of the possibility of such damages.
+      </CommentHighlight>
     </p>
     <h2 className="text-base font-semibold text-foreground mt-8 mb-3">7. Governing Law</h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
