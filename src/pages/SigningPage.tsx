@@ -92,6 +92,21 @@ export default function SigningPage() {
       setCurrentMatch(0);
     }
   }, [searchQuery]);
+  const navigateMatch = useCallback((direction: 'next' | 'prev') => {
+    if (!documentRef.current || matchCount === 0) return;
+    const marks = documentRef.current.querySelectorAll('mark[data-search-hl]');
+    // Reset all highlights
+    marks.forEach(m => (m as HTMLElement).style.backgroundColor = 'hsl(var(--primary) / 0.25)');
+    let next = direction === 'next' ? currentMatch + 1 : currentMatch - 1;
+    if (next > matchCount) next = 1;
+    if (next < 1) next = matchCount;
+    setCurrentMatch(next);
+    const target = marks[next - 1] as HTMLElement;
+    if (target) {
+      target.style.backgroundColor = 'hsl(var(--primary) / 0.5)';
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentMatch, matchCount]);
 
 
   useEffect(() => {
