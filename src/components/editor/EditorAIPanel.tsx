@@ -344,13 +344,26 @@ const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
             <div ref={chatEndRef} />
           </div>
 
+          {quotedText && (
+            <div className="flex-shrink-0 mb-1.5 rounded-md border bg-muted/40 px-2.5 py-2 relative">
+              <button
+                onClick={() => setQuotedText(null)}
+                className="absolute top-1 right-1 h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              >
+                <span className="text-xs">×</span>
+              </button>
+              <p className="text-[10px] font-medium text-muted-foreground mb-0.5">Selected text</p>
+              <p className="text-xs text-foreground line-clamp-3 italic">"{quotedText}"</p>
+            </div>
+          )}
+
           <div className="flex gap-2 flex-shrink-0">
             <Input
               ref={chatInputRef}
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleChatSubmit(); }}
-              placeholder="Ask about this document..."
+              placeholder={quotedText ? "What should AI do with this text..." : "Ask about this document..."}
               className="text-xs h-9"
               disabled={isChatStreaming}
             />
