@@ -166,22 +166,19 @@ const SortableParticipantCard = ({
           <TooltipContent side="top" className="text-xs">{SENDING_TOOLTIPS[participant.sendingMethod]}</TooltipContent>
         </Tooltip>
 
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
-              <MoreVertical size={14} />
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+              onClick={() => setConfirmRemoveId(participant.id)}
+            >
+              <Trash2 size={13} />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem className="gap-2 text-xs" onClick={() => onEdit(participant)}>
-              <Pencil size={12} /> Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={() => setConfirmRemoveId(participant.id)}>
-              <Trash2 size={12} /> Remove
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">Remove</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );
