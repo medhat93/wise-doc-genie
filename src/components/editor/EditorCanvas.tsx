@@ -731,6 +731,40 @@ const ThreadPin = ({
   );
 };
 
+/* ── Margin reply input ── */
+const MarginReplyInput = ({ sectionRef, onReply }: { sectionRef: string; onReply: (text: string) => void }) => {
+  const [text, setText] = useState("");
+  return (
+    <div className="px-2.5 py-2 bg-background/60">
+      <div className="flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1">
+        <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[7px] font-semibold text-primary-foreground">
+          AA
+        </div>
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && text.trim()) {
+              onReply(text.trim());
+              setText("");
+            }
+          }}
+          placeholder="Reply..."
+          className="flex-1 bg-transparent text-[11px] text-foreground outline-none placeholder:text-muted-foreground"
+        />
+        {text.trim() && (
+          <button
+            onClick={() => { onReply(text.trim()); setText(""); }}
+            className="flex h-5 w-5 items-center justify-center rounded text-primary hover:bg-accent"
+          >
+            <ArrowRight size={11} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /* ── Field overlay component ── */
 const FieldOverlay = ({
   field,
