@@ -607,8 +607,9 @@ const EditorTopBar = ({ onOpenFieldsPanel, isEsign, onToggleEsign, onOpenVersion
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="hidden md:inline-flex items-center gap-1 h-7 px-2.5 rounded-md border bg-muted/50 text-xs font-medium text-foreground hover:bg-muted transition-colors ml-2 flex-shrink-0">
-                  <PencilEdit01Icon
-                    style={{ width: 13, height: 13 }}
+                  <HugeiconsIcon
+                    icon={PencilEdit01Icon}
+                    size={13}
                     className={cn(
                       editingMode === "editing" && "text-foreground",
                       editingMode === "suggesting" && "text-primary",
