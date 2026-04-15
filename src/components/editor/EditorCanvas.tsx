@@ -289,30 +289,34 @@ const Doc2Content = ({ comments, onClickHighlight }: { comments: Comment[]; onCl
   </>
 );
 
-const Doc3Content = () => (
+const Doc3Content = ({ comments, onClickHighlight }: { comments: Comment[]; onClickHighlight: (ref: string) => void }) => (
   <>
     <h1 className="text-2xl font-bold text-foreground mb-1">Certificate of Insurance</h1>
     <p className="text-xs text-muted-foreground mb-8">Reference Document — Attachment</p>
     <div className="space-y-3 text-sm text-foreground/80 mb-6">
-      {[
-        ["Company Name", "Acme Professional Services LLC"],
-        ["Policy Number", "INS-2026-04871-GL"],
-        ["Coverage Type", "General Liability"],
-        ["Coverage Amount", "$2,000,000 per occurrence"],
-        ["Effective Date", "January 1, 2026"],
-        ["Expiration Date", "December 31, 2026"],
-        ["Insurance Provider", "National Indemnity Company"],
-      ].map(([label, value], i, arr) => (
-        <div key={label} className={cn("flex justify-between pb-2", i < arr.length - 1 && "border-b border-dashed border-border")}>
-          <span className="font-medium text-foreground">{label}</span>
-          <span>{value}</span>
-        </div>
-      ))}
+      <CommentHighlight sectionRef="Insurance: Coverage" comments={comments} onClickHighlight={onClickHighlight}>
+        {[
+          ["Company Name", "Acme Professional Services LLC"],
+          ["Policy Number", "INS-2026-04871-GL"],
+          ["Coverage Type", "General Liability"],
+          ["Coverage Amount", "$2,000,000 per occurrence"],
+          ["Effective Date", "January 1, 2026"],
+          ["Expiration Date", "December 31, 2026"],
+          ["Insurance Provider", "National Indemnity Company"],
+        ].map(([label, value], i, arr) => (
+          <div key={label} className={cn("flex justify-between pb-2", i < arr.length - 1 && "border-b border-dashed border-border")}>
+            <span className="font-medium text-foreground">{label}</span>
+            <span>{value}</span>
+          </div>
+        ))}
+      </CommentHighlight>
     </div>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      This certificate is issued as a matter of information only and confers no rights upon the
-      certificate holder. This certificate does not amend, extend, or alter the coverage afforded
-      by the policies listed herein.
+      <CommentHighlight sectionRef="Insurance: Validity" comments={comments} onClickHighlight={onClickHighlight}>
+        This certificate is issued as a matter of information only and confers no rights upon the
+        certificate holder. This certificate does not amend, extend, or alter the coverage afforded
+        by the policies listed herein.
+      </CommentHighlight>
     </p>
     <p className="text-sm leading-relaxed text-foreground/80">
       The insurance afforded by the policies described herein is subject to all terms, exclusions,
