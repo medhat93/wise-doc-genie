@@ -22,6 +22,7 @@ export interface Comment {
   text: string;
   timestamp: Date;
   sectionRef: string;
+  docId: string;
   status: "open" | "resolved";
   replies: CommentReply[];
   type: "inline" | "general";
@@ -45,81 +46,103 @@ const MOCK_COMMENTS: Comment[] = [
   {
     id: "c1", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5",
     text: "We need to revise the scope to include the additional deliverables discussed in yesterday's call",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), sectionRef: "Section 2: Scope of Services",
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), sectionRef: "Section 2: Scope of Services", docId: "doc-1",
     status: "open", type: "inline", annotationType: "comment",
-    replies: [{
-      id: "r1", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626",
-      text: "Agreed. I'll update the deliverables list.",
-      timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    }],
+    replies: [{ id: "r1", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626", text: "Agreed. I'll update the deliverables list.", timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000) }],
   },
   {
     id: "c2", author: "Mohammed Al-Faisal", authorInitials: "MA", authorColor: "#059669",
     text: "Payment terms should be NET-30, not NET-60",
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), sectionRef: "Section 3: Payment Terms",
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), sectionRef: "Section 3: Payment Terms", docId: "doc-1",
     status: "open", type: "inline", annotationType: "comment", replies: [],
   },
   {
     id: "c3", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5",
     text: "Legal team to review this clause",
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), sectionRef: "Section 5: Termination",
+    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), sectionRef: "Section 5: Termination", docId: "doc-1",
     status: "open", type: "inline", annotationType: "comment", replies: [],
   },
   {
     id: "s1", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626",
     text: "Suggest changing 'thirty (30) days' to 'fifteen (15) days' for faster payment cycle",
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), sectionRef: "Section 3: Payment Terms",
+    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), sectionRef: "Section 3: Payment Terms", docId: "doc-1",
     status: "open", type: "inline", annotationType: "suggestion",
-    suggestedText: "Client shall pay within fifteen (15) days of the invoice date.",
-    replies: [],
+    suggestedText: "Client shall pay within fifteen (15) days of the invoice date.", replies: [],
   },
   {
     id: "c4", author: "Layla Hassan", authorInitials: "LH", authorColor: "#7C3AED",
     text: "Definition of 'Deliverables' should include digital assets and source code",
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), sectionRef: "Section 1: Definitions",
+    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), sectionRef: "Section 1: Definitions", docId: "doc-1",
     status: "open", type: "inline", annotationType: "comment", replies: [],
   },
   {
     id: "s2", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5",
     text: "Consider adding a mutual NDA clause reference here",
-    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), sectionRef: "Section 4: Confidentiality",
+    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), sectionRef: "Section 4: Confidentiality", docId: "doc-1",
     status: "open", type: "inline", annotationType: "suggestion",
     suggestedText: "Each party agrees to hold in confidence all Confidential Information as further defined in the mutual NDA executed between the parties.",
-    replies: [{
-      id: "r2", author: "Mohammed Al-Faisal", authorInitials: "MA", authorColor: "#059669",
-      text: "Good idea — I'll cross-reference the existing NDA.",
-      timestamp: new Date(Date.now() - 7 * 60 * 60 * 1000),
-    }],
+    replies: [{ id: "r2", author: "Mohammed Al-Faisal", authorInitials: "MA", authorColor: "#059669", text: "Good idea — I'll cross-reference the existing NDA.", timestamp: new Date(Date.now() - 7 * 60 * 60 * 1000) }],
   },
   {
     id: "c5", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626",
     text: "Cap liability at 2x the total contract value per industry standard",
-    timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000), sectionRef: "Section 6: Liability",
+    timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000), sectionRef: "Section 6: Liability", docId: "doc-1",
     status: "open", type: "inline", annotationType: "comment",
-    replies: [{
-      id: "r3", author: "Layla Hassan", authorInitials: "LH", authorColor: "#7C3AED",
-      text: "Legal approved a 2x cap. Let's proceed.",
-      timestamp: new Date(Date.now() - 9 * 60 * 60 * 1000),
-    }],
+    replies: [{ id: "r3", author: "Layla Hassan", authorInitials: "LH", authorColor: "#7C3AED", text: "Legal approved a 2x cap. Let's proceed.", timestamp: new Date(Date.now() - 9 * 60 * 60 * 1000) }],
   },
   {
     id: "s3", author: "Mohammed Al-Faisal", authorInitials: "MA", authorColor: "#059669",
     text: "Reduce notice period from 30 to 15 days for termination for cause",
-    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000), sectionRef: "Section 5: Termination",
+    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000), sectionRef: "Section 5: Termination", docId: "doc-1",
     status: "open", type: "inline", annotationType: "suggestion",
-    suggestedText: "Either party may terminate this Agreement with fifteen (15) days' prior written notice for cause.",
-    replies: [],
+    suggestedText: "Either party may terminate this Agreement with fifteen (15) days' prior written notice for cause.", replies: [],
   },
+  // Doc 2 — Schedule A
+  {
+    id: "c6", author: "Mohammed Al-Faisal", authorInitials: "MA", authorColor: "#059669",
+    text: "Technical Development rate seems high — can we negotiate to $165/hr?",
+    timestamp: new Date(Date.now() - 14 * 60 * 60 * 1000), sectionRef: "Schedule: Service Fees", docId: "doc-2",
+    status: "open", type: "inline", annotationType: "comment",
+    replies: [{ id: "r4", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5", text: "I'll check with the vendor. $175 might be the floor.", timestamp: new Date(Date.now() - 13 * 60 * 60 * 1000) }],
+  },
+  {
+    id: "s4", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626",
+    text: "Suggest changing payment split to 40/30/30 to reduce upfront risk",
+    timestamp: new Date(Date.now() - 16 * 60 * 60 * 1000), sectionRef: "Schedule: Payment Schedule", docId: "doc-2",
+    status: "open", type: "inline", annotationType: "suggestion",
+    suggestedText: "Payments shall be made: 40% upon execution, 30% at initial milestone, and 30% upon final delivery.", replies: [],
+  },
+  {
+    id: "c7", author: "Layla Hassan", authorInitials: "LH", authorColor: "#7C3AED",
+    text: "Expense threshold should be $1,000 not $500 — too many approvals needed",
+    timestamp: new Date(Date.now() - 18 * 60 * 60 * 1000), sectionRef: "Schedule: Expense Policy", docId: "doc-2",
+    status: "open", type: "inline", annotationType: "comment", replies: [],
+  },
+  // Doc 3 — Insurance
+  {
+    id: "c8", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5",
+    text: "Coverage amount should be at least $5M per our internal policy requirements",
+    timestamp: new Date(Date.now() - 20 * 60 * 60 * 1000), sectionRef: "Insurance: Coverage", docId: "doc-3",
+    status: "open", type: "inline", annotationType: "comment", replies: [],
+  },
+  {
+    id: "c9", author: "Mohammed Al-Faisal", authorInitials: "MA", authorColor: "#059669",
+    text: "Certificate expires end of year — need renewal confirmation before signing",
+    timestamp: new Date(Date.now() - 22 * 60 * 60 * 1000), sectionRef: "Insurance: Validity", docId: "doc-3",
+    status: "open", type: "inline", annotationType: "comment",
+    replies: [{ id: "r5", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626", text: "Vendor confirmed auto-renewal. Will get written confirmation.", timestamp: new Date(Date.now() - 21 * 60 * 60 * 1000) }],
+  },
+  // General
   {
     id: "g1", author: "Ahmed Al-Rashid", authorInitials: "AA", authorColor: "#4F46E5",
     text: "Let's finalize this before EOD Thursday",
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), sectionRef: "",
+    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), sectionRef: "", docId: "",
     status: "open", type: "general", annotationType: "comment", replies: [],
   },
   {
     id: "g2", author: "Sarah Johnson", authorInitials: "SJ", authorColor: "#DC2626",
     text: "On it! Just waiting for legal's feedback on Section 5",
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), sectionRef: "",
+    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), sectionRef: "", docId: "",
     status: "open", type: "general", annotationType: "comment", replies: [],
   },
 ];
@@ -132,6 +155,11 @@ export const COMMENT_SECTIONS: Record<string, { docIndex: number; selector: stri
   "Section 4: Confidentiality": { docIndex: 0, selector: "4. Confidentiality" },
   "Section 5: Termination": { docIndex: 0, selector: "5. Term and Termination" },
   "Section 6: Liability": { docIndex: 0, selector: "6. Limitation of Liability" },
+  "Schedule: Service Fees": { docIndex: 1, selector: "1. Service Fees" },
+  "Schedule: Payment Schedule": { docIndex: 1, selector: "2. Payment Schedule" },
+  "Schedule: Expense Policy": { docIndex: 1, selector: "3. Expense Policy" },
+  "Insurance: Coverage": { docIndex: 2, selector: "Coverage" },
+  "Insurance: Validity": { docIndex: 2, selector: "Validity" },
 };
 
 export type AcknowledgmentLevel = 'none';

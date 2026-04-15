@@ -219,15 +219,21 @@ const Doc1Content = ({ comments, onClickHighlight, variableValues }: { comments:
   </>
 );
 
-const Doc2Content = () => (
+const Doc2Content = ({ comments, onClickHighlight }: { comments: Comment[]; onClickHighlight: (ref: string) => void }) => (
   <>
     <h1 className="text-2xl font-bold text-foreground mb-1">Schedule A: Pricing & Fee Structure</h1>
     <p className="text-xs text-muted-foreground mb-8">Attached to: Master Services Agreement</p>
-    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">1. Service Fees</h2>
+    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">
+      <CommentHighlight sectionRef="Schedule: Service Fees" comments={comments} onClickHighlight={onClickHighlight}>
+        1. Service Fees
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      The following table outlines the fees applicable to each category of services provided under
-      this Agreement. All fees are quoted in United States Dollars (USD) and are exclusive of
-      applicable taxes unless otherwise noted.
+      <CommentHighlight sectionRef="Schedule: Service Fees" comments={comments} onClickHighlight={onClickHighlight}>
+        The following table outlines the fees applicable to each category of services provided under
+        this Agreement. All fees are quoted in United States Dollars (USD) and are exclusive of
+        applicable taxes unless otherwise noted.
+      </CommentHighlight>
     </p>
     <div className="border rounded-md overflow-hidden mb-6">
       <table className="w-full text-sm">
@@ -256,45 +262,61 @@ const Doc2Content = () => (
         </tbody>
       </table>
     </div>
-    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">2. Payment Schedule</h2>
+    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">
+      <CommentHighlight sectionRef="Schedule: Payment Schedule" comments={comments} onClickHighlight={onClickHighlight}>
+        2. Payment Schedule
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      Payments shall be made in three installments: 30% upon execution of the Statement of Work,
-      40% upon delivery of the initial milestone, and 30% upon final delivery and acceptance of
-      all Deliverables. Net payment terms are thirty (30) days from invoice date.
+      <CommentHighlight sectionRef="Schedule: Payment Schedule" comments={comments} onClickHighlight={onClickHighlight}>
+        Payments shall be made in three installments: 30% upon execution of the Statement of Work,
+        40% upon delivery of the initial milestone, and 30% upon final delivery and acceptance of
+        all Deliverables. Net payment terms are thirty (30) days from invoice date.
+      </CommentHighlight>
     </p>
-    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">3. Expense Policy</h2>
+    <h2 className="text-base font-semibold text-foreground mt-6 mb-3">
+      <CommentHighlight sectionRef="Schedule: Expense Policy" comments={comments} onClickHighlight={onClickHighlight}>
+        3. Expense Policy
+      </CommentHighlight>
+    </h2>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      Reasonable travel and accommodation expenses incurred in connection with the Services shall
-      be reimbursed at cost, subject to prior written approval. Expenses exceeding $500 per
-      occurrence require advance authorization from the Client.
+      <CommentHighlight sectionRef="Schedule: Expense Policy" comments={comments} onClickHighlight={onClickHighlight}>
+        Reasonable travel and accommodation expenses incurred in connection with the Services shall
+        be reimbursed at cost, subject to prior written approval. Expenses exceeding $500 per
+        occurrence require advance authorization from the Client.
+      </CommentHighlight>
     </p>
   </>
 );
 
-const Doc3Content = () => (
+const Doc3Content = ({ comments, onClickHighlight }: { comments: Comment[]; onClickHighlight: (ref: string) => void }) => (
   <>
     <h1 className="text-2xl font-bold text-foreground mb-1">Certificate of Insurance</h1>
     <p className="text-xs text-muted-foreground mb-8">Reference Document — Attachment</p>
     <div className="space-y-3 text-sm text-foreground/80 mb-6">
-      {[
-        ["Company Name", "Acme Professional Services LLC"],
-        ["Policy Number", "INS-2026-04871-GL"],
-        ["Coverage Type", "General Liability"],
-        ["Coverage Amount", "$2,000,000 per occurrence"],
-        ["Effective Date", "January 1, 2026"],
-        ["Expiration Date", "December 31, 2026"],
-        ["Insurance Provider", "National Indemnity Company"],
-      ].map(([label, value], i, arr) => (
-        <div key={label} className={cn("flex justify-between pb-2", i < arr.length - 1 && "border-b border-dashed border-border")}>
-          <span className="font-medium text-foreground">{label}</span>
-          <span>{value}</span>
-        </div>
-      ))}
+      <CommentHighlight sectionRef="Insurance: Coverage" comments={comments} onClickHighlight={onClickHighlight}>
+        {[
+          ["Company Name", "Acme Professional Services LLC"],
+          ["Policy Number", "INS-2026-04871-GL"],
+          ["Coverage Type", "General Liability"],
+          ["Coverage Amount", "$2,000,000 per occurrence"],
+          ["Effective Date", "January 1, 2026"],
+          ["Expiration Date", "December 31, 2026"],
+          ["Insurance Provider", "National Indemnity Company"],
+        ].map(([label, value], i, arr) => (
+          <div key={label} className={cn("flex justify-between pb-2", i < arr.length - 1 && "border-b border-dashed border-border")}>
+            <span className="font-medium text-foreground">{label}</span>
+            <span>{value}</span>
+          </div>
+        ))}
+      </CommentHighlight>
     </div>
     <p className="text-sm leading-relaxed text-foreground/80 mb-4">
-      This certificate is issued as a matter of information only and confers no rights upon the
-      certificate holder. This certificate does not amend, extend, or alter the coverage afforded
-      by the policies listed herein.
+      <CommentHighlight sectionRef="Insurance: Validity" comments={comments} onClickHighlight={onClickHighlight}>
+        This certificate is issued as a matter of information only and confers no rights upon the
+        certificate holder. This certificate does not amend, extend, or alter the coverage afforded
+        by the policies listed herein.
+      </CommentHighlight>
     </p>
     <p className="text-sm leading-relaxed text-foreground/80">
       The insurance afforded by the policies described herein is subject to all terms, exclusions,
@@ -1149,12 +1171,14 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
 
   const activeDoc = MOCK_DOCUMENTS.find((d) => d.id === activeDocId) ?? null;
 
-  // Comments for margin bubbles (ALWAYS visible now)
+  // Comments for margin bubbles — grouped by docId then sectionRef
   const inlineComments = comments.filter((c) => c.type === "inline");
-  const commentsBySection = inlineComments.reduce<Record<string, Comment[]>>((acc, c) => {
-    (acc[c.sectionRef] = acc[c.sectionRef] || []).push(c);
+  const commentsByDoc = inlineComments.reduce<Record<string, Record<string, Comment[]>>>((acc, c) => {
+    if (!acc[c.docId]) acc[c.docId] = {};
+    (acc[c.docId][c.sectionRef] = acc[c.docId][c.sectionRef] || []).push(c);
     return acc;
   }, {});
+  const hasAnyInlineComments = inlineComments.length > 0;
 
   const [sectionPositions, setSectionPositions] = useState<Record<string, number>>({});
   const doc1Ref = useRef<HTMLDivElement>(null);
@@ -1271,9 +1295,9 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                           ))}
                         </>
                       ) : doc.id === "doc-2" ? (
-                        <Doc2Content />
+                        <Doc2Content comments={comments} onClickHighlight={handleClickHighlight} />
                       ) : (
-                        <Doc3Content />
+                        <Doc3Content comments={comments} onClickHighlight={handleClickHighlight} />
                       )}
                     </div>
                     {docFields.map((f) => (
@@ -1290,9 +1314,9 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                   </div>
 
                   {/* Always-expanded margin comments — Google Docs style */}
-                  {!isEsign && Object.keys(commentsBySection).length > 0 && (
+                  {!isEsign && hasAnyInlineComments && (
                     <div className="w-[240px] flex-shrink-0 relative hidden xl:block">
-                      {doc.id === "doc-1" && Object.entries(commentsBySection).map(([sectionRef, sectionComments], cIdx) => {
+                      {Object.entries(commentsByDoc[doc.id] || {}).map(([sectionRef, sectionComments], cIdx) => {
                         const yPos = sectionPositions[sectionRef];
                         if (yPos === undefined) return null;
                         const primaryComment = sectionComments[0];
