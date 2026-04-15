@@ -1,8 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
@@ -17,11 +23,18 @@ import {
   Stamp,
   ChevronDown,
   Radio,
-  GripVertical,
-  X,
   Trash2,
+  Clock,
+  Mail,
+  User,
+  Building2,
+  Paperclip,
+  ListFilter,
+  CircleDot,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
+import ParticipantsDialog from "@/components/ParticipantsDialog";
 
 /* ── Types ── */
 export interface FieldType {
@@ -29,6 +42,7 @@ export interface FieldType {
   label: string;
   description: string;
   icon: React.ElementType;
+  category: "signature" | "text" | "other";
   defaultWidth: number;
   defaultHeight: number;
 }
@@ -53,14 +67,24 @@ interface ParticipantOption {
 }
 
 const FIELD_TYPES: FieldType[] = [
-  { id: "signature", label: "Signature", description: "Full signature", icon: PenTool, defaultWidth: 200, defaultHeight: 50 },
-  { id: "initials", label: "Initials", description: "Initials only", icon: Type, defaultWidth: 100, defaultHeight: 40 },
-  { id: "date", label: "Date", description: "Date field", icon: Calendar, defaultWidth: 120, defaultHeight: 36 },
-  { id: "text", label: "Text", description: "Free text input", icon: TextCursorInput, defaultWidth: 180, defaultHeight: 36 },
-  { id: "checkbox", label: "Checkbox", description: "Checkbox", icon: CheckSquare, defaultWidth: 30, defaultHeight: 30 },
-  { id: "stamp", label: "Stamp", description: "Company stamp", icon: Stamp, defaultWidth: 120, defaultHeight: 50 },
-  { id: "dropdown", label: "Dropdown", description: "Dropdown select", icon: ChevronDown, defaultWidth: 160, defaultHeight: 36 },
-  { id: "radio", label: "Radio", description: "Radio options", icon: Radio, defaultWidth: 140, defaultHeight: 36 },
+  // Signature fields
+  { id: "signature", label: "Signature", description: "Full signature", icon: PenTool, category: "signature", defaultWidth: 200, defaultHeight: 50 },
+  { id: "initials", label: "Initials", description: "Initials only", icon: Type, category: "signature", defaultWidth: 100, defaultHeight: 40 },
+  { id: "stamp", label: "Stamp", description: "Company stamp", icon: User, category: "signature", defaultWidth: 120, defaultHeight: 50 },
+  { id: "digital-stamp", label: "Digital stamp", description: "Digital stamp", icon: Clock, category: "signature", defaultWidth: 120, defaultHeight: 50 },
+  { id: "signature-date", label: "Signature date", description: "Signature date", icon: Calendar, category: "signature", defaultWidth: 120, defaultHeight: 36 },
+  // Text fields
+  { id: "name", label: "Name", description: "Name field", icon: PenTool, category: "text", defaultWidth: 160, defaultHeight: 36 },
+  { id: "email", label: "Email", description: "Email field", icon: Mail, category: "text", defaultWidth: 180, defaultHeight: 36 },
+  { id: "title", label: "Title", description: "Title field", icon: User, category: "text", defaultWidth: 160, defaultHeight: 36 },
+  { id: "company", label: "Company", description: "Company field", icon: Building2, category: "text", defaultWidth: 160, defaultHeight: 36 },
+  { id: "date", label: "Date", description: "Date field", icon: Calendar, category: "text", defaultWidth: 120, defaultHeight: 36 },
+  { id: "text", label: "Text field", description: "Free text input", icon: Type, category: "text", defaultWidth: 180, defaultHeight: 36 },
+  // Others
+  { id: "checkbox", label: "Checkbox", description: "Checkbox", icon: CheckSquare, category: "other", defaultWidth: 30, defaultHeight: 30 },
+  { id: "radio", label: "Radio", description: "Radio options", icon: CircleDot, category: "other", defaultWidth: 140, defaultHeight: 36 },
+  { id: "attachment", label: "Attachment", description: "File attachment", icon: Paperclip, category: "other", defaultWidth: 160, defaultHeight: 36 },
+  { id: "dropdown", label: "Dropdown", description: "Dropdown select", icon: ListFilter, category: "other", defaultWidth: 160, defaultHeight: 36 },
 ];
 
 const MOCK_PARTICIPANTS: ParticipantOption[] = [
@@ -76,10 +100,17 @@ const INITIAL_PLACED_FIELDS: PlacedField[] = [
   { id: "f3", fieldTypeId: "signature", participantId: "p2", participantName: "Sarah Johnson", participantColor: "#DC2626", page: 1, x: 60, y: 760, width: 200, height: 50 },
 ];
 
+const CATEGORIES = [
+  { key: "signature" as const, label: "SIGNATURE FIELDS" },
+  { key: "text" as const, label: "TEXT FIELDS" },
+  { key: "other" as const, label: "OTHERS" },
+];
+
 /* ══════════ FIELDS PANEL ══════════ */
 const EditorFieldsPanel = () => {
   const [selectedParticipant, setSelectedParticipant] = useState<string>(MOCK_PARTICIPANTS[0].id);
   const [placedFields, setPlacedFields] = useState<PlacedField[]>(INITIAL_PLACED_FIELDS);
+  const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
 
   const activeParticipant = MOCK_PARTICIPANTS.find((p) => p.id === selectedParticipant) || MOCK_PARTICIPANTS[0];
 
@@ -98,123 +129,94 @@ const EditorFieldsPanel = () => {
     toast.success("Field removed");
   };
 
-  const getFieldType = (id: string) => FIELD_TYPES.find((f) => f.id === id);
+  // Check if signature field is full-width (only item in its row)
+  const isFullWidth = (ft: FieldType) => {
+    const categoryFields = FIELD_TYPES.filter(f => f.category === ft.category);
+    const idx = categoryFields.indexOf(ft);
+    // First item in signature category is full width
+    if (ft.category === "signature" && idx === 0) return true;
+    return false;
+  };
 
   return (
     <div className="flex flex-col gap-4 pb-6">
       <p className="text-xs text-muted-foreground">
-        Drag fields onto the document for participants to fill
+        Drag & drop fields to place them in the document
       </p>
 
-      {/* ── Participant selector ── */}
-      <div className="space-y-2">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Assign to</p>
-        <div className="flex flex-wrap gap-1.5">
-          {MOCK_PARTICIPANTS.map((p) => {
-            const isActive = p.id === selectedParticipant;
-            return (
-              <button
-                key={p.id}
-                onClick={() => setSelectedParticipant(p.id)}
-                className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors border",
-                  isActive
-                    ? "border-current"
-                    : "border-border hover:bg-accent"
-                )}
-                style={isActive ? {
-                  backgroundColor: `${p.color}15`,
-                  borderColor: p.color,
-                  color: p.color,
-                } : undefined}
-              >
+      {/* Manage participants button */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-9 text-sm w-full"
+        onClick={() => setParticipantsDialogOpen(true)}
+      >
+        Manage participants
+      </Button>
+
+      {/* Participant selector dropdown */}
+      <Select value={selectedParticipant} onValueChange={setSelectedParticipant}>
+        <SelectTrigger className="h-9 text-sm">
+          <div className="flex items-center gap-2">
+            <span
+              className="h-3 w-3 rounded-sm flex-shrink-0"
+              style={{ backgroundColor: activeParticipant.color }}
+            />
+            <SelectValue />
+          </div>
+        </SelectTrigger>
+        <SelectContent>
+          {MOCK_PARTICIPANTS.map((p) => (
+            <SelectItem key={p.id} value={p.id}>
+              <div className="flex items-center gap-2">
                 <span
-                  className="h-2 w-2 rounded-full flex-shrink-0"
+                  className="h-3 w-3 rounded-sm flex-shrink-0"
                   style={{ backgroundColor: p.color }}
                 />
-                <span className={cn(!isActive && "text-foreground")}>{p.name.split(" ")[0]}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* ── Field types grid ── */}
-      <div className="space-y-2">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Field types</p>
-        <div className="grid grid-cols-2 gap-2">
-          {FIELD_TYPES.map((ft) => {
-            const Icon = ft.icon;
-            return (
-              <div
-                key={ft.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, ft)}
-                className="border rounded-md p-2.5 cursor-grab active:cursor-grabbing hover:bg-accent/50 transition-colors flex items-start gap-2 group"
-                style={{ borderLeftWidth: 3, borderLeftColor: activeParticipant.color }}
-              >
-                <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
-                  <GripVertical size={10} className="text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <Icon size={14} className="text-foreground" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-medium leading-tight">{ft.label}</p>
-                  <p className="text-[10px] text-muted-foreground leading-tight">{ft.description}</p>
-                </div>
+                {p.name}
               </div>
-            );
-          })}
-        </div>
-      </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-      <Separator />
-
-      {/* ── Placed fields summary ── */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Placed fields</p>
-          <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
-            {placedFields.length}
-          </Badge>
-        </div>
-        {placedFields.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">No fields placed yet</p>
-        ) : (
-          <div className="space-y-1">
-            {placedFields.map((pf) => {
-              const ft = getFieldType(pf.fieldTypeId);
-              const Icon = ft?.icon || PenTool;
-              return (
-                <div
-                  key={pf.id}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-md border bg-card text-xs group"
-                >
-                  <Icon size={12} className="text-muted-foreground flex-shrink-0" />
-                  <span
-                    className="h-2 w-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: pf.participantColor }}
-                  />
-                  <span className="truncate flex-1 font-medium">{pf.participantName}</span>
-                  <span className="text-[10px] text-muted-foreground flex-shrink-0">Page {pf.page}</span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => removePlacedField(pf.id)}
-                        className="h-4 w-4 flex items-center justify-center rounded text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                      >
-                        <Trash2 size={10} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="left" className="text-xs">Remove field</TooltipContent>
-                  </Tooltip>
-                </div>
-              );
-            })}
+      {/* Field categories */}
+      {CATEGORIES.map((cat) => {
+        const fields = FIELD_TYPES.filter(f => f.category === cat.key);
+        return (
+          <div key={cat.key} className="space-y-2">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{cat.label}</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {fields.map((ft) => {
+                const Icon = ft.icon;
+                const fullWidth = isFullWidth(ft);
+                return (
+                  <div
+                    key={ft.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, ft)}
+                    className={cn(
+                      "border rounded-lg px-3 py-2.5 cursor-grab active:cursor-grabbing hover:bg-accent/50 transition-colors flex items-center gap-2.5",
+                      fullWidth && "col-span-2"
+                    )}
+                    style={{ borderLeftWidth: 3, borderLeftColor: activeParticipant.color }}
+                  >
+                    <Icon size={16} className="text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm font-medium">{ft.label}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        )}
-      </div>
+        );
+      })}
+
+      {/* Participants Dialog */}
+      <ParticipantsDialog
+        open={participantsDialogOpen}
+        onOpenChange={setParticipantsDialogOpen}
+        fromEditor
+      />
     </div>
   );
 };
