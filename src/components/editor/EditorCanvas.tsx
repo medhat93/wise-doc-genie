@@ -59,7 +59,12 @@ const CommentHighlight = ({
   const hasAi = sectionComments.some(c => c.annotationType === "ai_suggestion");
   const hasSuggestion = sectionComments.some(c => c.annotationType === "suggestion");
   const hasOpen = sectionComments.some((c) => c.status === "open");
-  
+
+  // Find suggestion with inline diff
+  const suggestion = sectionComments.find(c =>
+    (c.annotationType === "suggestion" || c.annotationType === "ai_suggestion") && c.suggestedText
+  );
+
   const bgClass = hasAi
     ? "bg-violet-100/50 dark:bg-violet-900/20"
     : hasSuggestion
@@ -69,22 +74,38 @@ const CommentHighlight = ({
     : "bg-emerald-100/30 dark:bg-emerald-900/15";
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
+    <span data-comment-section={sectionRef}>
+      {suggestion ? (
         <span
-          data-comment-section={sectionRef}
-          className={cn("rounded-sm px-0.5 cursor-pointer transition-colors hover:opacity-80", bgClass)}
+          className="cursor-pointer"
           onClick={(e) => { e.stopPropagation(); onClickHighlight(sectionRef); }}
         >
-          {children}
+          <span className="text-red-500/80 line-through decoration-red-400/60 bg-red-50 dark:bg-red-900/20 rounded-sm px-0.5">
+            {children}
+          </span>
+          {" "}
+          <span className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 rounded-sm px-0.5 not-italic">
+            {suggestion.suggestedText}
+          </span>
         </span>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="text-xs max-w-[200px]">
-        {sectionComments.length === 1
-          ? `${sectionComments[0].author}: "${sectionComments[0].text.slice(0, 60)}..."`
-          : `${sectionComments.length} annotations on this section`}
-      </TooltipContent>
-    </Tooltip>
+      ) : (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className={cn("rounded-sm px-0.5 cursor-pointer transition-colors hover:opacity-80", bgClass)}
+              onClick={(e) => { e.stopPropagation(); onClickHighlight(sectionRef); }}
+            >
+              {children}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs max-w-[200px]">
+            {sectionComments.length === 1
+              ? `${sectionComments[0].author}: "${sectionComments[0].text.slice(0, 60)}..."`
+              : `${sectionComments.length} annotations on this section`}
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </span>
   );
 };
 
