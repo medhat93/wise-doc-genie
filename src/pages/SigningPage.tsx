@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { PenTool, FileText, Printer, Download, Sparkles, ArrowLeft, MoreHorizontal, XCircle, UserPlus, Search, X } from 'lucide-react';
+import { PenTool, FileText, Printer, Download, Sparkles, ArrowLeft, MoreHorizontal, XCircle, UserPlus, Search, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import SigningAIPanel from '@/components/signing/SigningAIPanel';
