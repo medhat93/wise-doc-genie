@@ -72,6 +72,7 @@ const SortableParticipantCard = ({
   index,
   onEdit,
   onRemove,
+  onOrderChange,
   confirmRemoveId,
   setConfirmRemoveId,
 }: {
@@ -80,6 +81,7 @@ const SortableParticipantCard = ({
   index: number;
   onEdit: (p: Participant) => void;
   onRemove: (id: string) => void;
+  onOrderChange: (id: string, newOrder: number) => void;
   confirmRemoveId: string | null;
   setConfirmRemoveId: (id: string | null) => void;
 }) => {
