@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEditorContext, type AcknowledgmentLevel } from "./EditorContext";
+import { useEditorContext } from "./EditorContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,24 +13,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { SentIcon, Settings02Icon } from "@hugeicons/core-free-icons";
 import {
-  ChevronDown,
+  X,
+  Plus,
   FileText,
-  Eye,
   AlertTriangle,
   Check,
   Loader2,
+  Paperclip,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
-/* ── Mock documents data ── */
+/* ── Mock documents ── */
 const MOCK_DOCUMENTS = [
   { id: "d1", name: "Master Services Agreement 2026.pdf", type: "Primary", pages: 12 },
   { id: "d2", name: "Appendix A — Statement of Work.pdf", type: "Supplement", pages: 4 },
@@ -39,43 +40,6 @@ const MOCK_DOCUMENTS = [
 const TYPE_BADGE: Record<string, string> = {
   Primary: "bg-primary/10 text-primary border-primary/20",
   Supplement: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
-  Attachment: "bg-muted text-muted-foreground border-border",
-};
-
-/* ── Collapsible section ── */
-const Section = ({
-  title,
-  defaultOpen = true,
-  children,
-  warning,
-}: {
-  title: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-  warning?: string;
-}) => {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className="flex items-center justify-between w-full group">
-        <span className="text-sm font-semibold text-foreground">{title}</span>
-        <ChevronDown
-          size={16}
-          className={cn(
-            "text-muted-foreground transition-transform duration-200",
-            open && "rotate-180"
-          )}
-        />
-      </CollapsibleTrigger>
-      {warning && (
-        <div className="flex items-center gap-1.5 mt-1.5 text-amber-600 dark:text-amber-400">
-          <AlertTriangle size={12} />
-          <span className="text-xs">{warning}</span>
-        </div>
-      )}
-      <CollapsibleContent className="mt-3 space-y-2">{children}</CollapsibleContent>
-    </Collapsible>
-  );
 };
 
 /* ── Success overlay ── */
@@ -119,6 +83,57 @@ const SuccessOverlay = ({ participantCount }: { participantCount: number }) => {
   );
 };
 
+/* ── Participant chip ── */
+const ParticipantChip = ({
+  name,
+  email,
+  color,
+  hasFields,
+  role,
+}: {
+  name: string;
+  email: string;
+  color: string;
+  hasFields: boolean;
+  role: string;
+}) => {
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("");
+  const needsWarning = !hasFields && role !== "viewer";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full pl-0.5 pr-2.5 py-0.5 text-xs font-medium border transition-colors",
+            needsWarning
+              ? "border-amber-400/60 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300"
+              : "border-border bg-muted/40 text-foreground"
+          )}
+        >
+          <div
+            className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-semibold text-white shrink-0"
+            style={{ backgroundColor: color }}
+          >
+            {initials}
+          </div>
+          <span className="truncate max-w-[120px]">{name}</span>
+          {needsWarning && <AlertTriangle size={10} className="text-amber-500 shrink-0" />}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-xs">
+        <p>{email}</p>
+        {needsWarning && (
+          <p className="text-amber-500 mt-0.5">No signature fields assigned</p>
+        )}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
 /* ══════════ MAIN DIALOG ══════════ */
 const ReviewSendDialog = ({
   open,
@@ -128,26 +143,22 @@ const ReviewSendDialog = ({
   onOpenChange: (o: boolean) => void;
 }) => {
   const navigate = useNavigate();
-  const { participants, placedFields, documentAcknowledgments } = useEditorContext();
+  const { participants, placedFields } = useEditorContext();
   const [sending, setSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showCc, setShowCc] = useState(false);
   const [ccEmails, setCcEmails] = useState("");
   const [subject, setSubject] = useState("Untitled Document");
   const [message, setMessage] = useState(
-    "Hi,\n\nCan you please review and sign this document?\n\nThank you, Ahmed Al-Rashid"
+    "Hi,\n\nPlease review and sign the attached document(s).\n\nThank you,\nAhmed Al-Rashid"
   );
 
-  const signers = participants.filter((p) => p.role === "signer");
-  const approvers = participants.filter((p) => p.role === "approver");
-  const viewers = participants.filter((p) => p.role === "viewer");
-  const hasSequential = participants.some((p) => p.order > 0);
-
-  // Field counts per participant
   const fieldsByParticipant = participants.map((p) => ({
     ...p,
     fieldCount: placedFields.filter((f) => f.participantId === p.id).length,
   }));
-  const noFieldParticipants = fieldsByParticipant.filter(
+
+  const signersWithoutFields = fieldsByParticipant.filter(
     (p) => p.fieldCount === 0 && p.role !== "viewer"
   );
 
@@ -160,163 +171,181 @@ const ReviewSendDialog = ({
     }, 1000);
   };
 
-  const ParticipantRow = ({ p }: { p: (typeof participants)[0] }) => (
-    <div className="flex items-center justify-between py-1">
-      <div className="flex items-center gap-2">
-        {hasSequential && p.role === "signer" && (
-          <Badge variant="outline" className="text-[10px] px-1.5 h-5 font-mono">
-            {p.order}
-          </Badge>
-        )}
-        <div
-          className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-white"
-          style={{ backgroundColor: p.color }}
-        >
-          {p.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")}
-        </div>
-        <span className="text-sm font-medium">{p.name}</span>
-      </div>
-      <span className="text-xs text-muted-foreground">{p.email}</span>
-    </div>
-  );
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col p-0 gap-0">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle>Review & send</DialogTitle>
+        <DialogContent className="sm:max-w-[560px] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+          {/* ── Header ── */}
+          <DialogHeader className="px-5 pt-5 pb-0">
+            <DialogTitle className="text-base font-semibold">Send for signature</DialogTitle>
           </DialogHeader>
 
-          {/* Scrollable body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* ── Recipients ── */}
-            <Section
-              title="Recipients"
-              warning={
-                participants.length === 0
-                  ? "No participants added. Add at least one participant before sending."
-                  : undefined
-              }
-            >
-              {signers.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Signers</p>
-                  {signers.map((p) => (
-                    <ParticipantRow key={p.id} p={p} />
-                  ))}
-                </div>
-              )}
-              {approvers.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Approvers</p>
-                  {approvers.map((p) => (
-                    <ParticipantRow key={p.id} p={p} />
-                  ))}
-                </div>
-              )}
-              {viewers.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Viewers</p>
-                  {viewers.map((p) => (
-                    <ParticipantRow key={p.id} p={p} />
-                  ))}
-                </div>
-              )}
-              <div className="pt-2">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Send a copy to</p>
-                <Input
-                  value={ccEmails}
-                  onChange={(e) => setCcEmails(e.target.value)}
-                  placeholder="Email"
-                  className="h-8 text-sm"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  You can use a comma to separate multiple emails
-                </p>
-              </div>
-            </Section>
+          {/* ── Email-like body ── */}
+          <div className="flex-1 overflow-y-auto px-5 pt-4 pb-3 space-y-0">
 
-            {/* ── Documents ── */}
-            <Section title="Documents">
-              {MOCK_DOCUMENTS.map((doc) => (
-                <div key={doc.id} className="space-y-1 py-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FileText size={14} className="text-muted-foreground" />
-                      <span className="text-sm">{doc.name}</span>
+            {/* To field */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground">To</label>
+                {!showCc && (
+                  <button
+                    onClick={() => setShowCc(true)}
+                    className="text-[10px] font-medium text-primary hover:underline"
+                  >
+                    + Cc
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5 min-h-[32px] rounded-md border bg-background px-2 py-1.5">
+                {participants.length === 0 ? (
+                  <span className="text-xs text-muted-foreground py-0.5">No participants added</span>
+                ) : (
+                  fieldsByParticipant.map((p) => (
+                    <ParticipantChip
+                      key={p.id}
+                      name={p.name}
+                      email={p.email}
+                      color={p.color}
+                      hasFields={p.fieldCount > 0}
+                      role={p.role}
+                    />
+                  ))
+                )}
+              </div>
+              {signersWithoutFields.length > 0 && (
+                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <AlertTriangle size={11} />
+                  <span className="text-[11px]">
+                    {signersWithoutFields.length} signer{signersWithoutFields.length !== 1 ? "s" : ""} without signature fields
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Cc field */}
+            <AnimatePresence>
+              {showCc && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-3 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-muted-foreground">Cc</label>
+                      <button
+                        onClick={() => { setShowCc(false); setCcEmails(""); }}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                    <Input
+                      value={ccEmails}
+                      onChange={(e) => setCcEmails(e.target.value)}
+                      placeholder="email@example.com, ..."
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Divider */}
+            <div className="border-b my-3" />
+
+            {/* Subject */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Subject</label>
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                className="h-8 text-sm border-0 border-b rounded-none px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary"
+              />
+            </div>
+
+            {/* Message */}
+            <div className="pt-3 space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Message</label>
+              <Textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="text-sm min-h-[120px] resize-none border-0 shadow-none focus-visible:ring-0 px-0"
+                placeholder="Write a message to the recipients..."
+              />
+            </div>
+
+            {/* Divider */}
+            <div className="border-b my-3" />
+
+            {/* Attachments (documents) */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Paperclip size={12} className="text-muted-foreground" />
+                <label className="text-xs font-medium text-muted-foreground">
+                  Attached documents ({MOCK_DOCUMENTS.length})
+                </label>
+              </div>
+              <div className="space-y-1">
+                {MOCK_DOCUMENTS.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center justify-between rounded-md bg-muted/40 border px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText size={14} className="text-muted-foreground shrink-0" />
+                      <span className="text-xs font-medium truncate">{doc.name}</span>
                       <Badge
                         variant="outline"
-                        className={cn("text-[10px] px-1.5 h-5", TYPE_BADGE[doc.type])}
+                        className={cn("text-[9px] px-1.5 h-4 shrink-0", TYPE_BADGE[doc.type])}
                       >
                         {doc.type}
                       </Badge>
                     </div>
-                    <span className="text-xs text-muted-foreground">{doc.pages} pages</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
+                      {doc.pages} pages
+                    </span>
                   </div>
-                </div>
-              ))}
-            </Section>
-
-
-            {/* ── Message to recipients ── */}
-            <Section title="Message to recipients">
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Subject</label>
-                  <Input
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    className="h-8 text-sm mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Message</label>
-                  <Textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="text-sm mt-1 min-h-[100px] resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    This message will be included in the signing invitation email
-                  </p>
-                </div>
+                ))}
               </div>
-            </Section>
-
+            </div>
           </div>
 
           {/* ── Footer ── */}
-          <div className="border-t p-4 flex items-center justify-between flex-shrink-0">
+          <div className="border-t px-5 py-3 flex items-center justify-between flex-shrink-0 bg-muted/20">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1 text-muted-foreground h-8"
+              onClick={() => toast("Settings dialog coming soon")}
+            >
+              <HugeiconsIcon icon={Settings02Icon} size={12} />
+              Advanced settings
+            </Button>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                Back
+              <Button variant="ghost" size="sm" className="h-8" onClick={() => onOpenChange(false)}>
+                Cancel
               </Button>
-              <Button variant="ghost" size="sm" className="text-xs gap-1 text-muted-foreground" onClick={() => toast("Settings dialog coming soon")}>
-                <HugeiconsIcon icon={Settings02Icon} size={12} />
-                Advanced settings
+              <Button
+                size="sm"
+                className="gap-1.5 h-8"
+                disabled={participants.length === 0 || sending}
+                onClick={handleSend}
+              >
+                {sending ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <HugeiconsIcon icon={SentIcon} size={13} />
+                )}
+                {sending ? "Sending..." : "Send"}
               </Button>
             </div>
-            <Button
-              className="gap-1.5"
-              disabled={participants.length === 0 || sending}
-              onClick={handleSend}
-            >
-              {sending ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <HugeiconsIcon icon={SentIcon} size={14} />
-              )}
-              {sending ? "Sending..." : "Send now"}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Success overlay */}
       <AnimatePresence>
         {showSuccess && <SuccessOverlay participantCount={participants.length} />}
       </AnimatePresence>
