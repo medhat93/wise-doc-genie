@@ -1237,25 +1237,82 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                     ))}
                   </div>
 
-                  {/* Floating thread pins — positioned at the right edge of the document */}
+                  {/* Always-expanded margin comments — Google Docs style */}
                   {doc.id === "doc-1" && !isEsign && Object.keys(commentsBySection).length > 0 && (
-                    <>
+                    <div className="absolute left-full top-0 bottom-0 w-[260px] ml-4 pointer-events-none">
                       {Object.entries(commentsBySection).map(([sectionRef, sectionComments]) => {
                         const yPos = sectionPositions[sectionRef];
                         if (yPos === undefined) return null;
+                        const primaryComment = sectionComments[0];
+                        const style = BUBBLE_STYLES[primaryComment.annotationType];
                         return (
-                          <div key={sectionRef} className="absolute z-20" style={{ top: yPos, right: -20 }}>
-                            <ThreadPin
-                              comments={sectionComments}
-                              isOpen={openThreadSection === sectionRef}
-                              onToggle={() => setOpenThreadSection((prev) => (prev === sectionRef ? null : sectionRef))}
-                              onClose={() => setOpenThreadSection(null)}
-                              onAddReply={handleAddReply}
+                          <div
+                            key={sectionRef}
+                            className="absolute pointer-events-auto"
+                            style={{ top: yPos }}
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                          >
+                            {/* Connecting line */}
+                            <div
+                              className="absolute right-full top-4 w-4 h-px"
+                              style={{ backgroundColor: primaryComment.authorColor }}
                             />
+                            {/* Comment card */}
+                            <div className={cn(
+                              "w-[240px] rounded-lg border shadow-sm overflow-hidden",
+                              style.borderClass,
+                              style.bgClass
+                            )}>
+                              {sectionComments.map((comment) => (
+                                <div key={comment.id} className="px-3 py-2.5 border-b last:border-b-0 border-border/40">
+                                  <div className="flex items-start gap-2">
+                                    <div
+                                      className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[8px] font-semibold text-white"
+                                      style={{ backgroundColor: comment.authorColor }}
+                                    >
+                                      {comment.authorInitials}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="truncate text-[11px] font-medium text-foreground">{comment.author}</span>
+                                        <AnnotationPill annotationType={comment.annotationType} />
+                                        <span className="ml-auto shrink-0 text-[9px] text-muted-foreground">{timeAgo(comment.timestamp)}</span>
+                                      </div>
+                                      <p className="mt-0.5 text-[11px] leading-relaxed text-foreground/80">{comment.text}</p>
+                                    </div>
+                                  </div>
+                                  {comment.replies.length > 0 && (
+                                    <div className="mt-1.5 space-y-1.5 pl-7">
+                                      {comment.replies.map((reply) => (
+                                        <div key={reply.id}>
+                                          <div className="flex items-center gap-1.5">
+                                            <div
+                                              className="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-[6px] font-semibold text-white"
+                                              style={{ backgroundColor: reply.authorColor }}
+                                            >
+                                              {reply.authorInitials}
+                                            </div>
+                                            <span className="truncate text-[10px] font-medium text-foreground">{reply.author}</span>
+                                            <span className="ml-auto shrink-0 text-[9px] text-muted-foreground">{timeAgo(reply.timestamp)}</span>
+                                          </div>
+                                          <p className="pl-5 text-[10px] leading-relaxed text-foreground/80">{reply.text}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              {/* Inline reply */}
+                              <MarginReplyInput
+                                sectionRef={sectionRef}
+                                onReply={(text) => handleAddReply(sectionComments[0].id, text)}
+                              />
+                            </div>
                           </div>
                         );
                       })}
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
