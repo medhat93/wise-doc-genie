@@ -20,7 +20,7 @@ import {
 import {
   MoreVertical,
   Mail,
-  Phone,
+  MessageCircle,
   MessageSquare,
   Pencil,
   Trash2,
@@ -60,8 +60,16 @@ const SENDING_TOOLTIPS: Record<SendingMethod, string> = {
   whatsapp: "Will receive via WhatsApp",
 };
 
+const VERIFICATION_METHOD_LABELS: Record<string, string> = {
+  sms: "SMS",
+  whatsapp: "WhatsApp",
+  absher: "Absher",
+  nafath_only: "Nafath",
+  nafath_digital: "Nafath & Digital cert.",
+};
+
 const getSendingIcon = (method: SendingMethod) => {
-  if (method === "sms") return Phone;
+  if (method === "sms") return MessageCircle;
   if (method === "whatsapp") return MessageSquare;
   return Mail;
 };
@@ -131,13 +139,20 @@ const SortableParticipantCard = ({
 
       {/* Name + role badge + contact */}
       <div className="flex-1 min-w-0">
-        <Badge variant="outline" className={cn("text-[8px] px-1 py-0 h-3.5 font-medium border mb-1", roleStyle.className)}>
-          {roleStyle.label}
-        </Badge>
-        <p className="text-xs font-medium truncate">{participant.name}</p>
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <p className="text-xs font-medium truncate">{participant.name}</p>
+          <Badge variant="outline" className={cn("text-[8px] px-1 py-0 h-3.5 font-medium border flex-shrink-0", roleStyle.className)}>
+            {roleStyle.label}
+          </Badge>
+        </div>
         <p className="text-[10px] text-muted-foreground truncate">
           {participant.sendingMethod === "email" ? participant.email : participant.sendingPhone || ""}
         </p>
+        {hasVerification && (
+          <p className="text-[10px] text-muted-foreground truncate">
+            Verify with: {VERIFICATION_METHOD_LABELS[participant.verificationMethod!] || participant.verificationMethod}
+          </p>
+        )}
       </div>
 
       {/* Icons with tooltips */}
