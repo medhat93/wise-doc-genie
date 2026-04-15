@@ -248,7 +248,11 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
   const { isESign } = useWorkspaceMode();
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
-  const [activeTab, setActiveTab] = useState('overview');
+  const getDefaultTab = (d: WorkspaceDocument | null) => {
+    if (d && ['approving', 'approved'].includes(d.stage) && !!d.approvalSteps) return 'workflow';
+    return 'participants';
+  };
+  const [activeTab, setActiveTab] = useState(() => getDefaultTab(doc));
   
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [docsExpanded, setDocsExpanded] = useState(false);
