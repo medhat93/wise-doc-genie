@@ -1,20 +1,8 @@
-import { useState, useMemo } from "react";
-import { Copy, Plus, Search, ChevronDown, MoreHorizontal, Trash2, Pencil, Check, AlertTriangle, X, Users } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { Copy, Plus, Check, AlertTriangle, X, Trash2, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useEditorContext } from "./EditorContext";
 import type { Participant } from "./EditorParticipantsPanel";
@@ -40,31 +28,25 @@ const SYSTEM_VARIABLES: Variable[] = [
   { token: "Sender.Company", description: "Sender's organization", category: "system" },
 ];
 
-const ROLE_STYLES: Record<string, string> = {
-  signer: "bg-[hsl(var(--brand-indigo))]/15 text-[hsl(var(--brand-indigo))] border-[hsl(var(--brand-indigo))]/30",
-  approver: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
-  viewer: "bg-muted text-muted-foreground border-border",
-  cc: "bg-muted text-muted-foreground border-border",
+const PARTICIPANT_FIELDS = ["Name", "Email", "Phone", "Company", "Title"] as const;
+
+const getParticipantFieldValue = (p: Participant, field: string): string => {
+  switch (field) {
+    case "Name": return p.name || "";
+    case "Email": return p.email || "";
+    case "Phone": return p.sendingPhone || p.phone || "";
+    default: return "";
+  }
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  signer: "Signer",
-  approver: "Approver",
-  viewer: "Viewer",
-  cc: "CC",
-};
-
-/* ── Generate unique prefix from participant name ── */
 const generatePrefixes = (participants: Participant[]): Map<string, string> => {
   const prefixMap = new Map<string, string>();
   const firstNames = new Map<string, Participant[]>();
-
   participants.forEach((p) => {
     const firstName = p.name.split(" ")[0];
     if (!firstNames.has(firstName)) firstNames.set(firstName, []);
     firstNames.get(firstName)!.push(p);
   });
-
   firstNames.forEach((group, firstName) => {
     if (group.length === 1) {
       prefixMap.set(group[0].id, firstName);
@@ -75,67 +57,23 @@ const generatePrefixes = (participants: Participant[]): Map<string, string> => {
       });
     }
   });
-
   return prefixMap;
 };
 
-const PARTICIPANT_FIELDS = ["Name", "Email", "Phone", "Company", "Title"] as const;
-
-const getParticipantFieldValue = (p: Participant, field: string): string => {
-  switch (field) {
-    case "Name": return p.name || "";
-    case "Email": return p.email || "";
-    case "Phone": return p.sendingPhone || p.phone || "";
-    case "Company": return "";
-    case "Title": return "";
-    default: return "";
-  }
-};
-
-/* ── Variable row ── */
-const VariableRow = ({
-  token,
-  value,
-  onCopy,
-  menuItems,
-  description,
-}: {
+/* ── Categorized dropdown item ── */
+interface DropdownVariable {
   token: string;
-  value?: string;
-  onCopy: (token: string) => void;
-  menuItems?: React.ReactNode;
-  description?: string;
-}) => (
-  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent/50 transition-colors group">
-    <span className="font-mono text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 rounded px-1.5 py-0.5 flex-shrink-0">
-      [{token}]
-    </span>
-    <span className="text-xs text-muted-foreground truncate flex-1">
-      {value || description || "—"}
-    </span>
-    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-      <button
-        onClick={(e) => { e.stopPropagation(); onCopy(token); }}
-        className="h-6 w-6 flex items-center justify-center rounded hover:bg-accent text-muted-foreground hover:text-foreground"
-      >
-        <Copy size={12} />
-      </button>
-      {menuItems}
-    </div>
-  </div>
-);
+  description: string;
+  category: string;
+}
 
 /* ── Main panel ── */
 const EditorSmartFieldsPanel = () => {
   const { participants, variableValues, setVariableValues, usedVariables } = useEditorContext();
-  const [search, setSearch] = useState("");
-  const [participantOpen, setParticipantOpen] = useState(false);
-  const [systemOpen, setSystemOpen] = useState(false);
-  const [customOpen, setCustomOpen] = useState(false);
-  const [unusedOpen, setUnusedOpen] = useState(false);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newVarName, setNewVarName] = useState("");
-  const [newVarDefault, setNewVarDefault] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownSearch, setDropdownSearch] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [customVariables, setCustomVariables] = useState<Variable[]>([
     { token: "Contract.Type", description: "Type of contract", category: "custom", defaultValue: "Service Agreement" },
@@ -143,135 +81,195 @@ const EditorSmartFieldsPanel = () => {
     { token: "PO.Number", description: "Purchase order number", category: "custom", defaultValue: "" },
   ]);
 
+  // Track added placeholders (separate from usedVariables which tracks document usage)
+  const [addedTokens, setAddedTokens] = useState<string[]>(() => [...usedVariables]);
+
   const prefixes = useMemo(() => generatePrefixes(participants), [participants]);
 
-  // Build participant variables dynamically
-  const participantVariables = useMemo(() => {
-    const vars: { participant: Participant; prefix: string; variables: { token: string; value: string }[] }[] = [];
+  // Build all available variables
+  const allVariables = useMemo(() => {
+    const vars: DropdownVariable[] = [];
+
+    // Participant variables
     participants.forEach((p) => {
       const prefix = prefixes.get(p.id) || p.name.split(" ")[0];
-      const fields = PARTICIPANT_FIELDS.map((field) => ({
-        token: `${prefix}.${field}`,
-        value: getParticipantFieldValue(p, field),
-      }));
-      vars.push({ participant: p, prefix, variables: fields });
-    });
-    return vars;
-  }, [participants, prefixes]);
-
-  const allTokens = useMemo(() => {
-    const tokens: Variable[] = [];
-    participantVariables.forEach(({ variables }) => {
-      variables.forEach((v) => {
-        tokens.push({ token: v.token, description: v.value || "—", category: "participant" });
+      PARTICIPANT_FIELDS.forEach((field) => {
+        vars.push({
+          token: `${prefix}.${field}`,
+          description: getParticipantFieldValue(p, field) || `${p.name}'s ${field.toLowerCase()}`,
+          category: "Participant",
+        });
       });
     });
-    return [...tokens, ...SYSTEM_VARIABLES, ...customVariables];
-  }, [participantVariables, customVariables]);
+
+    // System variables
+    SYSTEM_VARIABLES.forEach((v) => {
+      vars.push({ token: v.token, description: v.description, category: "System" });
+    });
+
+    // Custom variables
+    customVariables.forEach((v) => {
+      vars.push({ token: v.token, description: v.description, category: "Custom" });
+    });
+
+    return vars;
+  }, [participants, prefixes, customVariables]);
+
+  // Merge addedTokens with usedVariables
+  const activeTokens = useMemo(() => {
+    const set = new Set([...addedTokens, ...usedVariables]);
+    return Array.from(set);
+  }, [addedTokens, usedVariables]);
+
+  const activeVars = useMemo(() =>
+    activeTokens.map(token => allVariables.find(v => v.token === token)).filter(Boolean) as DropdownVariable[],
+    [activeTokens, allVariables]
+  );
+
+  const filledCount = activeVars.filter(v => variableValues[v.token]?.trim()).length;
+  const unfilledCount = activeVars.length - filledCount;
+
+  // Filtered dropdown items
+  const filteredDropdown = useMemo(() => {
+    const q = dropdownSearch.toLowerCase();
+    return allVariables.filter(v =>
+      !activeTokens.includes(v.token) &&
+      (v.token.toLowerCase().includes(q) || v.description.toLowerCase().includes(q))
+    );
+  }, [allVariables, activeTokens, dropdownSearch]);
+
+  // Group by category
+  const groupedDropdown = useMemo(() => {
+    const groups: Record<string, DropdownVariable[]> = {};
+    filteredDropdown.forEach(v => {
+      if (!groups[v.category]) groups[v.category] = [];
+      groups[v.category].push(v);
+    });
+    return groups;
+  }, [filteredDropdown]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+        setDropdownSearch("");
+      }
+    };
+    if (dropdownOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [dropdownOpen]);
+
+  const handleAddVariable = (token: string) => {
+    setAddedTokens(prev => [...prev, token]);
+    navigator.clipboard?.writeText(`[${token}]`);
+    toast.success(`[${token}] added and copied`);
+    setDropdownOpen(false);
+    setDropdownSearch("");
+  };
 
   const handleCopy = (token: string) => {
     navigator.clipboard?.writeText(`[${token}]`);
-    toast.success(`[${token}] copied — paste it in the document`);
+    toast.success(`[${token}] copied`);
   };
 
-  const handleCreate = () => {
-    if (!newVarName.trim()) return;
-    const token = newVarName.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(".");
-    const newVar: Variable = { token, description: newVarName.trim(), category: "custom", defaultValue: newVarDefault };
-    setCustomVariables(prev => [...prev, newVar]);
-    if (newVarDefault) {
-      setVariableValues(prev => ({ ...prev, [token]: newVarDefault }));
-    }
-    navigator.clipboard?.writeText(`[${token}]`);
-    toast.success(`[${token}] created and copied to clipboard`);
-    setNewVarName("");
-    setNewVarDefault("");
-    setShowCreateForm(false);
-  };
-
-  const handleDeleteCustom = (token: string) => {
-    const usageCount = usedVariables.filter(v => v === token).length;
-    if (usageCount > 0) {
-      toast.warning(`This variable is used ${usageCount} time(s) in the document. Removing it will leave the placeholder text.`);
-    }
-    setCustomVariables(prev => prev.filter(v => v.token !== token));
+  const handleRemove = (token: string) => {
+    setAddedTokens(prev => prev.filter(t => t !== token));
     toast.success(`[${token}] removed`);
   };
 
-  // Used vs unused
-  const usedTokens = new Set(usedVariables);
-  const usedVarsList = allTokens.filter(v => usedTokens.has(v.token));
-  const filledCount = usedVarsList.filter(v => variableValues[v.token]?.trim()).length;
-  const unfilledCount = usedVarsList.length - filledCount;
-
-  // Filter
-  const matchesSearch = (text: string) =>
-    !search || text.toLowerCase().includes(search.toLowerCase());
-
-  const filterVars = (vars: Variable[]) =>
-    search ? vars.filter(v => matchesSearch(v.token) || matchesSearch(v.description)) : vars;
+  const handleCreateCustom = () => {
+    if (!dropdownSearch.trim()) return;
+    const token = dropdownSearch.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(".");
+    const newVar: Variable = { token, description: dropdownSearch.trim(), category: "custom", defaultValue: "" };
+    setCustomVariables(prev => [...prev, newVar]);
+    setAddedTokens(prev => [...prev, token]);
+    navigator.clipboard?.writeText(`[${token}]`);
+    toast.success(`[${token}] created and copied`);
+    setDropdownOpen(false);
+    setDropdownSearch("");
+  };
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">Fill existing or add new dynamic fields</p>
+      <p className="text-xs text-muted-foreground">Add placeholders and fill their values inline</p>
 
-      {/* Search */}
-      <div className="relative">
-        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Add placeholder..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="h-8 text-sm pl-8"
-        />
-      </div>
+      {/* Add placeholder field with dropdown */}
+      <div className="relative" ref={dropdownRef}>
+        <div
+          className={cn(
+            "flex items-center gap-2 border rounded-lg px-3 h-10 cursor-text transition-colors",
+            dropdownOpen ? "border-primary ring-1 ring-primary/20" : "hover:border-muted-foreground/40"
+          )}
+          onClick={() => {
+            setDropdownOpen(true);
+            setTimeout(() => inputRef.current?.focus(), 0);
+          }}
+        >
+          <Plus size={16} className="text-muted-foreground flex-shrink-0" />
+          <input
+            ref={inputRef}
+            placeholder="Add placeholder..."
+            value={dropdownSearch}
+            onChange={(e) => {
+              setDropdownSearch(e.target.value);
+              if (!dropdownOpen) setDropdownOpen(true);
+            }}
+            onFocus={() => setDropdownOpen(true)}
+            className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
+          />
+          {dropdownSearch && (
+            <button onClick={(e) => { e.stopPropagation(); setDropdownSearch(""); }} className="text-muted-foreground hover:text-foreground">
+              <X size={14} />
+            </button>
+          )}
+        </div>
 
-      {/* Search results (shown when searching, regardless of collapsed state) */}
-      {search.trim() && (() => {
-        // Gather all searchable variables
-        const allSearchable: Variable[] = [];
-        participantVariables.forEach(({ variables }) => {
-          variables.forEach(v => allSearchable.push({ token: v.token, description: v.value || "—", category: "participant" }));
-        });
-        SYSTEM_VARIABLES.forEach(v => allSearchable.push(v));
-        customVariables.forEach(v => allSearchable.push(v));
-
-        const results = allSearchable.filter(v => matchesSearch(v.token) || matchesSearch(v.description));
-
-        return (
-          <div className="space-y-1">
-            <h3 className="text-xs font-semibold text-muted-foreground">Search results</h3>
-            {results.length > 0 ? (
-              <div className="space-y-0.5">
-                {results.map(v => (
-                  <VariableRow key={v.token} token={v.token} description={v.description} value={undefined} onCopy={handleCopy} />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-2 py-2">
-                <p className="text-xs text-muted-foreground">No placeholder found for "{search}"</p>
+        {/* Dropdown */}
+        {dropdownOpen && (
+          <div className="absolute z-50 top-full left-0 right-0 mt-1 border rounded-lg bg-popover shadow-lg max-h-[320px] overflow-y-auto">
+            {Object.keys(groupedDropdown).length > 0 ? (
+              Object.entries(groupedDropdown).map(([category, vars]) => (
+                <div key={category}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 pt-3 pb-1">
+                    {category}
+                  </p>
+                  {vars.map(v => (
+                    <button
+                      key={v.token}
+                      type="button"
+                      className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-accent transition-colors"
+                      onClick={() => handleAddVariable(v.token)}
+                    >
+                      <span className="font-mono text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 rounded px-1.5 py-0.5 flex-shrink-0">
+                        [{v.token}]
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">{v.description}</span>
+                    </button>
+                  ))}
+                </div>
+              ))
+            ) : dropdownSearch.trim() ? (
+              <div className="p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">No placeholder found</p>
                 <button
-                  onClick={() => {
-                    const token = search.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(".");
-                    const newVar: Variable = { token, description: search.trim(), category: "custom", defaultValue: "" };
-                    setCustomVariables(prev => [...prev, newVar]);
-                    navigator.clipboard?.writeText(`[${token}]`);
-                    toast.success(`[${token}] created and copied to clipboard`);
-                    setSearch("");
-                  }}
-                  className="w-full text-left text-sm text-primary border border-dashed rounded-md p-2 hover:bg-primary/5 transition-colors"
+                  onClick={handleCreateCustom}
+                  className="w-full text-left text-sm text-primary border border-dashed rounded-md p-2.5 hover:bg-primary/5 transition-colors flex items-center gap-2"
                 >
-                  Create "{search.trim()}" as custom placeholder
+                  <Plus size={14} />
+                  Create "{dropdownSearch.trim()}" as custom placeholder
                 </button>
               </div>
+            ) : (
+              <p className="text-xs text-muted-foreground p-3">All placeholders have been added</p>
             )}
           </div>
-        );
-      })()}
+        )}
+      </div>
 
       {/* Status bar */}
-      {usedVarsList.length > 0 && (
-        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/50 text-xs">
+      {activeVars.length > 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 text-xs">
           {unfilledCount === 0 ? (
             <>
               <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
@@ -280,199 +278,68 @@ const EditorSmartFieldsPanel = () => {
           ) : (
             <>
               <AlertTriangle size={12} className="text-amber-600 dark:text-amber-400" />
-              <span className="text-amber-700 dark:text-amber-400">{unfilledCount} placeholder{unfilledCount !== 1 ? "s" : ""} need{unfilledCount === 1 ? "s" : ""} values</span>
+              <span className="text-amber-700 dark:text-amber-400">{unfilledCount} need{unfilledCount === 1 ? "s" : ""} values</span>
             </>
           )}
-          <span className="text-muted-foreground ml-auto">{usedVarsList.length} used · {filledCount} filled</span>
+          <span className="text-muted-foreground ml-auto">{filledCount}/{activeVars.length} filled</span>
         </div>
       )}
 
-      {/* USED IN DOCUMENT */}
-      {usedVarsList.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Used in document</h3>
-            <span className="text-[10px] bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 font-medium">{usedVarsList.length}</span>
-          </div>
-          <div className="space-y-2">
-            {usedVarsList.map(v => (
-              <div key={v.token} className="flex items-center gap-2 px-2 py-1.5 rounded-md border bg-card">
-                <span className={cn(
-                  "font-mono text-xs rounded px-1.5 py-0.5 flex-shrink-0",
-                  variableValues[v.token]?.trim()
-                    ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
-                    : "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
-                )}>
-                  [{v.token}]
-                </span>
-                <Input
-                  placeholder="Enter value..."
-                  value={variableValues[v.token] || ""}
-                  onChange={(e) => setVariableValues(prev => ({ ...prev, [v.token]: e.target.value }))}
-                  className="h-7 text-xs flex-1"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* PARTICIPANT VARIABLES */}
-      <Collapsible open={participantOpen} onOpenChange={setParticipantOpen}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full py-1">
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Participant Variables</h3>
-            <p className="text-[10px] text-muted-foreground">Auto-fill from participant data</p>
-          </div>
-          <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", participantOpen && "rotate-180")} />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          {participants.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 gap-2 mt-2">
-              <Users size={28} className="text-muted-foreground opacity-40" />
-              <p className="text-xs text-muted-foreground text-center">
-                Add participants in Step 2 to generate signer variables
-              </p>
-            </div>
-          ) : (
-            <div className="mt-2 space-y-3">
-              {participantVariables
-                .filter(({ participant, variables }) =>
-                  !search || matchesSearch(participant.name) || variables.some(v => matchesSearch(v.token))
-                )
-                .map(({ participant, variables }) => (
-                  <div key={participant.id} className="space-y-0.5">
-                    {/* Participant header */}
-                    <div className="flex items-center gap-2 px-2 py-1.5">
-                      <span
-                        className="h-2 w-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: participant.color }}
-                      />
-                      <span className="text-sm font-medium truncate">{participant.name}</span>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-[9px] px-1.5 py-0 h-4 font-medium border",
-                          ROLE_STYLES[participant.role] || ROLE_STYLES.viewer
-                        )}
+      {/* Added placeholders list */}
+      {activeVars.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Added placeholders</p>
+          <div className="space-y-1.5">
+            {activeVars.map(v => {
+              const isFilled = variableValues[v.token]?.trim();
+              return (
+                <div key={v.token} className="rounded-lg border bg-card p-2.5 space-y-1.5 group/item">
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "font-mono text-[11px] rounded px-1.5 py-0.5 flex-shrink-0 border",
+                      isFilled
+                        ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                        : "bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+                    )}>
+                      [{v.token}]
+                    </span>
+                    <div className="flex items-center gap-0.5 ml-auto opacity-0 group-hover/item:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleCopy(v.token)}
+                        className="h-6 w-6 flex items-center justify-center rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+                        title="Copy"
                       >
-                        {ROLE_LABELS[participant.role] || participant.role}
-                      </Badge>
-                    </div>
-                    {/* Variable rows */}
-                    {variables
-                      .filter((v) => !search || matchesSearch(v.token))
-                      .map((v) => (
-                        <VariableRow
-                          key={v.token}
-                          token={v.token}
-                          value={v.value || "—"}
-                          onCopy={handleCopy}
-                        />
-                      ))}
-                  </div>
-                ))}
-            </div>
-          )}
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* SYSTEM VARIABLES */}
-      <Collapsible open={systemOpen} onOpenChange={setSystemOpen}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full py-1">
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">System Variables</h3>
-            <p className="text-[10px] text-muted-foreground">Auto-populated by the system</p>
-          </div>
-          <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", systemOpen && "rotate-180")} />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="mt-1.5 space-y-0.5">
-            {filterVars(SYSTEM_VARIABLES).map(v => (
-              <VariableRow key={v.token} token={v.token} description={v.description} onCopy={handleCopy} />
-            ))}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* CUSTOM VARIABLES */}
-      <Collapsible open={customOpen} onOpenChange={setCustomOpen}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full py-1">
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Custom Variables</h3>
-            <p className="text-[10px] text-muted-foreground">Create your own reusable variables</p>
-          </div>
-          <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", customOpen && "rotate-180")} />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="mt-2 space-y-1">
-            {!showCreateForm && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full h-8 text-xs border-dashed gap-1.5"
-                onClick={() => setShowCreateForm(true)}
-              >
-                <Plus size={12} />
-                Add custom variable
-              </Button>
-            )}
-
-            {showCreateForm && (
-              <div className="border rounded-md p-3 space-y-2 bg-muted/30">
-                <Input
-                  placeholder="Variable name (e.g. Project Name)"
-                  value={newVarName}
-                  onChange={(e) => setNewVarName(e.target.value)}
-                  className="h-8 text-xs"
-                  autoFocus
-                />
-                {newVarName.trim() && (
-                  <p className="text-[10px] text-muted-foreground font-mono">
-                    → [{newVarName.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(".")}]
-                  </p>
-                )}
-                <Input
-                  placeholder="Default value (optional)"
-                  value={newVarDefault}
-                  onChange={(e) => setNewVarDefault(e.target.value)}
-                  className="h-8 text-xs"
-                />
-                <div className="flex gap-2">
-                  <Button size="sm" className="h-7 text-xs" onClick={handleCreate} disabled={!newVarName.trim()}>Add</Button>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setShowCreateForm(false); setNewVarName(""); setNewVarDefault(""); }}>Cancel</Button>
-                </div>
-              </div>
-            )}
-
-            {filterVars(customVariables).map(v => (
-              <VariableRow
-                key={v.token}
-                token={v.token}
-                description={v.description}
-                onCopy={handleCopy}
-                menuItems={
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="h-6 w-6 flex items-center justify-center rounded hover:bg-accent text-muted-foreground hover:text-foreground">
-                        <MoreHorizontal size={12} />
+                        <Copy size={12} />
                       </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem className="text-xs">
-                        <Pencil size={12} className="mr-2" /> Rename
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-xs text-destructive" onClick={() => handleDeleteCustom(v.token)}>
-                        <Trash2 size={12} className="mr-2" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                }
-              />
-            ))}
+                      <button
+                        onClick={() => handleRemove(v.token)}
+                        className="h-6 w-6 flex items-center justify-center rounded hover:bg-accent text-muted-foreground hover:text-destructive"
+                        title="Remove"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
+                  <Input
+                    placeholder={v.description || "Enter value..."}
+                    value={variableValues[v.token] || ""}
+                    onChange={(e) => setVariableValues(prev => ({ ...prev, [v.token]: e.target.value }))}
+                    className="h-7 text-xs"
+                  />
+                </div>
+              );
+            })}
           </div>
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
+          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+            <Plus size={18} className="text-muted-foreground" />
+          </div>
+          <p className="text-sm font-medium">No placeholders yet</p>
+          <p className="text-xs text-muted-foreground">Click above to add placeholders from the library</p>
+        </div>
+      )}
     </div>
   );
 };
