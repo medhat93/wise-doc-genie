@@ -105,6 +105,8 @@ export interface ChecklistState {
 interface EditorContextType {
   participants: Participant[];
   setParticipants: React.Dispatch<React.SetStateAction<Participant[]>>;
+  sequentialSigning: boolean;
+  setSequentialSigning: React.Dispatch<React.SetStateAction<boolean>>;
   placedFields: PlacedField[];
   setPlacedFields: React.Dispatch<React.SetStateAction<PlacedField[]>>;
   selectedFieldId: string | null;
