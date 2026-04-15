@@ -1282,16 +1282,11 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                         return (
                           <div
                             key={sectionRef}
-                            className="absolute pointer-events-auto"
-                            style={{ top: yPos }}
+                            className="mb-3"
+                            style={{ marginTop: idx === 0 ? yPos : undefined }}
                             onClick={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}
                           >
-                            {/* Connecting line */}
-                            <div
-                              className="absolute right-full top-4 w-4 h-px"
-                              style={{ backgroundColor: primaryComment.authorColor }}
-                            />
                             {/* Comment card */}
                             <div className={cn(
                               "w-[240px] rounded-lg border shadow-sm overflow-hidden",
