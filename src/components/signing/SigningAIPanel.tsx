@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Sparkles, X, Search } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { Textarea } from '@/components/ui/textarea';
 
 interface ChatMessage {
