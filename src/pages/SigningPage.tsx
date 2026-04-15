@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { PenTool, FileText, Printer, Download, Sparkles, ArrowLeft, MoreHorizontal, XCircle, UserPlus, Search, X } from 'lucide-react';
+import { PenTool, FileText, Printer, Download, Sparkles, ArrowLeft, MoreHorizontal, XCircle, UserPlus, Search, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import SigningAIPanel from '@/components/signing/SigningAIPanel';
@@ -39,6 +39,8 @@ export default function SigningPage() {
   const [docTransition, setDocTransition] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [matchCount, setMatchCount] = useState(0);
+  const [currentMatch, setCurrentMatch] = useState(0);
   const documentRef = useRef<HTMLDivElement>(null);
 
   const activeDoc = SIGNING_DOCUMENTS.find(d => d.id === activeDocId)!;
@@ -55,7 +57,11 @@ export default function SigningPage() {
         parent.normalize();
       }
     });
-    if (!searchQuery || searchQuery.length < 2) return;
+    if (!searchQuery || searchQuery.length < 2) {
+      setMatchCount(0);
+      setCurrentMatch(0);
+      return;
+    }
     const walker = document.createTreeWalker(documentRef.current, NodeFilter.SHOW_TEXT);
     const matches: { node: Text; index: number }[] = [];
     const query = searchQuery.toLowerCase();
@@ -64,7 +70,7 @@ export default function SigningPage() {
       const idx = node.textContent?.toLowerCase().indexOf(query) ?? -1;
       if (idx >= 0) matches.push({ node, index: idx });
     }
-    let firstMark: HTMLElement | null = null;
+    const marks: HTMLElement[] = [];
     matches.forEach(({ node, index }) => {
       const range = document.createRange();
       range.setStart(node, index);
@@ -75,10 +81,32 @@ export default function SigningPage() {
       mark.style.borderRadius = '2px';
       mark.style.padding = '0 1px';
       range.surroundContents(mark);
-      if (!firstMark) firstMark = mark;
+      marks.push(mark);
     });
-    if (firstMark) (firstMark as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setMatchCount(marks.length);
+    if (marks.length > 0) {
+      setCurrentMatch(1);
+      marks[0].style.backgroundColor = 'hsl(var(--primary) / 0.5)';
+      marks[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      setCurrentMatch(0);
+    }
   }, [searchQuery]);
+  const navigateMatch = useCallback((direction: 'next' | 'prev') => {
+    if (!documentRef.current || matchCount === 0) return;
+    const marks = documentRef.current.querySelectorAll('mark[data-search-hl]');
+    // Reset all highlights
+    marks.forEach(m => (m as HTMLElement).style.backgroundColor = 'hsl(var(--primary) / 0.25)');
+    let next = direction === 'next' ? currentMatch + 1 : currentMatch - 1;
+    if (next > matchCount) next = 1;
+    if (next < 1) next = matchCount;
+    setCurrentMatch(next);
+    const target = marks[next - 1] as HTMLElement;
+    if (target) {
+      target.style.backgroundColor = 'hsl(var(--primary) / 0.5)';
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentMatch, matchCount]);
 
 
   useEffect(() => {
@@ -234,27 +262,8 @@ export default function SigningPage() {
             <span className="text-xs text-muted-foreground ml-auto">{activeDoc.pages} pages</span>
           </div>
 
-          {/* Search bar */}
-          {searchOpen && (
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-card shrink-0">
-              <Search size={14} className="text-muted-foreground shrink-0" />
-              <input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search in document…"
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                autoFocus
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground">
-                  <X size={14} />
-                </button>
-              )}
-              <button onClick={() => { setSearchOpen(false); setSearchQuery(''); }} className="text-muted-foreground hover:text-foreground">
-                <X size={16} />
-              </button>
-            </div>
-          )}
+
+
 
           {/* Document canvas */}
           <div
@@ -335,20 +344,68 @@ export default function SigningPage() {
             <TooltipContent side="left">Download</TooltipContent>
           </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => { setSearchOpen(v => !v); setSearchQuery(''); }}
-                className={cn(
-                  'w-9 h-9 rounded-lg flex items-center justify-center transition-colors',
-                  searchOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
-                )}
-              >
-                <Search size={18} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="left">Search in document</TooltipContent>
-          </Tooltip>
+          <div className="relative">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => { setSearchOpen(v => !v); setSearchQuery(''); setCurrentMatch(0); setMatchCount(0); }}
+                  className={cn(
+                    'w-9 h-9 rounded-lg flex items-center justify-center transition-colors',
+                    searchOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                  <Search size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left">Search in document</TooltipContent>
+            </Tooltip>
+
+            {/* Floating search card */}
+            {searchOpen && (
+              <div className="absolute right-full mr-3 top-0 w-[260px] bg-card shadow-lg border border-border rounded-lg overflow-hidden z-50">
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold">Document search</span>
+                    <button
+                      onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Results {currentMatch} of {matchCount}
+                  </p>
+                  <div className="flex items-center gap-1.5 bg-muted/50 border border-border rounded-md px-2.5 py-1.5">
+                    <Search size={14} className="text-muted-foreground shrink-0" />
+                    <input
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Search on document..."
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground min-w-0"
+                      autoFocus
+                    />
+                    {matchCount > 0 && (
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <button
+                          onClick={() => navigateMatch('next')}
+                          className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                        >
+                          <ChevronDown size={14} />
+                        </button>
+                        <button
+                          onClick={() => navigateMatch('prev')}
+                          className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                        >
+                          <ChevronUp size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* AI Panel */}
