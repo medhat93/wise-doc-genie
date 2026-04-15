@@ -488,6 +488,37 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     e.dataTransfer.effectAllowed = "copy";
   };
 
+  // Approval simulation
+  const handleSendForApproval = () => {
+    if (approvalState !== "idle") return;
+    setApprovalState("in_progress");
+    setApprovedStepIndices([]);
+    toast.success("Sent for approval");
+
+    // Clear any existing timers
+    approvalTimerRef.current.forEach(t => clearTimeout(t));
+    approvalTimerRef.current = [];
+
+    const totalSteps = wfSteps.length;
+    const delayPerStep = Math.floor(10000 / totalSteps); // ~10s total
+
+    wfSteps.forEach((_, i) => {
+      const timer = setTimeout(() => {
+        setApprovedStepIndices(prev => [...prev, i]);
+        if (i === totalSteps - 1) {
+          // All steps approved
+          setTimeout(() => {
+            setApprovalState("completed");
+            markStepCompleted("workflow");
+            setActiveStepIndex(null);
+            setShowSendSection(true);
+            toast.success("All approval steps completed!");
+          }, 500);
+        }
+      }, delayPerStep * (i + 1));
+      approvalTimerRef.current.push(timer);
+    });
+  };
 
 
 
