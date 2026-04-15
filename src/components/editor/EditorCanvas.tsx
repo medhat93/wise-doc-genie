@@ -1218,7 +1218,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
             return (
               <div key={doc.id}>
                 {idx > 0 && <DocumentDivider doc={doc} />}
-                <div className="relative">
+                <div className="flex justify-center gap-4 relative">
                   <div
                     ref={(el) => { docRefs.current[doc.id] = el; }}
                     data-doc-id={doc.id}
