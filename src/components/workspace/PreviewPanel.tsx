@@ -304,6 +304,12 @@ export default function PreviewPanel({ document: doc, onClose }: Props) {
 
   /* ── FIX 6: Simplified action buttons — 1 primary + more ── */
   function renderActionButtons() {
+    const viewBtn = doc.stage !== 'draft' ? (
+      <Button variant="outline" className="h-7 text-xs gap-1" onClick={() => { onClose(); navigate(`/document/${doc.id}`); }}>
+        <Eye size={12} /> View
+      </Button>
+    ) : null;
+
     const moreMenu = (
       <DocumentActionsMenu
         doc={doc}
