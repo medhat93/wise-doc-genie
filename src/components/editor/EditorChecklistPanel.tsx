@@ -167,6 +167,11 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   // Step 4 state (workflow)
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>("none");
   const [workflowAssignees, setWorkflowAssignees] = useState<Record<number, string>>({});
+  
+  // Approval simulation state
+  const [approvalState, setApprovalState] = useState<"idle" | "in_progress" | "completed">("idle");
+  const [approvedStepIndices, setApprovedStepIndices] = useState<number[]>([]);
+  const approvalTimerRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Mock flags
   const workflowEnforced = true;
@@ -483,6 +488,37 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     e.dataTransfer.effectAllowed = "copy";
   };
 
+  // Approval simulation
+  const handleSendForApproval = () => {
+    if (approvalState !== "idle") return;
+    setApprovalState("in_progress");
+    setApprovedStepIndices([]);
+    toast.success("Sent for approval");
+
+    // Clear any existing timers
+    approvalTimerRef.current.forEach(t => clearTimeout(t));
+    approvalTimerRef.current = [];
+
+    const totalSteps = wfSteps.length;
+    const delayPerStep = Math.floor(10000 / totalSteps); // ~10s total
+
+    wfSteps.forEach((_, i) => {
+      const timer = setTimeout(() => {
+        setApprovedStepIndices(prev => [...prev, i]);
+        if (i === totalSteps - 1) {
+          // All steps approved
+          setTimeout(() => {
+            setApprovalState("completed");
+            markStepCompleted("workflow");
+            setActiveStepIndex(null);
+            setShowSendSection(true);
+            toast.success("All approval steps completed!");
+          }, 500);
+        }
+      }, delayPerStep * (i + 1));
+      approvalTimerRef.current.push(timer);
+    });
+  };
 
 
 
@@ -714,7 +750,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
           <div className="space-y-3">
             <div>
               <label className="text-xs font-medium mb-1.5 block">Select workflow</label>
-              <Select value={selectedWorkflow} onValueChange={(v) => { setSelectedWorkflow(v); setWorkflowAssignees({}); }}>
+              <Select value={selectedWorkflow} onValueChange={(v) => { setSelectedWorkflow(v); setWorkflowAssignees({}); setApprovalState("idle"); setApprovedStepIndices([]); approvalTimerRef.current.forEach(t => clearTimeout(t)); }}>
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Select workflow" />
                 </SelectTrigger>
@@ -756,17 +792,39 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                 {wfSteps.map((step, i) => {
                   const isLast = i === wfSteps.length - 1;
                   const actionStyle = ACTION_STYLES[step.action] || ACTION_STYLES.approver;
+                  const isStepApproved = approvedStepIndices.includes(i);
+                  const isNextToApprove = approvalState === "in_progress" && !isStepApproved && (i === 0 || approvedStepIndices.includes(i - 1));
                   return (
                     <div key={i} className="flex gap-3 relative">
                       {!isLast && (
                         <div className="absolute left-[13px] top-[28px] bottom-0 w-px border-l border-dashed border-border" />
                       )}
-                      <div className="h-[26px] w-[26px] rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-primary text-primary-foreground text-[10px] font-bold">
-                        {i + 1}
+                      <div className={cn(
+                        "h-[26px] w-[26px] rounded-full flex items-center justify-center flex-shrink-0 z-10 text-[10px] font-bold",
+                        isStepApproved
+                          ? "bg-emerald-500 text-white"
+                          : isNextToApprove
+                          ? "bg-amber-500 text-white"
+                          : "bg-primary text-primary-foreground"
+                      )}>
+                        {isStepApproved ? <Check size={12} /> : i + 1}
                       </div>
                       <div className={cn("flex-1", !isLast && "pb-5")}>
                         <div className="space-y-2">
-                          <span className="text-sm font-semibold">{step.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">{step.name}</span>
+                            {isStepApproved && (
+                              <Badge className="h-4 text-[9px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                Approved
+                              </Badge>
+                            )}
+                            {isNextToApprove && (
+                              <Badge className="h-4 text-[9px] bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 gap-1">
+                                <span className="animate-spin h-2 w-2 border border-amber-600 border-t-transparent rounded-full inline-block" />
+                                In review
+                              </Badge>
+                            )}
+                          </div>
 
                           {/* Tags row */}
                           {step.tags && step.tags.length > 0 && (
@@ -959,15 +1017,48 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                 <Separator className="my-3" />
 
                 <div className="flex flex-col gap-2">
-                  <Button
-                    variant={step.isComplete ? "default" : "outline"}
-                    size="sm"
-                    className={cn("w-full text-xs", step.isComplete ? "h-10 font-medium" : "h-9")}
-                    disabled={!canContinue}
-                    onClick={() => handleContinue(index)}
-                  >
-                    {isLastStep ? "Complete ✓" : "Continue →"}
-                  </Button>
+                  {step.id === "workflow" && selectedWorkflow !== "none" ? (
+                    approvalState === "in_progress" ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full h-10 text-xs font-medium"
+                        disabled
+                      >
+                        <span className="animate-spin mr-2 h-3 w-3 border-2 border-primary border-t-transparent rounded-full inline-block" />
+                        Waiting for approval...
+                      </Button>
+                    ) : approvalState === "completed" ? (
+                      <Button
+                        size="sm"
+                        className="w-full h-10 text-xs font-medium"
+                        onClick={() => handleContinue(index)}
+                      >
+                        <Check size={14} className="mr-1" />
+                        Approved — Continue →
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="w-full h-10 text-xs font-medium gap-2"
+                        disabled={!workflowComplete}
+                        onClick={handleSendForApproval}
+                      >
+                        <HugeiconsIcon icon={SentIcon} size={14} />
+                        Send for approval
+                      </Button>
+                    )
+                  ) : (
+                    <Button
+                      variant={step.isComplete ? "default" : "outline"}
+                      size="sm"
+                      className={cn("w-full text-xs", step.isComplete ? "h-10 font-medium" : "h-9")}
+                      disabled={!canContinue}
+                      onClick={() => handleContinue(index)}
+                    >
+                      {isLastStep ? "Complete ✓" : "Continue →"}
+                    </Button>
+                  )}
                   {step.isOptional && !step.isComplete && (
                     <Button variant="ghost" size="sm" className="w-full h-9 text-xs text-muted-foreground" onClick={() => handleSkip(index)}>
                       {step.skipLabel || "Skip"}
