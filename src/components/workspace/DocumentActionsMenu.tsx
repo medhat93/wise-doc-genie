@@ -136,6 +136,7 @@ export default function DocumentActionsMenu({ doc, trigger, onParticipants, onRe
     onRename,
     onCorrect: () => setCorrectionOpen(true),
     onFollowUp: () => navigate(`/create?mode=followup&parentId=${doc.id}&childType=supplement`),
+    onView: () => navigate(`/document/${doc.id}`),
   }, isESign);
 
   return (
