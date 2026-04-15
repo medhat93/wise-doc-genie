@@ -82,7 +82,7 @@ const EditorSmartFieldsPanel = () => {
   ]);
 
   // Track added placeholders (separate from usedVariables which tracks document usage)
-  const [addedTokens, setAddedTokens] = useState<string[]>(() => [...usedVariables]);
+  const [addedTokens, setAddedTokens] = useState<string[]>([]);
 
   const prefixes = useMemo(() => generatePrefixes(participants), [participants]);
 
