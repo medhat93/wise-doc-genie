@@ -279,17 +279,9 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
         skipLabel: "Skip — fill placeholders later",
       },
       {
-        id: "properties",
-        title: "Fill required properties",
-        description: "Complete the required document properties",
-        isVisible: hasRequiredProperties,
-        isComplete: allPropsComplete || isStepManuallyCompleted("properties"),
-        completeSummary: allPropsComplete ? "All required properties filled" : "",
-      },
-      {
         id: "workflow",
-        title: "Apply approval workflow",
-        description: "Select and configure an approval workflow before sending",
+        title: "Fill the required workflow",
+        description: "Complete the required document workflow",
         isVisible: workflowEnforced,
         isComplete: workflowComplete || isStepManuallyCompleted("workflow"),
         completeSummary: workflowComplete
@@ -298,7 +290,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       },
     ];
     return s.filter(step => step.isVisible);
-  }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, hasRequiredProperties, allPropsComplete, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
+  }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
 
   // Detect changes in expanded completed steps and reactivate them
   useEffect(() => {
