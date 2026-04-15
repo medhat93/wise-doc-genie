@@ -1324,47 +1324,67 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                         <span className="opacity-0 group-hover/card:opacity-100 transition-opacity">
                                           <AnnotationPill annotationType={comment.annotationType} />
                                         </span>
-                                        <span className="ml-auto shrink-0 text-[9px] text-muted-foreground opacity-0 group-hover/card:opacity-100 transition-opacity">{timeAgo(comment.timestamp)}</span>
+                                        {/* Icon actions — top-right on hover */}
+                                        <div className="ml-auto flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                          <span className="shrink-0 text-[9px] text-muted-foreground mr-1">{timeAgo(comment.timestamp)}</span>
+                                          {commentIdx === 0 && (
+                                            isSuggestionType ? (
+                                              <>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <button
+                                                      onClick={(e) => { e.stopPropagation(); toast.success("Suggestion accepted"); }}
+                                                      className="flex h-5 w-5 items-center justify-center rounded text-emerald-600 hover:bg-emerald-500/10 transition-colors"
+                                                    >
+                                                      <Check size={12} />
+                                                    </button>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent side="top" className="text-[10px]">Accept</TooltipContent>
+                                                </Tooltip>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <button
+                                                      onClick={(e) => { e.stopPropagation(); toast("Suggestion rejected"); }}
+                                                      className="flex h-5 w-5 items-center justify-center rounded text-destructive hover:bg-destructive/10 transition-colors"
+                                                    >
+                                                      <X size={12} />
+                                                    </button>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent side="top" className="text-[10px]">Reject</TooltipContent>
+                                                </Tooltip>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <button
+                                                      onClick={(e) => { e.stopPropagation(); toast.success("Comment resolved"); }}
+                                                      className="flex h-5 w-5 items-center justify-center rounded text-emerald-600 hover:bg-emerald-500/10 transition-colors"
+                                                    >
+                                                      <Check size={12} />
+                                                    </button>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent side="top" className="text-[10px]">Resolve</TooltipContent>
+                                                </Tooltip>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <button
+                                                      onClick={(e) => { e.stopPropagation(); toast("Comment deleted"); }}
+                                                      className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                                    >
+                                                      <Trash2 size={12} />
+                                                    </button>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent side="top" className="text-[10px]">Delete</TooltipContent>
+                                                </Tooltip>
+                                              </>
+                                            )
+                                          )}
+                                        </div>
                                       </div>
                                       <p className="mt-0.5 text-[11px] leading-relaxed text-foreground/80">{comment.text}</p>
                                     </div>
                                   </div>
-                                  {/* Hover actions */}
-                                  {commentIdx === 0 && (
-                                    <div className="flex items-center gap-1 mt-1.5 pl-7 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                                      {isSuggestionType ? (
-                                        <>
-                                          <button
-                                            onClick={(e) => { e.stopPropagation(); toast.success("Suggestion accepted"); }}
-                                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 hover:bg-emerald-500/10 transition-colors"
-                                          >
-                                            <Check size={11} /> Accept
-                                          </button>
-                                          <button
-                                            onClick={(e) => { e.stopPropagation(); toast("Suggestion rejected"); }}
-                                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                                          >
-                                            <X size={11} /> Reject
-                                          </button>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <button
-                                            onClick={(e) => { e.stopPropagation(); toast.success("Comment resolved"); }}
-                                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 hover:bg-emerald-500/10 transition-colors"
-                                          >
-                                            <Check size={11} /> Resolve
-                                          </button>
-                                          <button
-                                            onClick={(e) => { e.stopPropagation(); toast("Comment deleted"); }}
-                                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                                          >
-                                            <Trash2 size={11} /> Delete
-                                          </button>
-                                        </>
-                                      )}
-                                    </div>
-                                  )}
                                   {comment.replies.length > 0 && (
                                     <div className="mt-1.5 space-y-1.5 pl-7">
                                       {comment.replies.map((reply) => (
