@@ -1287,14 +1287,10 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                             onClick={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}
                           >
-                            {/* Comment card */}
-                            <div className={cn(
-                              "w-[240px] rounded-lg border shadow-sm overflow-hidden",
-                              style.borderClass,
-                              style.bgClass
-                            )}>
+                            {/* Comment card — borderless Google Docs style */}
+                            <div className="w-[240px] group/card rounded-lg hover:bg-muted/40 transition-colors overflow-hidden">
                               {sectionComments.map((comment) => (
-                                <div key={comment.id} className="px-3 py-2.5 border-b last:border-b-0 border-border/40">
+                                <div key={comment.id} className="px-2.5 py-2">
                                   <div className="flex items-start gap-2">
                                     <div
                                       className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[8px] font-semibold text-white"
@@ -1305,8 +1301,10 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center gap-1.5">
                                         <span className="truncate text-[11px] font-medium text-foreground">{comment.author}</span>
-                                        <AnnotationPill annotationType={comment.annotationType} />
-                                        <span className="ml-auto shrink-0 text-[9px] text-muted-foreground">{timeAgo(comment.timestamp)}</span>
+                                        <span className="opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                          <AnnotationPill annotationType={comment.annotationType} />
+                                        </span>
+                                        <span className="ml-auto shrink-0 text-[9px] text-muted-foreground opacity-0 group-hover/card:opacity-100 transition-opacity">{timeAgo(comment.timestamp)}</span>
                                       </div>
                                       <p className="mt-0.5 text-[11px] leading-relaxed text-foreground/80">{comment.text}</p>
                                     </div>
@@ -1323,7 +1321,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                               {reply.authorInitials}
                                             </div>
                                             <span className="truncate text-[10px] font-medium text-foreground">{reply.author}</span>
-                                            <span className="ml-auto shrink-0 text-[9px] text-muted-foreground">{timeAgo(reply.timestamp)}</span>
+                                            <span className="ml-auto shrink-0 text-[9px] text-muted-foreground opacity-0 group-hover/card:opacity-100 transition-opacity">{timeAgo(reply.timestamp)}</span>
                                           </div>
                                           <p className="pl-5 text-[10px] leading-relaxed text-foreground/80">{reply.text}</p>
                                         </div>
@@ -1332,11 +1330,13 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                   )}
                                 </div>
                               ))}
-                              {/* Inline reply */}
-                              <MarginReplyInput
-                                sectionRef={sectionRef}
-                                onReply={(text) => handleAddReply(sectionComments[0].id, text)}
-                              />
+                              {/* Inline reply — shown on hover */}
+                              <div className="opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                <MarginReplyInput
+                                  sectionRef={sectionRef}
+                                  onReply={(text) => handleAddReply(sectionComments[0].id, text)}
+                                />
+                              </div>
                             </div>
                           </div>
                         );
