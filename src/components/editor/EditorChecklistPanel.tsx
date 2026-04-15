@@ -750,7 +750,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
           <div className="space-y-3">
             <div>
               <label className="text-xs font-medium mb-1.5 block">Select workflow</label>
-              <Select value={selectedWorkflow} onValueChange={(v) => { setSelectedWorkflow(v); setWorkflowAssignees({}); }}>
+              <Select value={selectedWorkflow} onValueChange={(v) => { setSelectedWorkflow(v); setWorkflowAssignees({}); setApprovalState("idle"); setApprovedStepIndices([]); approvalTimerRef.current.forEach(t => clearTimeout(t)); }}>
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Select workflow" />
                 </SelectTrigger>
