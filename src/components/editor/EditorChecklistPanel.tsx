@@ -995,15 +995,48 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
                 <Separator className="my-3" />
 
                 <div className="flex flex-col gap-2">
-                  <Button
-                    variant={step.isComplete ? "default" : "outline"}
-                    size="sm"
-                    className={cn("w-full text-xs", step.isComplete ? "h-10 font-medium" : "h-9")}
-                    disabled={!canContinue}
-                    onClick={() => handleContinue(index)}
-                  >
-                    {isLastStep ? "Complete ✓" : "Continue →"}
-                  </Button>
+                  {step.id === "workflow" && selectedWorkflow !== "none" ? (
+                    approvalState === "in_progress" ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full h-10 text-xs font-medium"
+                        disabled
+                      >
+                        <span className="animate-spin mr-2 h-3 w-3 border-2 border-primary border-t-transparent rounded-full inline-block" />
+                        Waiting for approval...
+                      </Button>
+                    ) : approvalState === "completed" ? (
+                      <Button
+                        size="sm"
+                        className="w-full h-10 text-xs font-medium"
+                        onClick={() => handleContinue(index)}
+                      >
+                        <Check size={14} className="mr-1" />
+                        Approved — Continue →
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="w-full h-10 text-xs font-medium gap-2"
+                        disabled={!workflowComplete}
+                        onClick={handleSendForApproval}
+                      >
+                        <HugeiconsIcon icon={SentIcon} size={14} />
+                        Send for approval
+                      </Button>
+                    )
+                  ) : (
+                    <Button
+                      variant={step.isComplete ? "default" : "outline"}
+                      size="sm"
+                      className={cn("w-full text-xs", step.isComplete ? "h-10 font-medium" : "h-9")}
+                      disabled={!canContinue}
+                      onClick={() => handleContinue(index)}
+                    >
+                      {isLastStep ? "Complete ✓" : "Continue →"}
+                    </Button>
+                  )}
                   {step.isOptional && !step.isComplete && (
                     <Button variant="ghost" size="sm" className="w-full h-9 text-xs text-muted-foreground" onClick={() => handleSkip(index)}>
                       {step.skipLabel || "Skip"}
