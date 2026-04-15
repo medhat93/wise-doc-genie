@@ -25,7 +25,7 @@ import {
   Pencil,
   Trash2,
   Users,
-  Shield,
+  
   GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
