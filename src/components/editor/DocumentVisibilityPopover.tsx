@@ -1,8 +1,18 @@
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Eye } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -40,18 +50,23 @@ const DocumentVisibilityPopover = ({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity text-muted-foreground",
-            className
-          )}
-        >
-          <Eye size={iconSize} />
-        </Button>
-      </PopoverTrigger>
+      <Tooltip delayDuration={0}>
+        <PopoverTrigger asChild>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity text-muted-foreground",
+                className
+              )}
+            >
+              <Eye size={iconSize} />
+            </Button>
+          </TooltipTrigger>
+        </PopoverTrigger>
+        <TooltipContent side="top" className="text-xs">Control document visibility</TooltipContent>
+      </Tooltip>
       <PopoverContent side="left" align="start" className="w-64 p-3">
         <div className="flex items-center gap-2 mb-3">
           <Eye size={14} className="text-muted-foreground" />
