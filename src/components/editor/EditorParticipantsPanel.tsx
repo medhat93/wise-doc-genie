@@ -78,6 +78,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MOCK_DOCUMENTS } from "./EditorCanvas";
+import DocumentVisibilityPopover from "./DocumentVisibilityPopover";
 import { toast } from "sonner";
 
 /* ── Types ── */
