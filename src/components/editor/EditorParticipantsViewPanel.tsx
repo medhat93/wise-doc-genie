@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import ParticipantsDialog from "@/components/ParticipantsDialog";
 import { useEditorContext } from "./EditorContext";
 import { cn } from "@/lib/utils";
@@ -18,8 +18,9 @@ import {
   Trash2,
   Users,
   GripVertical,
-  Eye,
 } from "lucide-react";
+import DocumentVisibilityPopover from "./DocumentVisibilityPopover";
+import { MOCK_DOCUMENTS } from "./EditorCanvas";
 import { toast } from "sonner";
 import type { Participant, ParticipantRole, SendingMethod } from "./EditorParticipantsPanel";
 import AddParticipantDialog from "./AddParticipantDialog";
@@ -76,6 +77,8 @@ const SortableParticipantCard = ({
   onOrderChange,
   confirmRemoveId,
   setConfirmRemoveId,
+  visibleDocIds,
+  onVisibilityChange,
 }: {
   participant: Participant;
   workflowEnabled: boolean;
@@ -85,6 +88,8 @@ const SortableParticipantCard = ({
   onOrderChange: (id: string, newOrder: number) => void;
   confirmRemoveId: string | null;
   setConfirmRemoveId: (id: string | null) => void;
+  visibleDocIds: string[];
+  onVisibilityChange: (participantId: string, docId: string, visible: boolean) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: participant.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -165,18 +170,13 @@ const SortableParticipantCard = ({
       </div>
 
       {/* Eye icon for document visibility */}
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity text-muted-foreground"
-          >
-            <Eye size={13} />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="text-xs">Control document visibility</TooltipContent>
-      </Tooltip>
+      <DocumentVisibilityPopover
+        participantName={participant.name}
+        participantId={participant.id}
+        visibleDocIds={visibleDocIds}
+        onVisibilityChange={onVisibilityChange}
+        iconSize={13}
+      />
 
       {/* Delete button */}
       <Tooltip delayDuration={0}>
@@ -198,12 +198,26 @@ const SortableParticipantCard = ({
 
 /* ── Main panel ── */
 const EditorParticipantsViewPanel = () => {
-  const { participants, setParticipants } = useEditorContext();
+  const { participants, setParticipants, documentVisibility, setDocumentVisibility } = useEditorContext();
   const [workflowEnabled, setWorkflowEnabled] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
+
+  const allDocIds = useMemo(() => MOCK_DOCUMENTS.map(d => d.id), []);
+
+  const getVisibleDocs = useCallback((participantId: string) => {
+    return documentVisibility[participantId] || allDocIds;
+  }, [documentVisibility, allDocIds]);
+
+  const handleVisibilityChange = useCallback((participantId: string, docId: string, visible: boolean) => {
+    setDocumentVisibility(prev => {
+      const current = prev[participantId] || allDocIds;
+      const updated = visible ? [...current, docId] : current.filter(id => id !== docId);
+      return { ...prev, [participantId]: updated };
+    });
+  }, [setDocumentVisibility, allDocIds]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -282,6 +296,8 @@ const EditorParticipantsViewPanel = () => {
                   onOrderChange={handleOrderChange}
                   confirmRemoveId={confirmRemoveId}
                   setConfirmRemoveId={setConfirmRemoveId}
+                  visibleDocIds={getVisibleDocs(p.id)}
+                  onVisibilityChange={handleVisibilityChange}
                 />
               ))}
             </div>
@@ -300,6 +316,8 @@ const EditorParticipantsViewPanel = () => {
               onOrderChange={handleOrderChange}
               confirmRemoveId={confirmRemoveId}
               setConfirmRemoveId={setConfirmRemoveId}
+              visibleDocIds={getVisibleDocs(p.id)}
+              onVisibilityChange={handleVisibilityChange}
             />
           ))}
         </div>

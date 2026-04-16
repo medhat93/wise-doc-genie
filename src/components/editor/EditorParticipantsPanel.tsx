@@ -78,6 +78,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MOCK_DOCUMENTS } from "./EditorCanvas";
+import DocumentVisibilityPopover from "./DocumentVisibilityPopover";
 import { toast } from "sonner";
 
 /* ── Types ── */
@@ -846,14 +847,21 @@ const EditorParticipantsPanel = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                <Eye size={14} className="text-muted-foreground" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">Control document visibility</TooltipContent>
-          </Tooltip>
+          <DocumentVisibilityPopover
+            participantName={p.name}
+            participantId={p.id}
+            visibleDocIds={MOCK_DOCUMENTS.filter(d => (visibility[d.id] || []).includes(p.id)).map(d => d.id)}
+            onVisibilityChange={(pid, docId, visible) => {
+              setVisibility(prev => {
+                const current = prev[docId] || [];
+                return {
+                  ...prev,
+                  [docId]: visible ? [...current, pid] : current.filter(id => id !== pid),
+                };
+              });
+            }}
+            iconSize={14}
+          />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
