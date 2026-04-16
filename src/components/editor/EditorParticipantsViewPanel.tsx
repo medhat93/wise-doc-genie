@@ -198,12 +198,26 @@ const SortableParticipantCard = ({
 
 /* ── Main panel ── */
 const EditorParticipantsViewPanel = () => {
-  const { participants, setParticipants } = useEditorContext();
+  const { participants, setParticipants, documentVisibility, setDocumentVisibility } = useEditorContext();
   const [workflowEnabled, setWorkflowEnabled] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
+
+  const allDocIds = useMemo(() => MOCK_DOCUMENTS.map(d => d.id), []);
+
+  const getVisibleDocs = useCallback((participantId: string) => {
+    return documentVisibility[participantId] || allDocIds;
+  }, [documentVisibility, allDocIds]);
+
+  const handleVisibilityChange = useCallback((participantId: string, docId: string, visible: boolean) => {
+    setDocumentVisibility(prev => {
+      const current = prev[participantId] || allDocIds;
+      const updated = visible ? [...current, docId] : current.filter(id => id !== docId);
+      return { ...prev, [participantId]: updated };
+    });
+  }, [setDocumentVisibility, allDocIds]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -282,6 +296,8 @@ const EditorParticipantsViewPanel = () => {
                   onOrderChange={handleOrderChange}
                   confirmRemoveId={confirmRemoveId}
                   setConfirmRemoveId={setConfirmRemoveId}
+                  visibleDocIds={getVisibleDocs(p.id)}
+                  onVisibilityChange={handleVisibilityChange}
                 />
               ))}
             </div>
@@ -300,6 +316,8 @@ const EditorParticipantsViewPanel = () => {
               onOrderChange={handleOrderChange}
               confirmRemoveId={confirmRemoveId}
               setConfirmRemoveId={setConfirmRemoveId}
+              visibleDocIds={getVisibleDocs(p.id)}
+              onVisibilityChange={handleVisibilityChange}
             />
           ))}
         </div>
