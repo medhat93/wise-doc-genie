@@ -18,6 +18,7 @@ import {
   Trash2,
   Users,
   GripVertical,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Participant, ParticipantRole, SendingMethod } from "./EditorParticipantsPanel";
