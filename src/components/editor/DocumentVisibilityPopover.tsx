@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/popover";
 import { Eye } from "lucide-react";
 import { MOCK_DOCUMENTS } from "./EditorCanvas";
-import { MOCK_DOCUMENTS } from "./EditorCanvas";
 
 const DOC_TYPE_STYLES: Record<string, { label: string; className: string }> = {
   primary: { label: "Primary", className: "text-muted-foreground border-border" },
