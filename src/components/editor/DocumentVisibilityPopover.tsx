@@ -74,7 +74,7 @@ const DocumentVisibilityPopover = ({
         <div className="space-y-2">
           {MOCK_DOCUMENTS.map((doc) => {
             const isPrimary = doc.docType === "primary";
-            const isChecked = visibleDocIds.includes(doc.id);
+            const isChecked = isPrimary ? true : visibleDocIds.includes(doc.id);
             const typeStyle = DOC_TYPE_STYLES[doc.docType] || DOC_TYPE_STYLES.primary;
 
             return (
