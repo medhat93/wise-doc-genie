@@ -198,6 +198,8 @@ interface EditorContextType {
   setAiSuggestions: React.Dispatch<React.SetStateAction<AiSuggestion[]>>;
   checklistState: ChecklistState;
   setChecklistState: React.Dispatch<React.SetStateAction<ChecklistState>>;
+  documentVisibility: Record<string, string[]>;
+  setDocumentVisibility: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
@@ -235,6 +237,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [pendingAiQuestion, setPendingAiQuestion] = useState<{ question: string; selectedText: string } | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
   const [checklistState, setChecklistState] = useState<ChecklistState>({ completedStepIds: [], skippedStepIds: [] });
+  const [documentVisibility, setDocumentVisibility] = useState<Record<string, string[]>>({});
 
   return (
     <EditorContext.Provider value={{
@@ -252,6 +255,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       pendingAiQuestion, setPendingAiQuestion,
       aiSuggestions, setAiSuggestions,
       checklistState, setChecklistState,
+      documentVisibility, setDocumentVisibility,
     }}>
       {children}
     </EditorContext.Provider>
