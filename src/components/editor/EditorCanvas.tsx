@@ -1427,7 +1427,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
                                                     <button
-                                                      onClick={(e) => { e.stopPropagation(); resolveWithAnimation(sectionRef, "resolve"); }}
+                                                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteSection(sectionRef); }}
                                                       className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                                                     >
                                                       <Trash2 size={12} />
