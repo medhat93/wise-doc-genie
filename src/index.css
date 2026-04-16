@@ -175,6 +175,10 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(720deg); }
 }
+@keyframes ai-icon-spin-once {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 @keyframes ai-sparkle {
   0% { filter: brightness(1) drop-shadow(0 0 0px transparent); }
   25% { filter: brightness(1.3) drop-shadow(0 0 6px hsla(263, 70%, 58%, 0.6)); }
@@ -182,19 +186,16 @@
   75% { filter: brightness(1.25) drop-shadow(0 0 5px hsla(263, 70%, 58%, 0.5)); }
   100% { filter: brightness(1) drop-shadow(0 0 0px transparent); }
 }
-@keyframes ai-pulse-hover {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
 
 .ai-toolbar-btn {
   position: relative;
+  background: hsl(var(--background));
 }
 .ai-toolbar-btn__icon {
   animation: ai-icon-spin-twice 1.2s ease-in-out 0.3s 1, ai-sparkle 1.2s ease-in-out 0.3s 1;
 }
 .ai-toolbar-btn:hover .ai-toolbar-btn__icon {
-  animation: ai-pulse-hover 0.6s ease;
+  animation: ai-icon-spin-once 0.6s ease-in-out;
 }
 .ai-toolbar-btn--active {
   box-shadow: 0 0 8px hsla(239, 84%, 67%, 0.3);
