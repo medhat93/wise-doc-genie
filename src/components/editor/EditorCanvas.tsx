@@ -1377,7 +1377,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
                                                     <button
-                                                      onClick={(e) => { e.stopPropagation(); toast("Suggestion rejected"); }}
+                                                      onClick={(e) => { e.stopPropagation(); resolveWithAnimation(sectionRef, "reject"); }}
                                                       className="flex h-5 w-5 items-center justify-center rounded text-destructive hover:bg-destructive/10 transition-colors"
                                                     >
                                                       <X size={12} />
