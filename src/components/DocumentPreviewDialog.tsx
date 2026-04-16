@@ -154,37 +154,48 @@ const DocumentPreviewDialog = ({ doc, open, onOpenChange }: Props) => {
         {/* Scrollable page content */}
         <div className="flex-1 overflow-y-auto bg-muted/40 p-6">
           <div className="flex justify-center">
-            <div
-              className="bg-white shadow-lg transition-transform duration-300"
-              style={{
-                width: fitMode === "fit-page" ? "auto" : "100%",
-                maxWidth: fitMode === "actual" ? "none" : "680px",
-                aspectRatio: "210 / 297",
-                transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
-                transformOrigin: "top center",
-              }}
-            >
-              {/* Mock page content */}
-              <div className="p-10 h-full flex flex-col gap-4">
-                <div className="space-y-2.5 w-full">
-                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
-                  <div className="h-[5px] bg-muted-foreground/10 rounded w-4/5" />
-                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
-                  <div className="h-[5px] bg-muted-foreground/10 rounded w-3/5" />
-                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
-                  <div className="h-[5px] bg-muted-foreground/10 rounded w-2/3" />
-                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
-                  <div className="h-[5px] bg-muted-foreground/10 rounded w-4/5" />
-                  <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
-                  <div className="h-[5px] bg-muted-foreground/10 rounded w-1/2" />
+            {(() => {
+              const isLandscape = rotation === 90 || rotation === 270;
+              const aspect = isLandscape ? "297 / 210" : "210 / 297";
+              return (
+                <div
+                  className="bg-white shadow-lg transition-all duration-300"
+                  style={{
+                    width: fitMode === "fit-page" ? "auto" : "100%",
+                    maxWidth: fitMode === "actual" ? "none" : isLandscape ? "800px" : "680px",
+                    aspectRatio: aspect,
+                    transform: `scale(${zoom / 100})`,
+                    transformOrigin: "top center",
+                  }}
+                >
+                  {/* Mock page content with rotation applied inside */}
+                  <div
+                    className="w-full h-full flex items-center justify-center overflow-hidden transition-transform duration-300"
+                    style={{ transform: `rotate(${rotation}deg)` }}
+                  >
+                    <div className="p-10 flex flex-col gap-4" style={{ width: isLandscape ? "70%" : "100%", height: isLandscape ? "100%" : "auto" }}>
+                      <div className="space-y-2.5 w-full">
+                        <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
+                        <div className="h-[5px] bg-muted-foreground/10 rounded w-4/5" />
+                        <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
+                        <div className="h-[5px] bg-muted-foreground/10 rounded w-3/5" />
+                        <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
+                        <div className="h-[5px] bg-muted-foreground/10 rounded w-2/3" />
+                        <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
+                        <div className="h-[5px] bg-muted-foreground/10 rounded w-4/5" />
+                        <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
+                        <div className="h-[5px] bg-muted-foreground/10 rounded w-1/2" />
+                      </div>
+                      <div className="mt-auto text-center">
+                        <span className="text-lg font-semibold text-muted-foreground/20">
+                          {currentPage}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-auto text-center">
-                  <span className="text-lg font-semibold text-muted-foreground/20">
-                    {currentPage}
-                  </span>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
           </div>
         </div>
 
