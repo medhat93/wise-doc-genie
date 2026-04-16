@@ -892,49 +892,16 @@ const EditorParticipantsPanel = () => {
     });
     const steps = Array.from(signersByOrder.entries()).sort(([a], [b]) => a - b);
 
+    const allParticipants = [...approvers, ...signers.sort((a, b) => a.order - b.order), ...viewers];
+
     return (
-      <div className="space-y-3">
-        {/* Step 0 — Approvers */}
-        {approvers.length > 0 && (
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Step 0 — Approval</p>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            {approvers.map((a) => renderCard(a))}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={signers.sort((a, b) => a.order - b.order).map(s => s.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-2">
+            {allParticipants.map((p) => renderCard(p))}
           </div>
-        )}
-
-        {/* Signer steps */}
-        {steps.map(([stepNum, stepParticipants]) => (
-          <div key={stepNum} className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Step {stepNum}</p>
-              {stepParticipants.length > 1 && (
-                <span className="text-[10px] text-muted-foreground italic whitespace-nowrap">Signing in parallel</span>
-              )}
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            <div className={cn(
-              "space-y-1.5",
-              stepParticipants.length > 1 && "border-l-2 border-[hsl(var(--brand-indigo))]/20 pl-2"
-            )}>
-              {stepParticipants.map((s) => renderCard(s))}
-            </div>
-          </div>
-        ))}
-
-        {/* Viewers (no signing required) */}
-        {viewers.length > 0 && (
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">No signing required</p>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            {viewers.map((v) => renderCard(v))}
-          </div>
-        )}
-      </div>
+        </SortableContext>
+      </DndContext>
     );
   };
 
