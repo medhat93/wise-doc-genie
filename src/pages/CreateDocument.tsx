@@ -785,7 +785,7 @@ const CreateDocument = () => {
                         {(action as any).customIcon ? (
                           <AiIcon
                             size={20}
-                            className="transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]"
+                            className="ai-toolbar-btn__icon"
                           />
                         ) : (
                           <HugeiconsIcon icon={action.icon} size={20} />
