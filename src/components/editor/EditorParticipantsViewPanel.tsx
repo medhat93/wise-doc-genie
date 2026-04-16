@@ -164,6 +164,20 @@ const SortableParticipantCard = ({
         )}
       </div>
 
+      {/* Eye icon for document visibility */}
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity text-muted-foreground"
+          >
+            <Eye size={13} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-xs">Control document visibility</TooltipContent>
+      </Tooltip>
+
       {/* Delete button */}
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>
