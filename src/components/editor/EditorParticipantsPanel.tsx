@@ -578,6 +578,10 @@ const EditorParticipantsPanel = () => {
     );
   };
 
+  const handleOrderChange2 = (id: string, newOrder: number) => {
+    setParticipants((prev) => prev.map((p) => p.id === id ? { ...p, order: newOrder } : p));
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -790,176 +794,89 @@ const EditorParticipantsPanel = () => {
     }
 
     return (
-      <div key={p.id} className="border rounded-lg p-3 space-y-1.5">
-        {/* Row 1 */}
-        <div className="flex items-center justify-between gap-1.5">
+      <div key={p.id} className="border rounded-lg p-2.5 space-y-1 group/card hover:bg-muted/30 transition-colors">
+        {/* Row 1: drag + order + name + sending icon + role badge (right) */}
+        <div className="flex items-center gap-2">
+          {sequential && isSigner && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <GripVertical size={14} className="text-muted-foreground cursor-grab" />
+              <input
+                type="number"
+                min={1}
+                value={p.order}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val) && val >= 1) handleOrderChange2(p.id, val);
+                }}
+                className="h-5 w-5 rounded-sm bg-muted text-[10px] font-bold text-muted-foreground text-center border-0 outline-none focus:ring-1 focus:ring-primary appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+            </div>
+          )}
+          {!sequential && (
+            <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+          )}
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {/* Drag handle + step badge (only for signers when sequential) */}
-            {sequential && isSigner && (
-              <>
-                <GripVertical size={14} className="text-muted-foreground cursor-grab flex-shrink-0" />
-                <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0">
-                  {p.order}
+            <span className="text-xs font-medium truncate">{p.name}</span>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <span className="h-4 w-4 rounded flex items-center justify-center text-muted-foreground flex-shrink-0">
+                  {getSendingIcon(p.sendingMethod)}
                 </span>
-              </>
-            )}
-            {sequential && isApprover && (
-              <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0 opacity-50">
-                0
-              </span>
-            )}
-            <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-            <span className="text-sm font-medium truncate">{p.name}</span>
-            <span className="text-xs text-muted-foreground truncate">
-              {p.sendingMethod === "email" ? p.email : p.sendingPhone || ""}
-            </span>
-          </div>
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            {/* +/- stepper for signers in sequential mode */}
-            {sequential && isSigner && (
-              <div className="flex items-center gap-0.5 mr-1">
-                <button
-                  onClick={() => handleOrderChange(p.id, -1)}
-                  className="h-5 w-5 flex items-center justify-center rounded border text-muted-foreground hover:text-foreground hover:bg-accent"
-                >
-                  <Minus size={10} />
-                </button>
-                <button
-                  onClick={() => handleOrderChange(p.id, 1)}
-                  className="h-5 w-5 flex items-center justify-center rounded border text-muted-foreground hover:text-foreground hover:bg-accent"
-                >
-                  <Plus size={10} />
-                </button>
-              </div>
-            )}
-            {MOCK_DOCUMENTS.some(d => d.docType === "supplement") && (() => {
-              const docsVisible = MOCK_DOCUMENTS.filter(d => (visibility[d.id] || []).includes(p.id)).length;
-              const allVisible = docsVisible === MOCK_DOCUMENTS.length;
-              return (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-6 px-2 text-[10px] gap-1 flex-shrink-0">
-                      <Eye size={12} />
-                      {allVisible ? "All" : `${docsVisible}/${MOCK_DOCUMENTS.length}`}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-56 p-2" align="end">
-                    <p className="text-xs font-medium mb-2">Documents visible to {p.name.split(" ")[0]}</p>
-                    {MOCK_DOCUMENTS.map((doc) => {
-                      const visibleIds = visibility[doc.id] || [];
-                      const isChecked = visibleIds.includes(p.id);
-                      const isLastDoc = docsVisible === 1 && isChecked;
-                      return (
-                        <label
-                          key={doc.id}
-                          className={cn(
-                            "flex items-center gap-2 px-1 py-1 rounded hover:bg-accent cursor-pointer",
-                            isLastDoc && "opacity-50 cursor-not-allowed"
-                          )}
-                        >
-                          <Checkbox
-                            checked={isChecked}
-                            onCheckedChange={() => toggleDocVisibility(doc.id, p.id)}
-                            disabled={isLastDoc}
-                          />
-                          <span className="text-xs truncate flex-1">{doc.name}</span>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "text-[8px] px-1 py-0 h-3 font-medium",
-                              doc.docType === "primary" && "text-[hsl(var(--brand-indigo))]",
-                              doc.docType === "supplement" && "text-amber-600",
-                              doc.docType === "attachment" && "text-muted-foreground"
-                            )}
-                          >
-                            {doc.docType.charAt(0).toUpperCase() + doc.docType.slice(1)}
-                          </Badge>
-                        </label>
-                      );
-                    })}
-                  </PopoverContent>
-                </Popover>
-              );
-            })()}
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
+              </TooltipContent>
+            </Tooltip>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
-                  <MoreHorizontal size={14} />
-                </Button>
+                <button className="focus:outline-none ml-auto flex-shrink-0">
+                  <Badge variant="outline" className={cn("text-[8px] px-1 py-0 h-3.5 font-medium border cursor-pointer hover:opacity-80", roleStyle.className)}>
+                    {roleStyle.label}
+                  </Badge>
+                </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem className="gap-2 text-xs" onClick={() => startEditing(p)}>
-                  <Pencil size={12} />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 text-xs" onClick={() => handleDuplicate(p)}>
-                  <Copy size={12} />
-                  Duplicate
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={() => setConfirmRemoveId(p.id)}>
-                  <Trash2 size={12} />
-                  Remove
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="min-w-[100px]">
+                {(["signer", "approver", "viewer"] as ParticipantRole[]).map((r) => (
+                  <DropdownMenuItem key={r} className="text-xs gap-2" onClick={() => handleQuickRoleChange(p.id, r)}>
+                    <Badge variant="outline" className={cn("text-[9px] px-1 py-0 h-3.5 border", ROLE_STYLES[r].className)}>
+                      {ROLE_STYLES[r].label}
+                    </Badge>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
-
-        {/* Row 2: Clickable badges */}
-        <div className="flex items-center gap-1.5 flex-wrap">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="focus:outline-none">
-                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-medium border cursor-pointer hover:opacity-80", roleStyle.className)}>
-                  {roleStyle.label}
-                </Badge>
-              </button>
+              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                <MoreHorizontal size={14} />
+              </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="min-w-[100px]">
-              {(["signer", "approver", "viewer"] as ParticipantRole[]).map((r) => (
-                <DropdownMenuItem key={r} className="text-xs gap-2" onClick={() => handleQuickRoleChange(p.id, r)}>
-                  <Badge variant="outline" className={cn("text-[9px] px-1 py-0 h-3.5 border", ROLE_STYLES[r].className)}>
-                    {ROLE_STYLES[r].label}
-                  </Badge>
-                </DropdownMenuItem>
-              ))}
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem className="gap-2 text-xs" onClick={() => startEditing(p)}>
+                <Pencil size={12} />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem className="gap-2 text-xs" onClick={() => handleDuplicate(p)}>
+                <Copy size={12} />
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={() => setConfirmRemoveId(p.id)}>
+                <Trash2 size={12} />
+                Remove
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="focus:outline-none">
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border gap-1 flex items-center cursor-pointer hover:opacity-80">
-                  {getSendingIcon(p.sendingMethod)}
-                  {p.sendingMethod === "email" ? "Email" : p.sendingMethod === "sms" ? "SMS" : "WhatsApp"}
-                </Badge>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="min-w-[100px]">
-              {(["email", "sms", "whatsapp"] as SendingMethod[]).map((m) => (
-                <DropdownMenuItem key={m} className="text-xs gap-2" onClick={() => handleQuickSendingChange(p.id, m)}>
-                  {getSendingIcon(m)}
-                  {m === "email" ? "Email" : m === "sms" ? "SMS" : "WhatsApp"}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {p.language === "ar" && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border text-muted-foreground">
-              AR
-            </Badge>
-          )}
         </div>
 
-
-
-
-        {(p.sendingMethod === "sms" || p.sendingMethod === "whatsapp") && p.sendingPhone && (
-          <p className="text-xs text-muted-foreground pl-4">{p.sendingPhone}</p>
-        )}
+        {/* Row 2: contact info */}
+        <p className="text-[10px] text-muted-foreground truncate pl-0">
+          {p.sendingMethod === "email" ? p.email : p.sendingPhone || ""}
+        </p>
         {verifySummary && (
-          <p className="text-[10px] text-muted-foreground pl-4">{verifySummary}</p>
+          <p className="text-[10px] text-muted-foreground truncate">
+            {verifySummary}
+          </p>
         )}
       </div>
     );
@@ -975,49 +892,16 @@ const EditorParticipantsPanel = () => {
     });
     const steps = Array.from(signersByOrder.entries()).sort(([a], [b]) => a - b);
 
+    const allParticipants = [...approvers, ...signers.sort((a, b) => a.order - b.order), ...viewers];
+
     return (
-      <div className="space-y-3">
-        {/* Step 0 — Approvers */}
-        {approvers.length > 0 && (
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Step 0 — Approval</p>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            {approvers.map((a) => renderCard(a))}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={signers.sort((a, b) => a.order - b.order).map(s => s.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-2">
+            {allParticipants.map((p) => renderCard(p))}
           </div>
-        )}
-
-        {/* Signer steps */}
-        {steps.map(([stepNum, stepParticipants]) => (
-          <div key={stepNum} className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Step {stepNum}</p>
-              {stepParticipants.length > 1 && (
-                <span className="text-[10px] text-muted-foreground italic whitespace-nowrap">Signing in parallel</span>
-              )}
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            <div className={cn(
-              "space-y-1.5",
-              stepParticipants.length > 1 && "border-l-2 border-[hsl(var(--brand-indigo))]/20 pl-2"
-            )}>
-              {stepParticipants.map((s) => renderCard(s))}
-            </div>
-          </div>
-        ))}
-
-        {/* Viewers (no signing required) */}
-        {viewers.length > 0 && (
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">No signing required</p>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            {viewers.map((v) => renderCard(v))}
-          </div>
-        )}
-      </div>
+        </SortableContext>
+      </DndContext>
     );
   };
 
