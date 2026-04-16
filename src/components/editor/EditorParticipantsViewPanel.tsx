@@ -163,31 +163,20 @@ const SortableParticipantCard = ({
         )}
       </div>
 
-      {/* Icons with tooltips */}
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <span className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground">
-              <SendIcon size={12} />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-xs">{SENDING_TOOLTIPS[participant.sendingMethod]}</TooltipContent>
-        </Tooltip>
-
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-              onClick={() => setConfirmRemoveId(participant.id)}
-            >
-              <Trash2 size={13} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-xs">Remove</TooltipContent>
-        </Tooltip>
-      </div>
+      {/* Delete button */}
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+            onClick={() => setConfirmRemoveId(participant.id)}
+          >
+            <Trash2 size={13} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-xs">Remove</TooltipContent>
+      </Tooltip>
     </div>
   );
 };
