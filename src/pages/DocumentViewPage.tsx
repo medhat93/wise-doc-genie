@@ -477,7 +477,7 @@ function DocumentViewPage() {
                         )}
                       >
                         
-                        <div className={cn("relative z-10 flex items-center justify-center h-full w-full rounded-xl", "bg-gradient-to-br from-indigo-500/10 to-violet-500/10")}>
+                        <div className="relative z-10 flex items-center justify-center h-full w-full rounded-xl">
                           <AiIcon size={20} className="ai-toolbar-btn__icon" />
                         </div>
                       </button>
