@@ -578,6 +578,10 @@ const EditorParticipantsPanel = () => {
     );
   };
 
+  const handleOrderChange2 = (id: string, newOrder: number) => {
+    setParticipants((prev) => prev.map((p) => p.id === id ? { ...p, order: newOrder } : p));
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
