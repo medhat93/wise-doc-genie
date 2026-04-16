@@ -1391,7 +1391,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
                                                     <button
-                                                      onClick={(e) => { e.stopPropagation(); toast.success("Comment resolved"); }}
+                                                      onClick={(e) => { e.stopPropagation(); resolveWithAnimation(sectionRef, "resolve"); }}
                                                       className="flex h-5 w-5 items-center justify-center rounded text-emerald-600 hover:bg-emerald-500/10 transition-colors"
                                                     >
                                                       <Check size={12} />
