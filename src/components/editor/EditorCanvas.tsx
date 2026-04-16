@@ -1329,10 +1329,11 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                         if (yPos === undefined) return null;
                         const primaryComment = sectionComments[0];
                         const style = BUBBLE_STYLES[primaryComment.annotationType];
+                        const isResolving = resolvingIds.has(sectionRef);
                         return (
                           <div
                             key={sectionRef}
-                            className="mb-3"
+                            className={cn("mb-3", isResolving && "comment-resolving")}
                             style={cIdx === 0 ? { marginTop: Math.max(0, yPos - 16) } : undefined}
                             onClick={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}
