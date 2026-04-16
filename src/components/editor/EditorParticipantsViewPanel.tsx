@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import ParticipantsDialog from "@/components/ParticipantsDialog";
 import { useEditorContext } from "./EditorContext";
 import { cn } from "@/lib/utils";
@@ -18,8 +18,9 @@ import {
   Trash2,
   Users,
   GripVertical,
-  Eye,
 } from "lucide-react";
+import DocumentVisibilityPopover from "./DocumentVisibilityPopover";
+import { MOCK_DOCUMENTS } from "./EditorCanvas";
 import { toast } from "sonner";
 import type { Participant, ParticipantRole, SendingMethod } from "./EditorParticipantsPanel";
 import AddParticipantDialog from "./AddParticipantDialog";
@@ -76,6 +77,8 @@ const SortableParticipantCard = ({
   onOrderChange,
   confirmRemoveId,
   setConfirmRemoveId,
+  visibleDocIds,
+  onVisibilityChange,
 }: {
   participant: Participant;
   workflowEnabled: boolean;
@@ -85,6 +88,8 @@ const SortableParticipantCard = ({
   onOrderChange: (id: string, newOrder: number) => void;
   confirmRemoveId: string | null;
   setConfirmRemoveId: (id: string | null) => void;
+  visibleDocIds: string[];
+  onVisibilityChange: (participantId: string, docId: string, visible: boolean) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: participant.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
