@@ -964,6 +964,24 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     toast.success("Suggestion rejected");
   }, [setAiSuggestions]);
 
+  /** Animate a margin comment card flying away, then resolve it */
+  const resolveWithAnimation = useCallback((sectionRef: string, action: "resolve" | "accept" | "reject") => {
+    setResolvingIds(prev => new Set(prev).add(sectionRef));
+    const msg = action === "resolve" ? "Comment resolved" : action === "accept" ? "Suggestion accepted" : "Suggestion rejected";
+    setTimeout(() => {
+      setResolvingIds(prev => {
+        const next = new Set(prev);
+        next.delete(sectionRef);
+        return next;
+      });
+      // Actually resolve the comments for that section
+      setComments(prev => prev.map(c =>
+        c.sectionRef === sectionRef ? { ...c, status: "resolved" as const } : c
+      ));
+      toast.success(msg);
+    }, 500);
+  }, [setComments]);
+
   const scrollToNextSuggestion = useCallback(() => {
     const pending = aiSuggestions.find(s => s.status === "pending");
     if (pending) {
