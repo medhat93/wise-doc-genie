@@ -846,6 +846,14 @@ const EditorParticipantsPanel = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                <Eye size={14} className="text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">Control document visibility</TooltipContent>
+          </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
