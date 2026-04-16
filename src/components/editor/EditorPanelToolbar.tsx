@@ -175,7 +175,7 @@ const EditorPanelToolbar = ({ activePanel, onPanelToggle, className, isEsign, ch
                 isActive && "ai-toolbar-btn--active"
               )}
             >
-              <div className="ai-toolbar-btn__border" />
+              
               <div className={cn(
                 "relative z-10 flex items-center justify-center h-full w-full rounded-xl",
                 "bg-gradient-to-br from-indigo-500/10 to-violet-500/10"
