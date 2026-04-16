@@ -1340,7 +1340,31 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                             onMouseDown={(e) => e.stopPropagation()}
                           >
                             {/* Comment card — borderless Google Docs style */}
-                            <div className="w-[240px] group/card rounded-lg hover:bg-muted/40 transition-colors overflow-hidden">
+                            <div className="w-[240px] group/card rounded-lg hover:bg-muted/40 transition-colors overflow-hidden relative">
+                              {/* Delete confirmation overlay */}
+                              {confirmDeleteSection === sectionRef && (
+                                <div className="absolute inset-0 z-10 bg-background/90 backdrop-blur-[2px] rounded-lg flex flex-col items-center justify-center gap-2 animate-in fade-in duration-150">
+                                  <p className="text-xs font-medium">Delete this comment thread?</p>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 text-xs px-3 border-primary text-primary hover:bg-primary/10"
+                                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteSection(null); resolveWithAnimation(sectionRef, "resolve"); }}
+                                    >
+                                      Delete
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 text-xs px-3"
+                                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteSection(null); }}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                               {sectionComments.map((comment, commentIdx) => {
                                 const isSuggestionType = comment.annotationType === "suggestion" || comment.annotationType === "ai_suggestion";
                                 return (
