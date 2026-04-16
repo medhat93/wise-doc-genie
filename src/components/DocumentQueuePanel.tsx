@@ -42,7 +42,7 @@ import {
   SentIcon,
   Search01Icon,
 } from "@hugeicons/core-free-icons";
-import { FileText, FilePlus, RotateCw, Lock, MoreVertical } from "lucide-react";
+import { FileText, FilePlus, Lock, MoreVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AiIcon from "@/components/AiIcon";
 import DocumentPreviewDialog from "@/components/DocumentPreviewDialog";
