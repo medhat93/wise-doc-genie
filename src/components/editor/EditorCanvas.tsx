@@ -950,6 +950,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
   const [openThreadSection, setOpenThreadSection] = useState<string | null>(null);
   const [zoom, setZoom] = useState(100);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [resolvingIds, setResolvingIds] = useState<Set<string>>(new Set());
 
   const pendingSuggestions = aiSuggestions.filter(s => s.status === "pending");
 
@@ -962,6 +963,24 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     setAiSuggestions(prev => prev.map(s => s.id === id ? { ...s, status: "rejected" as const } : s));
     toast.success("Suggestion rejected");
   }, [setAiSuggestions]);
+
+  /** Animate a margin comment card flying away, then resolve it */
+  const resolveWithAnimation = useCallback((sectionRef: string, action: "resolve" | "accept" | "reject") => {
+    setResolvingIds(prev => new Set(prev).add(sectionRef));
+    const msg = action === "resolve" ? "Comment resolved" : action === "accept" ? "Suggestion accepted" : "Suggestion rejected";
+    setTimeout(() => {
+      setResolvingIds(prev => {
+        const next = new Set(prev);
+        next.delete(sectionRef);
+        return next;
+      });
+      // Actually resolve the comments for that section
+      setComments(prev => prev.map(c =>
+        c.sectionRef === sectionRef ? { ...c, status: "resolved" as const } : c
+      ));
+      toast.success(msg);
+    }, 500);
+  }, [setComments]);
 
   const scrollToNextSuggestion = useCallback(() => {
     const pending = aiSuggestions.find(s => s.status === "pending");
@@ -1310,10 +1329,11 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                         if (yPos === undefined) return null;
                         const primaryComment = sectionComments[0];
                         const style = BUBBLE_STYLES[primaryComment.annotationType];
+                        const isResolving = resolvingIds.has(sectionRef);
                         return (
                           <div
                             key={sectionRef}
-                            className="mb-3"
+                            className={cn("mb-3", isResolving && "comment-resolving")}
                             style={cIdx === 0 ? { marginTop: Math.max(0, yPos - 16) } : undefined}
                             onClick={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}
@@ -1346,7 +1366,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
                                                     <button
-                                                      onClick={(e) => { e.stopPropagation(); toast.success("Suggestion accepted"); }}
+                                                      onClick={(e) => { e.stopPropagation(); resolveWithAnimation(sectionRef, "accept"); }}
                                                       className="flex h-5 w-5 items-center justify-center rounded text-emerald-600 hover:bg-emerald-500/10 transition-colors"
                                                     >
                                                       <Check size={12} />
@@ -1357,7 +1377,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
                                                     <button
-                                                      onClick={(e) => { e.stopPropagation(); toast("Suggestion rejected"); }}
+                                                      onClick={(e) => { e.stopPropagation(); resolveWithAnimation(sectionRef, "reject"); }}
                                                       className="flex h-5 w-5 items-center justify-center rounded text-destructive hover:bg-destructive/10 transition-colors"
                                                     >
                                                       <X size={12} />
@@ -1371,7 +1391,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
                                                     <button
-                                                      onClick={(e) => { e.stopPropagation(); toast.success("Comment resolved"); }}
+                                                      onClick={(e) => { e.stopPropagation(); resolveWithAnimation(sectionRef, "resolve"); }}
                                                       className="flex h-5 w-5 items-center justify-center rounded text-emerald-600 hover:bg-emerald-500/10 transition-colors"
                                                     >
                                                       <Check size={12} />
@@ -1382,7 +1402,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
                                                     <button
-                                                      onClick={(e) => { e.stopPropagation(); toast("Comment deleted"); }}
+                                                      onClick={(e) => { e.stopPropagation(); resolveWithAnimation(sectionRef, "resolve"); }}
                                                       className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                                                     >
                                                       <Trash2 size={12} />
