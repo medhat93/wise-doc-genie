@@ -137,11 +137,19 @@ const SortableParticipantCard = ({
         <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: participant.color }} />
       )}
 
-      {/* Name + role badge + contact */}
+      {/* Name + sending method + role badge */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
           <p className="text-xs font-medium truncate">{participant.name}</p>
-          <Badge variant="outline" className={cn("text-[8px] px-1 py-0 h-3.5 font-medium border flex-shrink-0", roleStyle.className)}>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <span className="h-4 w-4 rounded flex items-center justify-center text-muted-foreground flex-shrink-0">
+                <SendIcon size={11} />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">{SENDING_TOOLTIPS[participant.sendingMethod]}</TooltipContent>
+          </Tooltip>
+          <Badge variant="outline" className={cn("text-[8px] px-1 py-0 h-3.5 font-medium border flex-shrink-0 ml-auto", roleStyle.className)}>
             {roleStyle.label}
           </Badge>
         </div>
