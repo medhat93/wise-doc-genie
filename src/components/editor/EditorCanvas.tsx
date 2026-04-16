@@ -950,6 +950,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
   const [openThreadSection, setOpenThreadSection] = useState<string | null>(null);
   const [zoom, setZoom] = useState(100);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [resolvingIds, setResolvingIds] = useState<Set<string>>(new Set());
 
   const pendingSuggestions = aiSuggestions.filter(s => s.status === "pending");
 
