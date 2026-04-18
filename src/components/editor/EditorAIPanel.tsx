@@ -421,15 +421,37 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
       {/* Conversation */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center py-8">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-              <Sparkles size={18} className="text-primary" />
+          <>
+            <div className="flex gap-2 items-start">
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <Sparkles size={12} className="text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs leading-relaxed text-foreground">
+                  Hi Ahmed — I've read your <span className="font-medium">Master Services Agreement</span>. I can see <span className="font-medium">2 parties</span>, <span className="font-medium">3 open comments</span>, and one redlined clause (<span className="font-medium">Payment Terms</span>). Ask me anything, or pick an intent below to get started.
+                </div>
+              </div>
             </div>
-            <p className="text-sm font-medium text-foreground mb-1">Signit AI</p>
-            <p className="text-xs text-muted-foreground max-w-[240px]">
-              Ask, draft, review, or summarize anything in this document.
-            </p>
-          </div>
+            <div className="flex flex-col gap-1.5 pl-8">
+              {[
+                "Summarize this contract",
+                "Review as Client",
+                "Check payment terms against Vendor MSA Playbook",
+                "Explain the redline on Payment Terms",
+              ].map((chip) => (
+                <button
+                  key={chip}
+                  onClick={() => {
+                    setInput(chip);
+                    setTimeout(() => inputRef.current?.focus(), 50);
+                  }}
+                  className="text-left text-xs px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted hover:border-primary/40 transition-colors text-foreground/90"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </>
         )}
 
         {messages.map((msg) =>
