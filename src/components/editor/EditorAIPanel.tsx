@@ -49,10 +49,10 @@ const PLAYBOOKS = [
   { id: "employment", name: "Employment Contract Playbook" },
 ];
 
-interface RichBlock {
-  kind: "card" | "table" | "diff" | "checklist";
-  title?: string;
-}
+type RichBlock =
+  | ({ kind: "suggestion" } & SuggestionCardProps)
+  | ({ kind: "table" } & ComparisonTableProps)
+  | ({ kind: "checklist" } & ChecklistProps);
 
 interface ChatMessage {
   id: string;
