@@ -657,7 +657,6 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
     addMarginPin(card.citation || "", card.severity, card.cardId);
     setResolvedViolations((prev) => [...prev, v.id]);
   };
-  };
 
   const shortDescribe = (card: SuggestionBlockData) => {
     const t = card.title.toLowerCase();
