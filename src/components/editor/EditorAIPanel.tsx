@@ -558,6 +558,105 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
       })
     );
     setHasResolvedAny(true);
+
+    // After Apply, surface a save-rule prompt as an in-panel toast
+    if (action === "applied") {
+      const suggestedName = deriveRuleName(card);
+      setSavePrompts((prev) => [
+        ...prev,
+        { id: `srp-${cardId}`, suggestedName, stage: "ask" },
+      ]);
+    }
+  };
+
+  const deriveRuleName = (card: SuggestionBlockData) => {
+    const t = card.title.toLowerCase();
+    if (t.includes("late payment") || t.includes("late-payment")) return "Late-payment interest ≤ 1%/month";
+    if (t.includes("payment window")) return "Payment window ≥ 30 days";
+    if (t.includes("governing law")) return "Require governing-law clause";
+    return card.title;
+  };
+
+  const dismissSavePrompt = (id: string) =>
+    setSavePrompts((prev) => prev.filter((p) => p.id !== id));
+
+  const openSaveRuleForm = (id: string) =>
+    setSavePrompts((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              stage: "form",
+              ruleName: p.ruleName ?? p.suggestedName,
+              savedTo: p.savedTo ?? (activePlaybooks.includes("my-playbook") ? "my-playbook" : activePlaybooks[0]),
+            }
+          : p
+      )
+    );
+
+  const confirmSaveRule = (id: string) =>
+    setSavePrompts((prev) => prev.map((p) => (p.id === id ? { ...p, stage: "saved" } : p)));
+
+  const updateSavePrompt = (id: string, patch: Partial<SaveRulePrompt>) =>
+    setSavePrompts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+
+  // Violations seed
+  type Violation = {
+    id: string;
+    title: string;
+    citation: string;
+    severity: "Critical" | "Medium" | "Low";
+    description: string;
+    card: SuggestionBlockData;
+  };
+  const VIOLATIONS_SEED: Violation[] = [
+    {
+      id: "v1",
+      title: "Payment window shorter than playbook standard",
+      citation: "§3 Payment Terms",
+      severity: "Medium",
+      description: "Document uses NET-15; Vendor MSA Playbook expects NET-30.",
+      card: {
+        cardId: `violation-card-v1`,
+        severity: "Medium",
+        title: "Payment window shorter than standard",
+        citation: "§3 Payment Terms",
+        oldText: "fifteen (15) days",
+        newText: "thirty (30) days",
+        reasoning: "Vendor MSA Playbook expects NET-30 for B2B services.",
+      },
+    },
+    {
+      id: "v2",
+      title: "Missing governing law",
+      citation: "§ End of document",
+      severity: "Low",
+      description: "No governing-law clause was found in this agreement.",
+      card: {
+        cardId: `violation-card-v2`,
+        severity: "Low",
+        title: "Missing governing law",
+        description: "No governing-law clause was found in this agreement.",
+        citation: "§ End of document",
+        newText:
+          "Governing Law. This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles.",
+        reasoning: "Adding an explicit governing-law clause prevents jurisdictional disputes.",
+      },
+    },
+  ];
+  const visibleViolations = VIOLATIONS_SEED.filter((v) => !resolvedViolations.includes(v.id));
+
+  const openViolationInChat = (v: Violation) => {
+    setActiveTab("chat");
+    import("./ai-blocks/aiBlockUtils").then(({ jumpToSection }) => jumpToSection(v.citation));
+    const card: SuggestionBlockData = { ...v.card, cardId: `${v.card.cardId}-${Date.now()}` };
+    appendAssistantMessage(
+      [{ kind: "suggestion", ...card }],
+      `From Violations — let's address: ${v.title}.`
+    );
+    addMarginPin(card.citation || "", card.severity, card.cardId);
+    setResolvedViolations((prev) => [...prev, v.id]);
+  };
   };
 
   const shortDescribe = (card: SuggestionBlockData) => {
