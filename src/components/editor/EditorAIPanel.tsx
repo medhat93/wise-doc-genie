@@ -802,10 +802,10 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
               size="icon"
               className="h-7 w-7"
               onClick={() => {
-                setExpanded((v) => !v);
-                toast(expanded ? "Collapsed" : "Expanded to canvas");
+                setCanvasInitialLayout("outline");
+                setCanvasOpen(true);
               }}
-              title="Expand"
+              title="Expand to canvas"
             >
               <Maximize2 size={14} />
             </Button>
