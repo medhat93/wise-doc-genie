@@ -1441,6 +1441,11 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
           </div>
         </SheetContent>
       </Sheet>
+      <AICanvasOverlay
+        open={canvasOpen}
+        initialLayout={canvasInitialLayout}
+        onClose={() => setCanvasOpen(false)}
+      />
     </div>
   );
 };
