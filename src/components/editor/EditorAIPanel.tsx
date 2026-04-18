@@ -521,7 +521,7 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-xs leading-relaxed text-foreground whitespace-pre-wrap">
-                  {msg.content}
+                  {renderAiText(msg.content)}
                   {isStreaming && msg.id === messages[messages.length - 1]?.id && (
                     <span className="inline-block w-1 h-3 bg-primary animate-pulse ml-0.5 align-middle" />
                   )}
