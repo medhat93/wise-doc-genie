@@ -169,16 +169,18 @@ const EditorPageInner = () => {
         )}
 
         {/* Center — Document canvas (full width now) */}
-        <EditorCanvas
-          showToolbar={!isEsign}
-          onFieldSelect={handleFieldSelect}
-          onOpenComments={handleOpenComments}
-          onOpenAi={handleOpenAi}
-          onOpenVersionHistory={() => setVersionHistoryOpen(true)}
-          isEsign={isEsign}
-          hideZoomBar={!!selectedFieldId}
-          hideMarginComments={!!selectedFieldId && !!activePanel && activePanel !== "field-settings"}
-        />
+        <div data-editor-canvas-host className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <EditorCanvas
+            showToolbar={!isEsign}
+            onFieldSelect={handleFieldSelect}
+            onOpenComments={handleOpenComments}
+            onOpenAi={handleOpenAi}
+            onOpenVersionHistory={() => setVersionHistoryOpen(true)}
+            isEsign={isEsign}
+            hideZoomBar={!!selectedFieldId}
+            hideMarginComments={!!selectedFieldId && !!activePanel && activePanel !== "field-settings"}
+          />
+        </div>
 
       <VersionHistoryOverlay
         open={versionHistoryOpen}
