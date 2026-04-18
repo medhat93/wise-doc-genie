@@ -200,6 +200,8 @@ interface EditorContextType {
   setChecklistState: React.Dispatch<React.SetStateAction<ChecklistState>>;
   documentVisibility: Record<string, string[]>;
   setDocumentVisibility: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
+  requestOpenAiPanel: () => void;
+  setRequestOpenAiPanel: (fn: () => void) => void;
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
