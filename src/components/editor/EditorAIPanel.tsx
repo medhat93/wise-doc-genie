@@ -142,7 +142,8 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [activePlaybooks, setActivePlaybooks] = useState<string[]>(["vendor-msa", "my-playbook"]);
   const [playbookOpen, setPlaybookOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [canvasOpen, setCanvasOpen] = useState(false);
+  const [canvasInitialLayout, setCanvasInitialLayout] = useState<AiCanvasSummary["layout"]>("outline");
   const [setups, setSetups] = useState<Record<string, ReviewSetup>>({});
   const [reviewRuns, setReviewRuns] = useState<Record<string, "idle" | "running" | "done">>({});
   const [hasResolvedAny, setHasResolvedAny] = useState(false);
