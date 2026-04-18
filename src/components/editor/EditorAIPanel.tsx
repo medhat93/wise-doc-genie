@@ -19,7 +19,20 @@ import {
   ChevronDown,
   Check,
   MessageSquare,
+  ShieldAlert,
+  ExternalLink,
+  Bookmark,
+  Undo2,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import AiIcon from "@/components/AiIcon";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
