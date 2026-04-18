@@ -60,9 +60,8 @@ const SCOPES: Scope[] = ["Full document", "Selected text", "Current section"];
 
 const PLAYBOOKS = [
   { id: "vendor-msa", name: "Vendor MSA Playbook" },
-  { id: "nda-standard", name: "Standard NDA Playbook" },
-  { id: "data-protection", name: "Data Protection Playbook" },
-  { id: "employment", name: "Employment Contract Playbook" },
+  { id: "nda-redlines", name: "NDA Redlines" },
+  { id: "my-playbook", name: "My Playbook" },
 ];
 
 type SuggestionBlockData = SuggestionCardProps & {
