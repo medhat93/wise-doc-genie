@@ -137,12 +137,23 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
   const [quotedText, setQuotedText] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [activePlaybooks, setActivePlaybooks] = useState<string[]>(["vendor-msa"]);
+  const [activePlaybooks, setActivePlaybooks] = useState<string[]>(["vendor-msa", "my-playbook"]);
   const [playbookOpen, setPlaybookOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [setups, setSetups] = useState<Record<string, ReviewSetup>>({});
   const [reviewRuns, setReviewRuns] = useState<Record<string, "idle" | "running" | "done">>({});
   const [hasResolvedAny, setHasResolvedAny] = useState(false);
+  const [activeTab, setActiveTab] = useState<"chat" | "violations">("chat");
+  const [resolvedViolations, setResolvedViolations] = useState<string[]>([]);
+  // Save-rule prompts shown as lightweight in-panel toasts
+  type SaveRulePrompt = {
+    id: string;
+    suggestedName: string;
+    stage: "ask" | "form" | "saved";
+    ruleName?: string;
+    savedTo?: string;
+  };
+  const [savePrompts, setSavePrompts] = useState<SaveRulePrompt[]>([]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
