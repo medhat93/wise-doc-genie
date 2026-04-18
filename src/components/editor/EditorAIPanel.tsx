@@ -25,6 +25,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useEditorContext } from "./EditorContext";
 import type { AiSuggestion, Comment } from "./EditorContext";
+import SuggestionCard, { type SuggestionCardProps } from "./ai-blocks/SuggestionCard";
+import ComparisonTable, { type ComparisonTableProps } from "./ai-blocks/ComparisonTable";
+import Checklist, { type ChecklistProps } from "./ai-blocks/Checklist";
+import CitationPill from "./ai-blocks/CitationPill";
 
 const EDIT_KEYWORDS = [
   "change", "rewrite", "update", "modify", "add a clause",
