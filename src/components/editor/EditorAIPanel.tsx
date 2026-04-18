@@ -177,6 +177,42 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
     }
   }, [pendingAiQuestion, setPendingAiQuestion]);
 
+  // Listen for slash/selection actions and canvas summaries (cross-surface bus)
+  useEffect(() => {
+    const onAction = (e: Event) => {
+      const detail = (e as CustomEvent<AiUserAction>).detail;
+      if (!detail) return;
+      handleExternalAction(detail);
+    };
+    const onSummary = (e: Event) => {
+      const s = (e as CustomEvent<AiCanvasSummary>).detail;
+      if (!s) return;
+      const id = `a-canvas-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id,
+          role: "assistant",
+          content: `Canvas: ${s.label} · `,
+          blocks: [{ kind: "canvas-link", layout: s.layout, label: s.label }],
+        },
+      ]);
+    };
+    const onOpenCanvas = (e: Event) => {
+      const detail = (e as CustomEvent<{ layout?: AiCanvasSummary["layout"] }>).detail;
+      setCanvasInitialLayout(detail?.layout ?? "outline");
+      setCanvasOpen(true);
+    };
+    window.addEventListener(AI_EVENTS.USER_ACTION, onAction);
+    window.addEventListener(AI_EVENTS.CANVAS_SUMMARY, onSummary);
+    window.addEventListener(AI_EVENTS.OPEN_CANVAS, onOpenCanvas);
+    return () => {
+      window.removeEventListener(AI_EVENTS.USER_ACTION, onAction);
+      window.removeEventListener(AI_EVENTS.CANVAS_SUMMARY, onSummary);
+      window.removeEventListener(AI_EVENTS.OPEN_CANVAS, onOpenCanvas);
+    };
+  });
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isStreaming]);
