@@ -45,6 +45,8 @@ import CitationPill from "./ai-blocks/CitationPill";
 
 import ReviewSetupCard, { type ReviewSetup } from "./ai-blocks/ReviewSetupCard";
 import { addMarginPin, removeMarginPin, applyEditToCanvas } from "./ai-blocks/aiBlockUtils";
+import AICanvasOverlay from "./AICanvasOverlay";
+import { AI_EVENTS, type AiUserAction, type AiCanvasSummary } from "./ai-blocks/aiEvents";
 
 const EDIT_KEYWORDS = [
   "change", "rewrite", "update", "modify", "add a clause",
