@@ -263,6 +263,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       aiSuggestions, setAiSuggestions,
       checklistState, setChecklistState,
       documentVisibility, setDocumentVisibility,
+      requestOpenAiPanel, setRequestOpenAiPanel,
     }}>
       {children}
     </EditorContext.Provider>
