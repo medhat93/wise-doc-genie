@@ -786,7 +786,7 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
                     <span className="inline-block w-1 h-3 bg-primary animate-pulse ml-0.5 align-middle" />
                   )}
                 </div>
-                {msg.blocks?.map((b, i) => renderBlock(b, i))}
+                {msg.blocks?.map((b, i) => renderBlock(b, i, msg.id))}
                 {msg.hasSuggestions && !isStreaming && pendingSuggestions.length > 0 && (
                   <div className="mt-2 flex gap-1.5">
                     <Button size="sm" className="h-7 text-[10px] flex-1" onClick={handleAcceptAll}>
