@@ -78,7 +78,8 @@ type RichBlock =
   | ({ kind: "checklist" } & ChecklistProps)
   | { kind: "setup"; setupId: string }
   | { kind: "status"; label: string }
-  | { kind: "completion"; criticalCount: number };
+  | { kind: "completion"; criticalCount: number }
+  | { kind: "canvas-link"; layout: "outline" | "risk" | "comparison" | "extracted"; label: string };
 
 interface ChatMessage {
   id: string;
