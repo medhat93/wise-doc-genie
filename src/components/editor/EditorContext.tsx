@@ -240,6 +240,11 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
   const [checklistState, setChecklistState] = useState<ChecklistState>({ completedStepIds: [], skippedStepIds: [] });
   const [documentVisibility, setDocumentVisibility] = useState<Record<string, string[]>>({});
+  const openAiPanelRef = useState<{ fn: () => void }>({ fn: () => {} })[0];
+  const setRequestOpenAiPanel = useCallback((fn: () => void) => {
+    openAiPanelRef.fn = fn;
+  }, [openAiPanelRef]);
+  const requestOpenAiPanel = useCallback(() => openAiPanelRef.fn(), [openAiPanelRef]);
 
   return (
     <EditorContext.Provider value={{
