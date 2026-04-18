@@ -43,22 +43,23 @@ const EditorPanel = ({ panelId, onClose, docType, onSwitchPanel }: EditorPanelPr
     >
       <>
 
-          {/* Header */}
-          <div className="h-12 px-4 flex items-center justify-between border-b flex-shrink-0">
-            <span className="font-semibold text-sm">{PANEL_TITLES[panelId]}</span>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
-              <X size={14} />
-            </Button>
-          </div>
+          {panelId !== "ai" && (
+            <div className="h-12 px-4 flex items-center justify-between border-b flex-shrink-0">
+              <span className="font-semibold text-sm">{PANEL_TITLES[panelId]}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+                <X size={14} />
+              </Button>
+            </div>
+          )}
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className={panelId === "ai" ? "flex-1 overflow-hidden flex flex-col" : "flex-1 overflow-y-auto p-4"}>
             {panelId === "checklist" ? (
               <EditorChecklistPanel onSwitchPanel={onSwitchPanel || (() => {})} />
             ) : panelId === "annotations" ? (
               <EditorFieldsSidebar asPanel />
             ) : panelId === "ai" ? (
-              <EditorAIPanel docType={docType} />
+              <EditorAIPanel docType={docType} onClose={onClose} />
             ) : panelId === "fields" ? (
               <EditorSmartFieldsPanel />
             ) : panelId === "properties" ? (
