@@ -258,46 +258,26 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
       const aiId = `a-${Date.now()}`;
       const lower = text.toLowerCase();
 
-      // Seeded mock: Review as Client
-      if (intent === "Review" || lower.includes("review as client")) {
-        const blocks: RichBlock[] = [
+      // Seeded mock: Review intent → setup card
+      if (intent === "Review" || lower.includes("review as client") || lower.includes("review")) {
+        const setupId = `setup-${Date.now()}`;
+        const initial: ReviewSetup = {
+          perspective: "Client",
+          scope: "Full document",
+          playbook: "Vendor MSA Playbook",
+          output: "Comments + redlines",
+        };
+        setSetups((prev) => ({ ...prev, [setupId]: initial }));
+        setReviewRuns((prev) => ({ ...prev, [setupId]: "idle" }));
+        setMessages((prev) => [
+          ...prev,
           {
-            kind: "suggestion",
-            severity: "Critical",
-            title: "Late payment interest is above playbook ceiling",
-            citation: "§3 Payment Terms",
-            oldText: "1.5% per month",
-            newText: "1% per month",
-            reasoning:
-              "Your Vendor MSA Playbook caps late-payment interest at 1% per month (rule #7).",
+            id: aiId,
+            role: "assistant",
+            content: "Here's the setup I detected — tweak anything before we begin.",
+            blocks: [{ kind: "setup", setupId }],
           },
-          {
-            kind: "suggestion",
-            severity: "Medium",
-            title: "Payment window shorter than standard",
-            citation: "§3 Payment Terms",
-            oldText: "fifteen (15) days",
-            newText: "thirty (30) days",
-            reasoning:
-              "Market norm for B2B services is NET-30. NET-15 puts pressure on Client cash flow.",
-          },
-          {
-            kind: "suggestion",
-            severity: "Low",
-            title: "Missing governing law",
-            description: "No governing-law clause was found in this agreement.",
-            citation: "§ End of document",
-            newText:
-              "Governing Law. This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles.",
-            reasoning:
-              "Adding an explicit governing-law clause prevents jurisdictional disputes if a conflict arises.",
-          },
-        ];
-        streamAssistant(
-          aiId,
-          "Reviewing Master Services Agreement as Client, full document, using Vendor MSA Playbook. Found 4 issues — streaming as I go.",
-          { blocks }
-        );
+        ]);
         return;
       }
 
