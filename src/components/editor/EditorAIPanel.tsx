@@ -30,6 +30,9 @@ import ComparisonTable, { type ComparisonTableProps } from "./ai-blocks/Comparis
 import Checklist, { type ChecklistProps } from "./ai-blocks/Checklist";
 import CitationPill from "./ai-blocks/CitationPill";
 
+import ReviewSetupCard, { type ReviewSetup } from "./ai-blocks/ReviewSetupCard";
+import { addMarginPin, removeMarginPin, applyEditToCanvas } from "./ai-blocks/aiBlockUtils";
+
 const EDIT_KEYWORDS = [
   "change", "rewrite", "update", "modify", "add a clause",
   "remove", "rephrase", "replace", "insert", "edit",
@@ -49,10 +52,19 @@ const PLAYBOOKS = [
   { id: "employment", name: "Employment Contract Playbook" },
 ];
 
+type SuggestionBlockData = SuggestionCardProps & {
+  cardId: string;
+  resolved?: "applied" | "dismissed";
+  resolvedLabel?: string;
+};
+
 type RichBlock =
-  | ({ kind: "suggestion" } & SuggestionCardProps)
+  | ({ kind: "suggestion" } & SuggestionBlockData)
   | ({ kind: "table" } & ComparisonTableProps)
-  | ({ kind: "checklist" } & ChecklistProps);
+  | ({ kind: "checklist" } & ChecklistProps)
+  | { kind: "setup"; setupId: string }
+  | { kind: "status"; label: string }
+  | { kind: "completion"; criticalCount: number };
 
 interface ChatMessage {
   id: string;
