@@ -299,6 +299,104 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
     return mockSuggestions.length;
   };
 
+  // Handle a user action coming from slash menu / selection menu
+  const handleExternalAction = (action: AiUserAction) => {
+    const userId = `u-ext-${Date.now()}`;
+    const userMsg: ChatMessage = {
+      id: userId,
+      role: "user",
+      content: action.prompt,
+      intent: (action.intent as ChatMessage["intent"]) ?? undefined,
+      selectedText: action.selectedText,
+    };
+    setMessages((prev) => [...prev, userMsg]);
+
+    setTimeout(() => {
+      const aiId = `a-ext-${Date.now()}`;
+      const k = action.kind;
+
+      // Selection → Make stricter → SuggestionCard
+      if (k === "make-stricter") {
+        const card: SuggestionBlockData = {
+          cardId: `ext-card-${Date.now()}`,
+          severity: "Medium",
+          title: "Tighten payment-terms language",
+          citation: "§3 Payment Terms",
+          oldText: "Late payments may be subject to interest at 1.5% per month",
+          newText: "Late payments must accrue interest at 1% per month, compounded monthly, until paid in full",
+          reasoning: "Replaced permissive 'may' with mandatory 'must' and aligned the rate with your playbook.",
+        };
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: aiId,
+            role: "assistant",
+            content: "Here's a stricter version of the selected clause:",
+            blocks: [{ kind: "suggestion", ...card }],
+          },
+        ]);
+        return;
+      }
+
+      // Selection → Compare to playbook → ComparisonTable
+      if (k === "compare-playbook") {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: aiId,
+            role: "assistant",
+            content: "Comparing the selected clause to your active playbook:",
+            blocks: [
+              {
+                kind: "table",
+                caption: "Selection vs Vendor MSA Playbook",
+                headers: ["Aspect", "Your selection", "Playbook standard"],
+                rows: [
+                  { cells: ["Payment window", "NET-15", "NET-30"], chip: "Risk" },
+                  { cells: ["Late interest", "1.5% / month", "1% / month"], chip: "Above market" },
+                  { cells: ["Currency", "USD", "USD"], chip: "Matches playbook" },
+                ],
+              },
+            ],
+          },
+        ]);
+        return;
+      }
+
+      // Slash → Draft clause → confirmation message
+      if (k === "draft-clause") {
+        const input = (action.payload?.input as string) || "";
+        const subject = input.toLowerCase().includes("saudi") ? "Saudi Arabia" : input || "the requested topic";
+        streamAssistant(
+          aiId,
+          `Drafted a governing-law clause for ${subject}. Accept to insert into the document.`
+        );
+        return;
+      }
+
+      // Slash → other kinds → generic confirmation
+      if (action.intent === "Slash") {
+        streamAssistant(
+          aiId,
+          `Done — streamed the result into the editor as a pending insertion. Use Accept / Reject above the block.`
+        );
+        return;
+      }
+
+      // Selection generic actions (ask, rewrite, shorten, explain)
+      const labelMap: Record<string, string> = {
+        ask: "Here's what this clause means in plain English:",
+        rewrite: "Here's a clearer rewrite:",
+        shorten: "Here's a shorter version:",
+        explain: "Plain-English explanation of the selected text:",
+      };
+      streamAssistant(
+        aiId,
+        `${labelMap[k || ""] || "Here's my take:"} the selected language is generally clear, but you could tighten the obligation by replacing soft modal verbs ("may", "should") with mandatory ones ("must", "shall"). See [§3 Payment Terms] for context.`
+      );
+    }, 200);
+  };
+
   const handleSend = () => {
     if (!input.trim() || isStreaming) return;
     const text = input.trim();
