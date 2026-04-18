@@ -770,6 +770,21 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
           </div>
           <div className="flex items-center gap-0.5">
             <Button
+              variant={activeTab === "violations" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 px-2 text-[11px] gap-1"
+              onClick={() => setActiveTab((t) => (t === "violations" ? "chat" : "violations"))}
+              title="Violations"
+            >
+              <ShieldAlert size={13} />
+              Violations
+              {visibleViolations.length > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-destructive/15 text-destructive text-[10px] font-semibold">
+                  {visibleViolations.length}
+                </span>
+              )}
+            </Button>
+            <Button
               variant="ghost"
               size="icon"
               className="h-7 w-7"
