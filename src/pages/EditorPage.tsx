@@ -66,7 +66,7 @@ const EditorPageInner = () => {
   const childType = searchParams.get("childType") || "amendment";
   const [isEsign, setIsEsign] = useState(initialMode === "esign");
   const isMobile = useIsMobile();
-  const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen, participants, placedFields, usedVariables, variableValues } = useEditorContext();
+  const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen, participants, placedFields, usedVariables, variableValues, setRequestOpenAiPanel } = useEditorContext();
 
   const [loading, setLoading] = useState(true);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
