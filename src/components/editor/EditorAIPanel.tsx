@@ -829,23 +829,36 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
             <PopoverTrigger asChild>
               <button className="text-primary hover:underline font-medium">change</button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-2" align="start">
-              <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground px-2 py-1.5">
-                Playbooks
+            <PopoverContent className="w-72 p-0" align="start">
+              <div className="px-3 pt-2.5 pb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                Active playbooks
               </div>
-              <div className="space-y-0.5">
-                {PLAYBOOKS.map((pb) => (
-                  <label
-                    key={pb.id}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={activePlaybooks.includes(pb.id)}
-                      onCheckedChange={() => togglePlaybook(pb.id)}
-                    />
-                    <span className="text-xs">{pb.name}</span>
-                  </label>
-                ))}
+              <div className="px-1.5 pb-1.5 space-y-0.5">
+                {PLAYBOOKS.map((pb) => {
+                  const on = activePlaybooks.includes(pb.id);
+                  return (
+                    <div
+                      key={pb.id}
+                      className="flex items-center justify-between gap-2 px-2 py-1.5 rounded hover:bg-accent"
+                    >
+                      <span className="text-xs text-foreground">{pb.name}</span>
+                      <Switch checked={on} onCheckedChange={() => togglePlaybook(pb.id)} />
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => {
+                  setPlaybookOpen(false);
+                  toast("Opening playbook manager…");
+                }}
+                className="flex items-center gap-1 px-3 py-2 w-full text-left text-xs font-medium text-primary hover:bg-accent border-t border-border"
+              >
+                Manage playbooks
+                <ExternalLink size={11} />
+              </button>
+              <div className="px-3 py-2 text-[10px] leading-snug text-muted-foreground bg-muted/40 border-t border-border">
+                Signit AI auto-selects playbooks based on the document type.
               </div>
             </PopoverContent>
           </Popover>
