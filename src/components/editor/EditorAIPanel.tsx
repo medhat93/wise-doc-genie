@@ -1,417 +1,644 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Send,
+  Sparkles,
+  X,
+  Maximize2,
+  History,
+  ChevronDown,
+  Check,
+  MessageSquare,
+} from "lucide-react";
 import AiIcon from "@/components/AiIcon";
-import { FileText, Search, MessageCircleQuestion, Send, ArrowLeft, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { useEditorContext } from "./EditorContext";
 import type { AiSuggestion, Comment } from "./EditorContext";
 
-const MOCK_DRAFTS: Record<string, string> = {
-  "Sales Proposal": `SALES PROPOSAL\n\nPrepared for: [Client Name]\nPrepared by: [Company Name]\nDate: February 2025\n\n1. Executive Summary\n\nWe are pleased to present this proposal outlining our comprehensive solution designed to address your organization's specific needs.\n\n2. Proposed Solution\n\nOur team will deliver the following key components:\n- Strategic assessment and gap analysis\n- Custom implementation roadmap\n- Full deployment and integration support\n- Ongoing optimization and support\n\n3. Pricing Structure\n\nThe investment for this engagement is structured as follows...`,
-  default: `DOCUMENT DRAFT\n\nThis is an AI-generated draft based on your document type and requirements.\n\n1. Overview\n\nThis section provides a high-level summary of the document's purpose and scope.\n\n2. Key Terms\n\nThe following terms and conditions apply to this agreement...\n\n3. Next Steps\n\nPlease review this draft and make any necessary modifications before finalizing.`,
-};
-
-const MOCK_AI_RESPONSES: Record<string, string> = {
-  default: "Based on the selected text, this clause establishes the standard terms for the agreement. The language is fairly standard for this type of contract. Would you like me to suggest any modifications or clarify specific aspects?",
-  termination: "This termination clause allows either party to end the agreement with 30 days written notice. This is a standard provision, though you may want to consider adding specific conditions under which immediate termination is permitted, such as material breach or insolvency.",
-  payment: "The payment terms specify NET-30 from the invoice date. This is standard for B2B agreements. Consider whether you want to add late payment penalties or early payment discounts.",
-  liability: "This limitation of liability clause caps damages at the total fees paid in the 12 months preceding the claim. This is a common approach, but you should verify it aligns with your risk tolerance and applicable law.",
-};
-
-const EDIT_KEYWORDS = ["change", "rewrite", "update", "modify", "add a clause", "remove", "rephrase", "replace", "insert", "edit", "revise", "add a section", "delete"];
-
-const QUICK_ACTIONS = [
-  { id: "draft", label: "Draft document", icon: FileText, active: true },
-  { id: "review", label: "Review document", icon: Search, active: false },
-  { id: "ask", label: "Ask about document", icon: MessageCircleQuestion, active: false },
+const EDIT_KEYWORDS = [
+  "change", "rewrite", "update", "modify", "add a clause",
+  "remove", "rephrase", "replace", "insert", "edit",
+  "revise", "add a section", "delete", "draft",
 ];
 
+const INTENT_CHIPS = ["Ask", "Draft", "Review", "Use playbook", "Summarize"] as const;
+type Intent = (typeof INTENT_CHIPS)[number];
+
+type Scope = "Full document" | "Selected text" | "Current section";
+const SCOPES: Scope[] = ["Full document", "Selected text", "Current section"];
+
+const PLAYBOOKS = [
+  { id: "vendor-msa", name: "Vendor MSA Playbook" },
+  { id: "nda-standard", name: "Standard NDA Playbook" },
+  { id: "data-protection", name: "Data Protection Playbook" },
+  { id: "employment", name: "Employment Contract Playbook" },
+];
+
+interface RichBlock {
+  kind: "card" | "table" | "diff" | "checklist";
+  title?: string;
+}
+
 interface ChatMessage {
+  id: string;
   role: "user" | "assistant";
   content: string;
+  intent?: Intent;
+  scope?: Scope;
   selectedText?: string;
   hasSuggestions?: boolean;
+  blocks?: RichBlock[];
 }
+
+interface HistoryItem {
+  id: string;
+  title: string;
+  date: Date;
+  preview: string;
+}
+
+const MOCK_HISTORY: HistoryItem[] = [
+  { id: "h1", title: "Termination clause review", date: new Date(), preview: "Suggested 60-day notice…" },
+  { id: "h2", title: "Pricing summary", date: new Date(), preview: "Annual cap at 5%…" },
+  { id: "h3", title: "Data protection redlines", date: new Date(Date.now() - 86400000), preview: "Added GDPR clause…" },
+  { id: "h4", title: "Liability cap question", date: new Date(Date.now() - 86400000 * 3), preview: "Capped at 12 months fees…" },
+  { id: "h5", title: "Initial document summary", date: new Date(Date.now() - 86400000 * 7), preview: "MSA with 4 schedules…" },
+];
+
+const MOCK_AI_RESPONSES: Record<string, string> = {
+  default: "Based on this document, the clause establishes standard terms for the agreement. The language is fairly typical. Want me to suggest modifications or clarify specific aspects?",
+  termination: "This termination clause allows either party to end the agreement with 30 days written notice. Consider adding immediate-termination triggers like material breach or insolvency.",
+  payment: "Payment terms specify NET-30 from invoice date — standard for B2B. You may want to add late payment penalties or early payment discounts.",
+  liability: "The liability cap is set at 12 months of fees paid. Common, but verify it fits your risk tolerance and applicable law.",
+  summarize: "This is a Master Services Agreement between two parties covering scope of services, fees, IP ownership, confidentiality, and termination. Initial term is 24 months with auto-renewal.",
+};
 
 interface EditorAIPanelProps {
   docType?: string;
+  onClose?: () => void;
 }
 
-const EditorAIPanel = ({ docType = "" }: EditorAIPanelProps) => {
-  const { pendingAiQuestion, setPendingAiQuestion, aiSuggestions, setAiSuggestions, setComments } = useEditorContext();
-  const [activeAction, setActiveAction] = useState("draft");
-  const [streamedText, setStreamedText] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(true);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [streamComplete, setStreamComplete] = useState(false);
-  const streamRef = useRef<ReturnType<typeof setInterval> | null>(null);
+const formatHistoryGroup = (date: Date) => {
+  const today = new Date();
+  const diff = Math.floor((today.getTime() - date.getTime()) / 86400000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  if (diff < 7) return "This week";
+  return "Earlier";
+};
 
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState("");
+const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
+  const { pendingAiQuestion, setPendingAiQuestion, aiSuggestions, setAiSuggestions, setComments } =
+    useEditorContext();
+
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [activeIntent, setActiveIntent] = useState<Intent | null>(null);
+  const [scope, setScope] = useState<Scope>("Full document");
   const [quotedText, setQuotedText] = useState<string | null>(null);
-  const [isChatStreaming, setIsChatStreaming] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const chatInputRef = useRef<HTMLInputElement>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [activePlaybooks, setActivePlaybooks] = useState<string[]>(["vendor-msa"]);
+  const [playbookOpen, setPlaybookOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
-  const pendingSuggestions = aiSuggestions.filter(s => s.status === "pending");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  const pendingSuggestions = aiSuggestions.filter((s) => s.status === "pending");
+  const primaryPlaybookName =
+    PLAYBOOKS.find((p) => p.id === activePlaybooks[0])?.name ?? "No playbook";
+
+  // Auto-switch scope when text is selected via Ask AI
   useEffect(() => {
     if (pendingAiQuestion) {
-      setActiveAction("ask");
       setQuotedText(pendingAiQuestion.selectedText || null);
-      setChatInput("");
+      if (pendingAiQuestion.selectedText) setScope("Selected text");
+      setInput(pendingAiQuestion.question || "");
       setPendingAiQuestion(null);
-      setTimeout(() => chatInputRef.current?.focus(), 100);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [pendingAiQuestion, setPendingAiQuestion]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, isStreaming]);
 
-  const isEditRequest = (text: string) => {
+  const isEditRequest = (text: string, intent: Intent | null) => {
+    if (intent === "Draft" || intent === "Review" || intent === "Use playbook") return true;
     const lower = text.toLowerCase();
-    return EDIT_KEYWORDS.some(kw => lower.includes(kw));
+    return EDIT_KEYWORDS.some((kw) => lower.includes(kw));
   };
 
-  const handleAiResponse = (question: string, selectedText?: string) => {
-    setIsChatStreaming(true);
-    const isEdit = isEditRequest(question);
-
-    if (isEdit) {
-      // Generate mock suggestions
-      const mockSuggestions: AiSuggestion[] = [
-        {
-          id: `ai-s-${Date.now()}-1`,
-          type: "addition",
-          sectionRef: "Section 2: Scope of Services",
-          newText: "2.1 Data Protection. The Service Provider shall implement and maintain appropriate technical and organizational measures to ensure the security and confidentiality of all personal data processed in connection with the Services, in compliance with applicable data protection laws including GDPR and local regulations.",
-          status: "pending",
-        },
-        {
-          id: `ai-s-${Date.now()}-2`,
-          type: "replacement",
-          sectionRef: "Section 5: Termination",
-          oldText: "Either party may terminate this Agreement with thirty (30) days' prior written notice.",
-          newText: "Either party may terminate this Agreement with sixty (60) days' prior written notice. In the event of a material breach, the non-breaching party may terminate immediately upon written notice.",
-          status: "pending",
-        },
-      ];
-
-      setAiSuggestions(prev => [...prev, ...mockSuggestions]);
-
-      // Add AI comment annotations
-      mockSuggestions.forEach(s => {
-        const newComment: Comment = {
-          id: `ai-c-${s.id}`,
-          author: "AI Assistant",
-          authorInitials: "AI",
-          authorColor: "#7C3AED",
-          text: s.type === "addition"
-            ? `Suggested adding a new clause about data protection after this section`
-            : `Suggested replacing the termination notice period`,
-          timestamp: new Date(),
-          sectionRef: s.sectionRef,
-          docId: "doc-1",
-          status: "open",
-          replies: [],
-          type: "inline",
-          annotationType: "ai_suggestion",
-          suggestedText: s.newText,
-        };
-        setComments(prev => [newComment, ...prev]);
-      });
-
-      const response = `I've added ${mockSuggestions.length} suggestions to the document. Review them inline and accept or reject each one.`;
-      let charIndex = 0;
-      setChatMessages((prev) => [...prev, { role: "assistant", content: "", hasSuggestions: true }]);
-      const interval = setInterval(() => {
-        charIndex += 3;
-        if (charIndex >= response.length) {
-          setChatMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { role: "assistant", content: response, hasSuggestions: true };
-            return updated;
-          });
-          setIsChatStreaming(false);
-          clearInterval(interval);
-        } else {
-          setChatMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { role: "assistant", content: response.slice(0, charIndex), hasSuggestions: true };
-            return updated;
-          });
-        }
-      }, 20);
-    } else {
-      // Normal Q&A response
-      const lowerQ = (question + " " + (selectedText || "")).toLowerCase();
-      let responseKey = "default";
-      if (lowerQ.includes("terminat")) responseKey = "termination";
-      else if (lowerQ.includes("payment") || lowerQ.includes("pay")) responseKey = "payment";
-      else if (lowerQ.includes("liabil")) responseKey = "liability";
-
-      const fullResponse = MOCK_AI_RESPONSES[responseKey];
-      let charIndex = 0;
-      setChatMessages((prev) => [...prev, { role: "assistant", content: "" }]);
-      const interval = setInterval(() => {
-        charIndex += 3;
-        if (charIndex >= fullResponse.length) {
-          setChatMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { role: "assistant", content: fullResponse };
-            return updated;
-          });
-          setIsChatStreaming(false);
-          clearInterval(interval);
-        } else {
-          setChatMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { role: "assistant", content: fullResponse.slice(0, charIndex) };
-            return updated;
-          });
-        }
-      }, 20);
-    }
+  const pickResponseKey = (q: string) => {
+    const l = q.toLowerCase();
+    if (l.includes("summar")) return "summarize";
+    if (l.includes("terminat")) return "termination";
+    if (l.includes("pay")) return "payment";
+    if (l.includes("liabil")) return "liability";
+    return "default";
   };
 
-  const handleChatSubmit = () => {
-    if (!chatInput.trim() || isChatStreaming) return;
-    const userMessage: ChatMessage = {
+  const streamAssistant = (msgId: string, fullText: string, opts?: Partial<ChatMessage>) => {
+    let i = 0;
+    setMessages((prev) => [
+      ...prev,
+      { id: msgId, role: "assistant", content: "", ...opts },
+    ]);
+    setIsStreaming(true);
+    const interval = setInterval(() => {
+      i += 3;
+      const done = i >= fullText.length;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === msgId ? { ...m, content: done ? fullText : fullText.slice(0, i) } : m
+        )
+      );
+      if (done) {
+        clearInterval(interval);
+        setIsStreaming(false);
+      }
+    }, 18);
+  };
+
+  const generateSuggestions = () => {
+    const mockSuggestions: AiSuggestion[] = [
+      {
+        id: `ai-s-${Date.now()}-1`,
+        type: "addition",
+        sectionRef: "Section 2: Scope of Services",
+        newText:
+          "2.1 Data Protection. The Service Provider shall implement and maintain appropriate technical and organizational measures to ensure the security and confidentiality of all personal data processed in connection with the Services, in compliance with applicable data protection laws including GDPR.",
+        status: "pending",
+      },
+      {
+        id: `ai-s-${Date.now()}-2`,
+        type: "replacement",
+        sectionRef: "Section 5: Termination",
+        oldText: "Either party may terminate this Agreement with thirty (30) days' prior written notice.",
+        newText:
+          "Either party may terminate this Agreement with sixty (60) days' prior written notice. In the event of a material breach, the non-breaching party may terminate immediately upon written notice.",
+        status: "pending",
+      },
+    ];
+    setAiSuggestions((prev) => [...prev, ...mockSuggestions]);
+    mockSuggestions.forEach((s) => {
+      const newComment: Comment = {
+        id: `ai-c-${s.id}`,
+        author: "AI Assistant",
+        authorInitials: "AI",
+        authorColor: "#7C3AED",
+        text:
+          s.type === "addition"
+            ? "Suggested adding a new clause about data protection after this section"
+            : "Suggested replacing the termination notice period",
+        timestamp: new Date(),
+        sectionRef: s.sectionRef,
+        docId: "doc-1",
+        status: "open",
+        replies: [],
+        type: "inline",
+        annotationType: "ai_suggestion",
+        suggestedText: s.newText,
+      };
+      setComments((prev) => [newComment, ...prev]);
+    });
+    return mockSuggestions.length;
+  };
+
+  const handleSend = () => {
+    if (!input.trim() || isStreaming) return;
+    const text = input.trim();
+    const userMsg: ChatMessage = {
+      id: `u-${Date.now()}`,
       role: "user",
-      content: chatInput.trim(),
+      content: text,
+      intent: activeIntent ?? undefined,
+      scope,
       selectedText: quotedText || undefined,
     };
-    setChatMessages((prev) => [...prev, userMessage]);
-    const q = chatInput.trim();
-    const selText = quotedText || undefined;
-    setChatInput("");
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
     setQuotedText(null);
-    handleAiResponse(q, selText);
+
+    const intent = activeIntent;
+    setActiveIntent(null);
+
+    setTimeout(() => {
+      const isEdit = isEditRequest(text, intent);
+      const aiId = `a-${Date.now()}`;
+      if (isEdit) {
+        const count = generateSuggestions();
+        streamAssistant(
+          aiId,
+          `I've added ${count} suggestion${count === 1 ? "" : "s"} to the document. Review them inline and accept or reject each one.`,
+          { hasSuggestions: true, blocks: [{ kind: "diff", title: "Suggested redlines" }] }
+        );
+      } else {
+        const key = pickResponseKey(text);
+        const blocks: RichBlock[] | undefined =
+          intent === "Summarize" || key === "summarize"
+            ? [{ kind: "card", title: "Document summary" }]
+            : key === "payment"
+            ? [{ kind: "table", title: "Pricing breakdown" }]
+            : intent === "Review"
+            ? [{ kind: "checklist", title: "Review checklist" }]
+            : undefined;
+        streamAssistant(aiId, MOCK_AI_RESPONSES[key], { blocks });
+      }
+    }, 200);
   };
 
   const handleAcceptAll = () => {
-    setAiSuggestions(prev => prev.map(s => s.status === "pending" ? { ...s, status: "accepted" as const } : s));
+    setAiSuggestions((prev) =>
+      prev.map((s) => (s.status === "pending" ? { ...s, status: "accepted" as const } : s))
+    );
     toast.success("All suggestions accepted");
   };
-
   const handleRejectAll = () => {
-    setAiSuggestions(prev => prev.map(s => s.status === "pending" ? { ...s, status: "rejected" as const } : s));
+    setAiSuggestions((prev) =>
+      prev.map((s) => (s.status === "pending" ? { ...s, status: "rejected" as const } : s))
+    );
     toast.success("All suggestions rejected");
   };
 
-  const startStream = () => {
-    setIsAnalyzing(true);
-    setIsStreaming(false);
-    setStreamComplete(false);
-    setStreamedText("");
-
-    const timer = setTimeout(() => {
-      setIsAnalyzing(false);
-      setIsStreaming(true);
-
-      const draftKey = Object.keys(MOCK_DRAFTS).find((k) =>
-        docType.toLowerCase().includes(k.toLowerCase())
-      ) || "default";
-      const fullText = MOCK_DRAFTS[draftKey];
-      let charIndex = 0;
-
-      streamRef.current = setInterval(() => {
-        charIndex += 2;
-        if (charIndex >= fullText.length) {
-          setStreamedText(fullText);
-          setIsStreaming(false);
-          setStreamComplete(true);
-          if (streamRef.current) clearInterval(streamRef.current);
-        } else {
-          setStreamedText(fullText.slice(0, charIndex));
-        }
-      }, 30);
-    }, 2000);
-
-    return timer;
+  const togglePlaybook = (id: string) => {
+    setActivePlaybooks((prev) =>
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+    );
   };
 
-  useEffect(() => {
-    if (activeAction === "draft") {
-      const timer = startStream();
-      return () => {
-        clearTimeout(timer);
-        if (streamRef.current) clearInterval(streamRef.current);
-      };
-    }
-  }, [activeAction]);
+  // Group history by date label
+  const historyGroups = MOCK_HISTORY.reduce<Record<string, HistoryItem[]>>((acc, h) => {
+    const k = formatHistoryGroup(h.date);
+    (acc[k] ||= []).push(h);
+    return acc;
+  }, {});
 
-  const handleRegenerate = () => {
-    if (streamRef.current) clearInterval(streamRef.current);
-    startStream();
-  };
-
-  const handleActionClick = (id: string) => {
-    if (id === "review") {
-      toast("AI Review coming soon", { description: "This feature is under development" });
-      return;
+  const renderBlock = (block: RichBlock, idx: number) => {
+    switch (block.kind) {
+      case "card":
+        return (
+          <div
+            key={idx}
+            className="rounded-lg border border-border bg-muted/30 p-3 mt-2"
+          >
+            <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">
+              {block.title}
+            </div>
+            <div className="text-xs text-foreground/80">[card placeholder]</div>
+          </div>
+        );
+      case "table":
+        return (
+          <div
+            key={idx}
+            className="rounded-lg border border-border overflow-hidden mt-2"
+          >
+            <div className="bg-muted/40 px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground border-b">
+              {block.title}
+            </div>
+            <div className="p-3 text-xs text-foreground/80">[table placeholder]</div>
+          </div>
+        );
+      case "diff":
+        return (
+          <div
+            key={idx}
+            className="rounded-lg border border-primary/30 bg-primary/5 p-3 mt-2"
+          >
+            <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-primary mb-1">
+              <Sparkles size={10} />
+              {block.title}
+            </div>
+            <div className="text-xs text-foreground/80">[diff placeholder]</div>
+          </div>
+        );
+      case "checklist":
+        return (
+          <div
+            key={idx}
+            className="rounded-lg border border-border bg-muted/30 p-3 mt-2"
+          >
+            <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">
+              {block.title}
+            </div>
+            <div className="text-xs text-foreground/80">[checklist placeholder]</div>
+          </div>
+        );
     }
-    setActiveAction(id);
   };
 
   return (
-    <div className="flex flex-col h-full -m-4 p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <AiIcon size={16} />
-        <span className="text-sm font-medium">AI Assistant</span>
-        <div className={`h-2 w-2 rounded-full ml-1 ${
-          activeAction === "ask"
-            ? isChatStreaming ? "bg-primary animate-pulse" : "bg-emerald-500"
-            : streamComplete ? "bg-emerald-500" : "bg-primary animate-pulse"
-        }`} />
-        <Badge variant="secondary" className="text-[10px] h-5 ml-auto">
-          {activeAction === "ask"
-            ? isChatStreaming ? "Thinking" : "Ready"
-            : streamComplete ? "Ready" : isAnalyzing ? "Analyzing" : "Generating"
-          }
-        </Badge>
-      </div>
-
-      <div className="flex gap-1.5 mb-4 flex-wrap">
-        {QUICK_ACTIONS.map((action) => {
-          const Icon = action.icon;
-          return (
-            <button
-              key={action.id}
-              onClick={() => handleActionClick(action.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                activeAction === action.id
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
+    <div className="flex flex-col h-full bg-card">
+      {/* Header */}
+      <div className="px-4 pt-3 pb-2.5 border-b flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AiIcon size={16} />
+            <span className="text-sm font-semibold">Signit AI</span>
+          </div>
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setHistoryOpen(true)}
+              title="History"
             >
-              <Icon size={12} />
-              {action.label}
-            </button>
-          );
-        })}
+              <History size={14} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => {
+                setExpanded((v) => !v);
+                toast(expanded ? "Collapsed" : "Expanded to canvas");
+              }}
+              title="Expand"
+            >
+              <Maximize2 size={14} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={onClose}
+              title="Close"
+            >
+              <X size={14} />
+            </Button>
+          </div>
+        </div>
+
+        {/* Playbook chip */}
+        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+            <Sparkles size={10} />
+            Using: {primaryPlaybookName}
+            {activePlaybooks.length > 1 && ` +${activePlaybooks.length - 1}`}
+          </span>
+          <span>·</span>
+          <Popover open={playbookOpen} onOpenChange={setPlaybookOpen}>
+            <PopoverTrigger asChild>
+              <button className="text-primary hover:underline font-medium">change</button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2" align="start">
+              <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground px-2 py-1.5">
+                Playbooks
+              </div>
+              <div className="space-y-0.5">
+                {PLAYBOOKS.map((pb) => (
+                  <label
+                    key={pb.id}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
+                  >
+                    <Checkbox
+                      checked={activePlaybooks.includes(pb.id)}
+                      onCheckedChange={() => togglePlaybook(pb.id)}
+                    />
+                    <span className="text-xs">{pb.name}</span>
+                  </label>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
-      {activeAction === "ask" ? (
-        <>
-          <div className="flex-1 overflow-y-auto mb-3 space-y-3">
-            {chatMessages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full text-center py-8">
-                <MessageCircleQuestion size={24} className="text-muted-foreground/50 mb-2" />
-                <p className="text-sm font-medium text-muted-foreground mb-1">Ask about your document</p>
-                <p className="text-xs text-muted-foreground/70">Select text and click Ask AI, or type a question below</p>
-              </div>
-            )}
-            {chatMessages.map((msg, i) => (
-              <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                {msg.selectedText && (
-                  <div className="max-w-[90%] mb-1 px-2.5 py-1.5 rounded-md bg-muted/50 border border-border text-[11px] text-muted-foreground italic line-clamp-2">
-                    "{msg.selectedText}"
-                  </div>
+      {/* Conversation */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-center py-8">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+              <Sparkles size={18} className="text-primary" />
+            </div>
+            <p className="text-sm font-medium text-foreground mb-1">Signit AI</p>
+            <p className="text-xs text-muted-foreground max-w-[240px]">
+              Ask, draft, review, or summarize anything in this document.
+            </p>
+          </div>
+        )}
+
+        {messages.map((msg) =>
+          msg.role === "user" ? (
+            <div key={msg.id} className="flex flex-col items-end">
+              {msg.selectedText && (
+                <div className="max-w-[90%] mb-1 px-2.5 py-1.5 rounded-md bg-muted/60 border border-border text-[11px] text-muted-foreground italic line-clamp-2">
+                  "{msg.selectedText}"
+                </div>
+              )}
+              <div className="max-w-[90%] px-3 py-2 rounded-2xl rounded-br-sm bg-muted text-foreground text-xs leading-relaxed">
+                {msg.intent && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium uppercase tracking-wide bg-primary/15 text-primary mr-1.5 align-middle">
+                    {msg.intent}
+                  </span>
                 )}
-                <div className={`max-w-[90%] px-3 py-2 rounded-lg text-xs leading-relaxed ${
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/50 text-foreground border border-border"
-                }`}>
-                  {msg.role === "assistant" && msg.hasSuggestions && (
-                    <div className="flex items-center gap-1 mb-1">
-                      <Sparkles size={10} className="text-violet-600" />
-                      <span className="text-[9px] text-violet-600 font-medium uppercase">Inline edits</span>
-                    </div>
-                  )}
+                {msg.content}
+              </div>
+              {msg.scope && msg.scope !== "Full document" && (
+                <span className="text-[10px] text-muted-foreground mt-0.5 mr-1">
+                  Scope: {msg.scope}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div key={msg.id} className="flex gap-2 items-start">
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <Sparkles size={12} className="text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs leading-relaxed text-foreground whitespace-pre-wrap">
                   {msg.content}
-                  {msg.role === "assistant" && isChatStreaming && i === chatMessages.length - 1 && (
+                  {isStreaming && msg.id === messages[messages.length - 1]?.id && (
                     <span className="inline-block w-1 h-3 bg-primary animate-pulse ml-0.5 align-middle" />
                   )}
                 </div>
-                {/* Accept/Reject all buttons after suggestion messages */}
-                {msg.role === "assistant" && msg.hasSuggestions && !isChatStreaming && pendingSuggestions.length > 0 && i === chatMessages.length - 1 && (
-                  <div className="max-w-[90%] mt-1.5 space-y-1 w-full">
-                    <Button size="sm" className="w-full h-7 text-[10px]" onClick={handleAcceptAll}>
-                      Accept all suggestions
+                {msg.blocks?.map((b, i) => renderBlock(b, i))}
+                {msg.hasSuggestions && !isStreaming && pendingSuggestions.length > 0 && (
+                  <div className="mt-2 flex gap-1.5">
+                    <Button size="sm" className="h-7 text-[10px] flex-1" onClick={handleAcceptAll}>
+                      <Check size={12} className="mr-1" />
+                      Accept all
                     </Button>
-                    <Button variant="ghost" size="sm" className="w-full h-7 text-[10px]" onClick={handleRejectAll}>
-                      Reject all suggestions
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-[10px] flex-1"
+                      onClick={handleRejectAll}
+                    >
+                      Reject all
                     </Button>
                   </div>
                 )}
+                <div className="mt-1 text-[10px] text-muted-foreground/70">
+                  Sources: 2 · Just now
+                </div>
+              </div>
+            </div>
+          )
+        )}
+
+        {isStreaming && messages[messages.length - 1]?.role === "user" && (
+          <div className="flex gap-2 items-start">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Sparkles size={12} className="text-primary animate-pulse" />
+            </div>
+            <div className="flex items-center gap-1 pt-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Composer */}
+      <div className="border-t bg-card px-3 pt-2.5 pb-2 flex-shrink-0 space-y-2">
+        {/* Intent chips */}
+        <div className="flex gap-1.5 flex-wrap">
+          {INTENT_CHIPS.map((chip) => (
+            <button
+              key={chip}
+              onClick={() => setActiveIntent((cur) => (cur === chip ? null : chip))}
+              className={cn(
+                "px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors",
+                activeIntent === chip
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+
+        {/* Scope row */}
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                {scope}
+                <ChevronDown size={11} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {SCOPES.map((s) => (
+                <DropdownMenuItem key={s} onClick={() => setScope(s)}>
+                  {scope === s && <Check size={12} className="mr-1.5" />}
+                  <span className={scope === s ? "" : "ml-[18px]"}>{s}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Selected text preview */}
+        {quotedText && (
+          <div className="rounded-md border bg-muted/40 px-2.5 py-1.5 relative">
+            <button
+              onClick={() => setQuotedText(null)}
+              className="absolute top-1 right-1 h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            >
+              <X size={11} />
+            </button>
+            <p className="text-[10px] font-medium text-muted-foreground mb-0.5">Selected text</p>
+            <p className="text-xs text-foreground line-clamp-3 italic pr-5">"{quotedText}"</p>
+          </div>
+        )}
+
+        {/* Input */}
+        <div className="flex gap-1.5 items-end">
+          <Textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            rows={1}
+            placeholder={
+              activeIntent
+                ? `${activeIntent}…`
+                : quotedText
+                ? "What should AI do with this text?"
+                : "Message Signit AI…"
+            }
+            className="min-h-[36px] max-h-[120px] resize-none text-xs py-2"
+            disabled={isStreaming}
+          />
+          <Button
+            size="sm"
+            className="h-9 w-9 p-0 shrink-0"
+            disabled={!input.trim() || isStreaming}
+            onClick={handleSend}
+          >
+            <Send size={14} />
+          </Button>
+        </div>
+
+        <p className="text-[10px] text-muted-foreground/80 text-center pt-0.5">
+          Signit AI may make mistakes — see sources on every reply
+        </p>
+      </div>
+
+      {/* History side drawer */}
+      <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+        <SheetContent side="right" className="w-[320px] sm:w-[320px] p-0 flex flex-col">
+          <SheetHeader className="px-4 py-3 border-b flex-shrink-0">
+            <SheetTitle className="flex items-center gap-2 text-sm">
+              <History size={14} />
+              Conversation history
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-3 space-y-4">
+            {Object.entries(historyGroups).map(([group, items]) => (
+              <div key={group}>
+                <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground px-2 mb-1.5">
+                  {group}
+                </div>
+                <div className="space-y-1">
+                  {items.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        toast(`Loaded: ${item.title}`);
+                        setHistoryOpen(false);
+                      }}
+                      className="w-full text-left px-2.5 py-2 rounded-md hover:bg-accent transition-colors group"
+                    >
+                      <div className="flex items-start gap-2">
+                        <MessageSquare size={12} className="text-muted-foreground mt-0.5 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-medium truncate">{item.title}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">
+                            {item.preview}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             ))}
-            <div ref={chatEndRef} />
           </div>
-
-          {quotedText && (
-            <div className="flex-shrink-0 mb-1.5 rounded-md border bg-muted/40 px-2.5 py-2 relative">
-              <button
-                onClick={() => setQuotedText(null)}
-                className="absolute top-1 right-1 h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              >
-                <span className="text-xs">×</span>
-              </button>
-              <p className="text-[10px] font-medium text-muted-foreground mb-0.5">Selected text</p>
-              <p className="text-xs text-foreground line-clamp-3 italic">"{quotedText}"</p>
-            </div>
-          )}
-
-          <div className="flex gap-2 flex-shrink-0">
-            <Input
-              ref={chatInputRef}
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleChatSubmit(); }}
-              placeholder={quotedText ? "What should AI do with this text..." : "Ask about this document..."}
-              className="text-xs h-9"
-              disabled={isChatStreaming}
-            />
-            <Button
-              size="sm"
-              className="h-9 w-9 p-0 shrink-0"
-              disabled={!chatInput.trim() || isChatStreaming}
-              onClick={handleChatSubmit}
-            >
-              <Send size={14} />
-            </Button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="flex-1 overflow-y-auto mb-4">
-            {isAnalyzing && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                Analyzing your requirements...
-              </div>
-            )}
-            {(isStreaming || streamComplete) && (
-              <pre className="text-sm whitespace-pre-wrap font-sans leading-relaxed text-foreground">
-                {streamedText}
-                {isStreaming && (
-                  <span className="inline-block w-1 h-4 bg-primary animate-pulse ml-0.5 align-middle" />
-                )}
-              </pre>
-            )}
-          </div>
-
-          <div className="flex gap-2 flex-shrink-0">
-            <Button variant="default" size="sm" className="flex-1" disabled={!streamComplete}>
-              Accept Draft
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              disabled={isStreaming || isAnalyzing}
-              onClick={handleRegenerate}
-            >
-              Regenerate
-            </Button>
-          </div>
-        </>
-      )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
