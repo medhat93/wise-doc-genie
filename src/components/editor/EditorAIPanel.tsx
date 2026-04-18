@@ -1030,6 +1030,125 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
           </div>
         )}
       </div>
+      )}
+
+      {/* In-panel save-rule toasts */}
+      {savePrompts.length > 0 && (
+        <div className="px-3 pt-2 pb-1 space-y-1.5 flex-shrink-0">
+          {savePrompts.map((p) => (
+            <div
+              key={p.id}
+              className="rounded-lg border border-primary/30 bg-primary/5 backdrop-blur-sm px-3 py-2 animate-fade-in"
+            >
+              {p.stage === "ask" && (
+                <div className="flex items-start gap-2">
+                  <Bookmark size={13} className="text-primary mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] text-foreground leading-snug">
+                      Saved the fix to the doc. Want to save{" "}
+                      <span className="font-medium">"{p.suggestedName}"</span> as a rule so we catch it next time?
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      <button
+                        onClick={() => openSaveRuleForm(p.id)}
+                        className="px-2 py-0.5 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        Save rule
+                      </button>
+                      <button
+                        onClick={() => dismissSavePrompt(p.id)}
+                        className="px-2 py-0.5 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted"
+                      >
+                        Not now
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => dismissSavePrompt(p.id)}
+                    className="text-muted-foreground hover:text-foreground"
+                    title="Dismiss"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
+
+              {p.stage === "form" && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <Bookmark size={11} className="text-primary" />
+                    Save as playbook rule
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">
+                      Rule name
+                    </label>
+                    <Input
+                      value={p.ruleName ?? ""}
+                      onChange={(e) => updateSavePrompt(p.id, { ruleName: e.target.value })}
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">
+                      Save to
+                    </label>
+                    <Select
+                      value={p.savedTo}
+                      onValueChange={(v) => updateSavePrompt(p.id, { savedTo: v })}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PLAYBOOKS.filter((pb) => activePlaybooks.includes(pb.id)).map((pb) => (
+                          <SelectItem key={pb.id} value={pb.id} className="text-xs">
+                            {pb.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5 pt-0.5">
+                    <button
+                      onClick={() => dismissSavePrompt(p.id)}
+                      className="px-2 py-0.5 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => confirmSaveRule(p.id)}
+                      disabled={!p.ruleName?.trim()}
+                      className="px-2 py-0.5 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {p.stage === "saved" && (
+                <div className="flex items-center gap-2">
+                  <Check size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <div className="flex-1 text-[11px] text-foreground leading-snug">
+                    Rule saved to{" "}
+                    <span className="font-medium">
+                      {PLAYBOOKS.find((pb) => pb.id === p.savedTo)?.name ?? "playbook"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => dismissSavePrompt(p.id)}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium text-primary hover:bg-primary/10"
+                  >
+                    <Undo2 size={11} />
+                    Undo
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Composer */}
       <div className="border-t bg-card px-3 pt-2.5 pb-2 flex-shrink-0 space-y-2">
