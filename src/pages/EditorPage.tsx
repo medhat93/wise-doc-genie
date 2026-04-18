@@ -102,7 +102,6 @@ const EditorPageInner = () => {
   }, [activePanel, setCommentsPanelOpen]);
 
   // Register opener so slash/selection menus can pop the AI panel
-  const { setRequestOpenAiPanel } = useEditorContext();
   useEffect(() => {
     setRequestOpenAiPanel(() => setActivePanel("ai"));
   }, [setRequestOpenAiPanel]);
