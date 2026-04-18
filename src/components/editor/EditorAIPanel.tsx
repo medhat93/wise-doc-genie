@@ -19,7 +19,20 @@ import {
   ChevronDown,
   Check,
   MessageSquare,
+  ShieldAlert,
+  ExternalLink,
+  Bookmark,
+  Undo2,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import AiIcon from "@/components/AiIcon";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -47,9 +60,8 @@ const SCOPES: Scope[] = ["Full document", "Selected text", "Current section"];
 
 const PLAYBOOKS = [
   { id: "vendor-msa", name: "Vendor MSA Playbook" },
-  { id: "nda-standard", name: "Standard NDA Playbook" },
-  { id: "data-protection", name: "Data Protection Playbook" },
-  { id: "employment", name: "Employment Contract Playbook" },
+  { id: "nda-redlines", name: "NDA Redlines" },
+  { id: "my-playbook", name: "My Playbook" },
 ];
 
 type SuggestionBlockData = SuggestionCardProps & {
@@ -125,12 +137,23 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
   const [quotedText, setQuotedText] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [activePlaybooks, setActivePlaybooks] = useState<string[]>(["vendor-msa"]);
+  const [activePlaybooks, setActivePlaybooks] = useState<string[]>(["vendor-msa", "my-playbook"]);
   const [playbookOpen, setPlaybookOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [setups, setSetups] = useState<Record<string, ReviewSetup>>({});
   const [reviewRuns, setReviewRuns] = useState<Record<string, "idle" | "running" | "done">>({});
   const [hasResolvedAny, setHasResolvedAny] = useState(false);
+  const [activeTab, setActiveTab] = useState<"chat" | "violations">("chat");
+  const [resolvedViolations, setResolvedViolations] = useState<string[]>([]);
+  // Save-rule prompts shown as lightweight in-panel toasts
+  type SaveRulePrompt = {
+    id: string;
+    suggestedName: string;
+    stage: "ask" | "form" | "saved";
+    ruleName?: string;
+    savedTo?: string;
+  };
+  const [savePrompts, setSavePrompts] = useState<SaveRulePrompt[]>([]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -535,6 +558,104 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
       })
     );
     setHasResolvedAny(true);
+
+    // After Apply, surface a save-rule prompt as an in-panel toast
+    if (action === "applied") {
+      const suggestedName = deriveRuleName(card);
+      setSavePrompts((prev) => [
+        ...prev,
+        { id: `srp-${cardId}`, suggestedName, stage: "ask" },
+      ]);
+    }
+  };
+
+  const deriveRuleName = (card: SuggestionBlockData) => {
+    const t = card.title.toLowerCase();
+    if (t.includes("late payment") || t.includes("late-payment")) return "Late-payment interest ≤ 1%/month";
+    if (t.includes("payment window")) return "Payment window ≥ 30 days";
+    if (t.includes("governing law")) return "Require governing-law clause";
+    return card.title;
+  };
+
+  const dismissSavePrompt = (id: string) =>
+    setSavePrompts((prev) => prev.filter((p) => p.id !== id));
+
+  const openSaveRuleForm = (id: string) =>
+    setSavePrompts((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              stage: "form",
+              ruleName: p.ruleName ?? p.suggestedName,
+              savedTo: p.savedTo ?? (activePlaybooks.includes("my-playbook") ? "my-playbook" : activePlaybooks[0]),
+            }
+          : p
+      )
+    );
+
+  const confirmSaveRule = (id: string) =>
+    setSavePrompts((prev) => prev.map((p) => (p.id === id ? { ...p, stage: "saved" } : p)));
+
+  const updateSavePrompt = (id: string, patch: Partial<SaveRulePrompt>) =>
+    setSavePrompts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+
+  // Violations seed
+  type Violation = {
+    id: string;
+    title: string;
+    citation: string;
+    severity: "Critical" | "Medium" | "Low";
+    description: string;
+    card: SuggestionBlockData;
+  };
+  const VIOLATIONS_SEED: Violation[] = [
+    {
+      id: "v1",
+      title: "Payment window shorter than playbook standard",
+      citation: "§3 Payment Terms",
+      severity: "Medium",
+      description: "Document uses NET-15; Vendor MSA Playbook expects NET-30.",
+      card: {
+        cardId: `violation-card-v1`,
+        severity: "Medium",
+        title: "Payment window shorter than standard",
+        citation: "§3 Payment Terms",
+        oldText: "fifteen (15) days",
+        newText: "thirty (30) days",
+        reasoning: "Vendor MSA Playbook expects NET-30 for B2B services.",
+      },
+    },
+    {
+      id: "v2",
+      title: "Missing governing law",
+      citation: "§ End of document",
+      severity: "Low",
+      description: "No governing-law clause was found in this agreement.",
+      card: {
+        cardId: `violation-card-v2`,
+        severity: "Low",
+        title: "Missing governing law",
+        description: "No governing-law clause was found in this agreement.",
+        citation: "§ End of document",
+        newText:
+          "Governing Law. This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles.",
+        reasoning: "Adding an explicit governing-law clause prevents jurisdictional disputes.",
+      },
+    },
+  ];
+  const visibleViolations = VIOLATIONS_SEED.filter((v) => !resolvedViolations.includes(v.id));
+
+  const openViolationInChat = (v: Violation) => {
+    setActiveTab("chat");
+    import("./ai-blocks/aiBlockUtils").then(({ jumpToSection }) => jumpToSection(v.citation));
+    const card: SuggestionBlockData = { ...v.card, cardId: `${v.card.cardId}-${Date.now()}` };
+    appendAssistantMessage(
+      [{ kind: "suggestion", ...card }],
+      `From Violations — let's address: ${v.title}.`
+    );
+    addMarginPin(card.citation || "", card.severity, card.cardId);
+    setResolvedViolations((prev) => [...prev, v.id]);
   };
 
   const shortDescribe = (card: SuggestionBlockData) => {
@@ -649,6 +770,21 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
           </div>
           <div className="flex items-center gap-0.5">
             <Button
+              variant={activeTab === "violations" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 px-2 text-[11px] gap-1"
+              onClick={() => setActiveTab((t) => (t === "violations" ? "chat" : "violations"))}
+              title="Violations"
+            >
+              <ShieldAlert size={13} />
+              Violations
+              {visibleViolations.length > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-destructive/15 text-destructive text-[10px] font-semibold">
+                  {visibleViolations.length}
+                </span>
+              )}
+            </Button>
+            <Button
               variant="ghost"
               size="icon"
               className="h-7 w-7"
@@ -693,30 +829,100 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
             <PopoverTrigger asChild>
               <button className="text-primary hover:underline font-medium">change</button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-2" align="start">
-              <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground px-2 py-1.5">
-                Playbooks
+            <PopoverContent className="w-72 p-0" align="start">
+              <div className="px-3 pt-2.5 pb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                Active playbooks
               </div>
-              <div className="space-y-0.5">
-                {PLAYBOOKS.map((pb) => (
-                  <label
-                    key={pb.id}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={activePlaybooks.includes(pb.id)}
-                      onCheckedChange={() => togglePlaybook(pb.id)}
-                    />
-                    <span className="text-xs">{pb.name}</span>
-                  </label>
-                ))}
+              <div className="px-1.5 pb-1.5 space-y-0.5">
+                {PLAYBOOKS.map((pb) => {
+                  const on = activePlaybooks.includes(pb.id);
+                  return (
+                    <div
+                      key={pb.id}
+                      className="flex items-center justify-between gap-2 px-2 py-1.5 rounded hover:bg-accent"
+                    >
+                      <span className="text-xs text-foreground">{pb.name}</span>
+                      <Switch checked={on} onCheckedChange={() => togglePlaybook(pb.id)} />
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => {
+                  setPlaybookOpen(false);
+                  toast("Opening playbook manager…");
+                }}
+                className="flex items-center gap-1 px-3 py-2 w-full text-left text-xs font-medium text-primary hover:bg-accent border-t border-border"
+              >
+                Manage playbooks
+                <ExternalLink size={11} />
+              </button>
+              <div className="px-3 py-2 text-[10px] leading-snug text-muted-foreground bg-muted/40 border-t border-border">
+                Signit AI auto-selects playbooks based on the document type.
               </div>
             </PopoverContent>
           </Popover>
         </div>
       </div>
 
-      {/* Conversation */}
+      {/* Conversation / Violations */}
+      {activeTab === "violations" ? (
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+          <div className="flex items-start gap-2 pb-1">
+            <ShieldAlert size={14} className="text-destructive mt-0.5" />
+            <div>
+              <div className="text-sm font-semibold text-foreground">Playbook violations</div>
+              <div className="text-[11px] text-muted-foreground leading-snug">
+                Rules currently broken in this document. Click one to address it in chat.
+              </div>
+            </div>
+          </div>
+          {visibleViolations.length === 0 ? (
+            <div className="rounded-lg border border-dashed bg-muted/30 px-3 py-6 text-center">
+              <div className="text-xs font-medium text-foreground">All clear</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">
+                No active violations from your playbooks.
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {visibleViolations.map((v) => {
+                const sevColor =
+                  v.severity === "Critical"
+                    ? "bg-destructive/10 text-destructive border-destructive/20"
+                    : v.severity === "Medium"
+                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                    : "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/20";
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => openViolationInChat(v)}
+                    className="w-full text-left rounded-xl border bg-background/60 hover:bg-accent/40 hover:border-primary/40 transition-colors px-3 py-2.5"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className={cn(
+                          "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide border",
+                          sevColor
+                        )}
+                      >
+                        {v.severity}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">{v.citation}</span>
+                    </div>
+                    <div className="text-xs font-semibold text-foreground leading-snug">
+                      {v.title}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                      {v.description}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
         {messages.length === 0 && (
           <>
@@ -824,6 +1030,125 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
           </div>
         )}
       </div>
+      )}
+
+      {/* In-panel save-rule toasts */}
+      {savePrompts.length > 0 && (
+        <div className="px-3 pt-2 pb-1 space-y-1.5 flex-shrink-0">
+          {savePrompts.map((p) => (
+            <div
+              key={p.id}
+              className="rounded-lg border border-primary/30 bg-primary/5 backdrop-blur-sm px-3 py-2 animate-fade-in"
+            >
+              {p.stage === "ask" && (
+                <div className="flex items-start gap-2">
+                  <Bookmark size={13} className="text-primary mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] text-foreground leading-snug">
+                      Saved the fix to the doc. Want to save{" "}
+                      <span className="font-medium">"{p.suggestedName}"</span> as a rule so we catch it next time?
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      <button
+                        onClick={() => openSaveRuleForm(p.id)}
+                        className="px-2 py-0.5 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        Save rule
+                      </button>
+                      <button
+                        onClick={() => dismissSavePrompt(p.id)}
+                        className="px-2 py-0.5 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted"
+                      >
+                        Not now
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => dismissSavePrompt(p.id)}
+                    className="text-muted-foreground hover:text-foreground"
+                    title="Dismiss"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
+
+              {p.stage === "form" && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <Bookmark size={11} className="text-primary" />
+                    Save as playbook rule
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">
+                      Rule name
+                    </label>
+                    <Input
+                      value={p.ruleName ?? ""}
+                      onChange={(e) => updateSavePrompt(p.id, { ruleName: e.target.value })}
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-0.5">
+                      Save to
+                    </label>
+                    <Select
+                      value={p.savedTo}
+                      onValueChange={(v) => updateSavePrompt(p.id, { savedTo: v })}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PLAYBOOKS.filter((pb) => activePlaybooks.includes(pb.id)).map((pb) => (
+                          <SelectItem key={pb.id} value={pb.id} className="text-xs">
+                            {pb.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5 pt-0.5">
+                    <button
+                      onClick={() => dismissSavePrompt(p.id)}
+                      className="px-2 py-0.5 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => confirmSaveRule(p.id)}
+                      disabled={!p.ruleName?.trim()}
+                      className="px-2 py-0.5 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {p.stage === "saved" && (
+                <div className="flex items-center gap-2">
+                  <Check size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <div className="flex-1 text-[11px] text-foreground leading-snug">
+                    Rule saved to{" "}
+                    <span className="font-medium">
+                      {PLAYBOOKS.find((pb) => pb.id === p.savedTo)?.name ?? "playbook"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => dismissSavePrompt(p.id)}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium text-primary hover:bg-primary/10"
+                  >
+                    <Undo2 size={11} />
+                    Undo
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Composer */}
       <div className="border-t bg-card px-3 pt-2.5 pb-2 flex-shrink-0 space-y-2">
