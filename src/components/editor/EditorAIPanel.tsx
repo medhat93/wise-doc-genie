@@ -894,6 +894,25 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
             </Button>
           </div>
         );
+      case "canvas-link":
+        return (
+          <div
+            key={idx}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-md border bg-primary/5 px-2 py-1 animate-fade-in"
+          >
+            <Maximize2 size={11} className="text-primary" />
+            <span className="text-[11px] text-foreground">{block.label}</span>
+            <button
+              onClick={() => {
+                setCanvasInitialLayout(block.layout);
+                setCanvasOpen(true);
+              }}
+              className="text-[11px] font-medium text-primary hover:underline ml-1"
+            >
+              reopen
+            </button>
+          </div>
+        );
     }
   };
 
