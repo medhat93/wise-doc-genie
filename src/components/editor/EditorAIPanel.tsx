@@ -128,6 +128,9 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
   const [activePlaybooks, setActivePlaybooks] = useState<string[]>(["vendor-msa"]);
   const [playbookOpen, setPlaybookOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [setups, setSetups] = useState<Record<string, ReviewSetup>>({});
+  const [reviewRuns, setReviewRuns] = useState<Record<string, "idle" | "running" | "done">>({});
+  const [hasResolvedAny, setHasResolvedAny] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
