@@ -189,6 +189,10 @@ const EditorPageInner = () => {
         onClose={() => setVersionHistoryOpen(false)}
       />
 
+      {/* In-editor AI surfaces */}
+      <EditorSlashMenu />
+      <SelectionAIMenu />
+
         {/* Desktop panel */}
         {!isMobile && (
           <AnimatePresence>
