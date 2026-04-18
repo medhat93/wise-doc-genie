@@ -10,6 +10,8 @@ import EditorFieldSettings from "@/components/editor/EditorFieldSettings";
 import { useEditorContext } from "@/components/editor/EditorContext";
 import CorrectionBanner from "@/components/editor/CorrectionBanner";
 import VersionHistoryOverlay from "@/components/editor/VersionHistoryOverlay";
+import EditorSlashMenu from "@/components/editor/EditorSlashMenu";
+import SelectionAIMenu from "@/components/editor/SelectionAIMenu";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
