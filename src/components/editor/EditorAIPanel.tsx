@@ -30,6 +30,9 @@ import ComparisonTable, { type ComparisonTableProps } from "./ai-blocks/Comparis
 import Checklist, { type ChecklistProps } from "./ai-blocks/Checklist";
 import CitationPill from "./ai-blocks/CitationPill";
 
+import ReviewSetupCard, { type ReviewSetup } from "./ai-blocks/ReviewSetupCard";
+import { addMarginPin, removeMarginPin, applyEditToCanvas } from "./ai-blocks/aiBlockUtils";
+
 const EDIT_KEYWORDS = [
   "change", "rewrite", "update", "modify", "add a clause",
   "remove", "rephrase", "replace", "insert", "edit",
@@ -49,10 +52,19 @@ const PLAYBOOKS = [
   { id: "employment", name: "Employment Contract Playbook" },
 ];
 
+type SuggestionBlockData = SuggestionCardProps & {
+  cardId: string;
+  resolved?: "applied" | "dismissed";
+  resolvedLabel?: string;
+};
+
 type RichBlock =
-  | ({ kind: "suggestion" } & SuggestionCardProps)
+  | ({ kind: "suggestion" } & SuggestionBlockData)
   | ({ kind: "table" } & ComparisonTableProps)
-  | ({ kind: "checklist" } & ChecklistProps);
+  | ({ kind: "checklist" } & ChecklistProps)
+  | { kind: "setup"; setupId: string }
+  | { kind: "status"; label: string }
+  | { kind: "completion"; criticalCount: number };
 
 interface ChatMessage {
   id: string;
@@ -116,6 +128,9 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
   const [activePlaybooks, setActivePlaybooks] = useState<string[]>(["vendor-msa"]);
   const [playbookOpen, setPlaybookOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [setups, setSetups] = useState<Record<string, ReviewSetup>>({});
+  const [reviewRuns, setReviewRuns] = useState<Record<string, "idle" | "running" | "done">>({});
+  const [hasResolvedAny, setHasResolvedAny] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -243,46 +258,26 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
       const aiId = `a-${Date.now()}`;
       const lower = text.toLowerCase();
 
-      // Seeded mock: Review as Client
-      if (intent === "Review" || lower.includes("review as client")) {
-        const blocks: RichBlock[] = [
+      // Seeded mock: Review intent → setup card
+      if (intent === "Review" || lower.includes("review as client") || lower.includes("review")) {
+        const setupId = `setup-${Date.now()}`;
+        const initial: ReviewSetup = {
+          perspective: "Client",
+          scope: "Full document",
+          playbook: "Vendor MSA Playbook",
+          output: "Comments + redlines",
+        };
+        setSetups((prev) => ({ ...prev, [setupId]: initial }));
+        setReviewRuns((prev) => ({ ...prev, [setupId]: "idle" }));
+        setMessages((prev) => [
+          ...prev,
           {
-            kind: "suggestion",
-            severity: "Critical",
-            title: "Late payment interest is above playbook ceiling",
-            citation: "§3 Payment Terms",
-            oldText: "1.5% per month",
-            newText: "1% per month",
-            reasoning:
-              "Your Vendor MSA Playbook caps late-payment interest at 1% per month (rule #7).",
+            id: aiId,
+            role: "assistant",
+            content: "Here's the setup I detected — tweak anything before we begin.",
+            blocks: [{ kind: "setup", setupId }],
           },
-          {
-            kind: "suggestion",
-            severity: "Medium",
-            title: "Payment window shorter than standard",
-            citation: "§3 Payment Terms",
-            oldText: "fifteen (15) days",
-            newText: "thirty (30) days",
-            reasoning:
-              "Market norm for B2B services is NET-30. NET-15 puts pressure on Client cash flow.",
-          },
-          {
-            kind: "suggestion",
-            severity: "Low",
-            title: "Missing governing law",
-            description: "No governing-law clause was found in this agreement.",
-            citation: "§ End of document",
-            newText:
-              "Governing Law. This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles.",
-            reasoning:
-              "Adding an explicit governing-law clause prevents jurisdictional disputes if a conflict arises.",
-          },
-        ];
-        streamAssistant(
-          aiId,
-          "Reviewing Master Services Agreement as Client, full document, using Vendor MSA Playbook. Found 4 issues — streaming as I go.",
-          { blocks }
-        );
+        ]);
         return;
       }
 
@@ -357,6 +352,201 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
     return acc;
   }, {});
 
+  // Build the seeded review cards from a setup
+  const buildReviewCards = (): SuggestionBlockData[] => [
+    {
+      cardId: `card-${Date.now()}-1`,
+      severity: "Critical",
+      title: "Late payment interest is above playbook ceiling",
+      citation: "§3 Payment Terms",
+      oldText: "1.5% per month",
+      newText: "1% per month",
+      reasoning:
+        "Your Vendor MSA Playbook caps late-payment interest at 1% per month (rule #7).",
+    },
+    {
+      cardId: `card-${Date.now()}-2`,
+      severity: "Medium",
+      title: "Payment window shorter than standard",
+      citation: "§3 Payment Terms",
+      oldText: "fifteen (15) days",
+      newText: "thirty (30) days",
+      reasoning:
+        "Market norm for B2B services is NET-30. NET-15 puts pressure on Client cash flow.",
+    },
+    {
+      cardId: `card-${Date.now()}-3`,
+      severity: "Low",
+      title: "Missing governing law",
+      description: "No governing-law clause was found in this agreement.",
+      citation: "§ End of document",
+      newText:
+        "Governing Law. This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles.",
+      reasoning:
+        "Adding an explicit governing-law clause prevents jurisdictional disputes if a conflict arises.",
+    },
+  ];
+
+  const appendAssistantMessage = (blocks: RichBlock[], content = "") => {
+    const id = `a-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    setMessages((prev) => [...prev, { id, role: "assistant", content, blocks }]);
+    return id;
+  };
+
+  // Run the streaming review: thinking line, then cards one by one with pins
+  const runReview = (setupId: string) => {
+    const setup = setups[setupId];
+    if (!setup) return;
+    setReviewRuns((prev) => ({ ...prev, [setupId]: "running" }));
+
+    // 1) Thinking status with countdown
+    const statusId = `a-thinking-${Date.now()}`;
+    const totalSections = 8;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: statusId,
+        role: "assistant",
+        content: `Reviewing as ${setup.perspective} · ${setup.scope} · ${setup.playbook}.`,
+        blocks: [{ kind: "status", label: `Thinking… reading 1 of ${totalSections} sections` }],
+      },
+    ]);
+    setIsStreaming(true);
+    let read = 1;
+    const tick = setInterval(() => {
+      read += 1;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === statusId
+            ? {
+                ...m,
+                blocks: [
+                  {
+                    kind: "status",
+                    label: `Thinking… reading ${read} of ${totalSections} sections`,
+                  },
+                ],
+              }
+            : m
+        )
+      );
+      if (read >= totalSections) clearInterval(tick);
+    }, 220);
+
+    // 2) Stream cards one at a time
+    const cards = buildReviewCards();
+    cards.forEach((card, idx) => {
+      setTimeout(() => {
+        // Replace the thinking message with a quiet header on first card
+        if (idx === 0) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === statusId
+                ? {
+                    ...m,
+                    content: `Found ${cards.length} issues — streaming as I go.`,
+                    blocks: [],
+                  }
+                : m
+            )
+          );
+        }
+        appendAssistantMessage([{ kind: "suggestion", ...card }]);
+        addMarginPin(card.citation || "", card.severity, card.cardId);
+
+        if (idx === cards.length - 1) {
+          setTimeout(() => {
+            appendAssistantMessage(
+              [{ kind: "completion", criticalCount: cards.filter((c) => c.severity === "Critical").length }],
+              `Review complete — ${cards.length} issues.`
+            );
+            setIsStreaming(false);
+            setReviewRuns((prev) => ({ ...prev, [setupId]: "done" }));
+          }, 400);
+        }
+      }, 2000 + idx * 1200);
+    });
+  };
+
+  const runSecondPass = () => {
+    setIsStreaming(true);
+    const headerId = appendAssistantMessage(
+      [{ kind: "status", label: "Re-reading after your edits…" }],
+      ""
+    );
+    setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === headerId
+            ? {
+                ...m,
+                content:
+                  "After your edits, I noticed the document still references \"fifteen (15) days\" in a second place — [§7.2]. Want me to align it?",
+                blocks: [],
+              }
+            : m
+        )
+      );
+      const card: SuggestionBlockData = {
+        cardId: `card-2pass-${Date.now()}`,
+        severity: "Medium",
+        title: "Inconsistent payment window in §7.2",
+        citation: "§7.2",
+        oldText: "fifteen (15) days",
+        newText: "thirty (30) days",
+        reasoning: "Aligns with the change you applied in §3 Payment Terms.",
+      };
+      appendAssistantMessage([{ kind: "suggestion", ...card }]);
+      addMarginPin(card.citation || "", card.severity, card.cardId);
+      setIsStreaming(false);
+    }, 1800);
+  };
+
+  const resolveCard = (
+    msgId: string,
+    cardId: string,
+    action: "applied" | "dismissed",
+    card: SuggestionBlockData
+  ) => {
+    let label = "";
+    if (action === "applied") {
+      const ok = applyEditToCanvas(card.citation || "", card.oldText, card.newText);
+      label = ok
+        ? `Applied — ${card.title.toLowerCase().startsWith("missing")
+            ? "added " + card.title.replace(/^Missing\s+/i, "").toLowerCase()
+            : card.oldText
+            ? `${shortDescribe(card)} changed to “${card.newText.length > 60 ? card.newText.slice(0, 57) + "…" : card.newText}”`
+            : "inserted clause"} ${card.citation ? `in ${card.citation}` : ""}`.trim()
+        : `Applied — ${card.title}`;
+    } else {
+      label = `Dismissed — ${card.title}`;
+    }
+    removeMarginPin(card.cardId);
+    // Replace the card block with a status block, keep msg
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== msgId) return m;
+        const blocks = (m.blocks || []).map((b) =>
+          b.kind === "suggestion" && b.cardId === cardId
+            ? ({ kind: "status", label } as RichBlock)
+            : b
+        );
+        return { ...m, blocks };
+      })
+    );
+    setHasResolvedAny(true);
+  };
+
+  const shortDescribe = (card: SuggestionBlockData) => {
+    const t = card.title.toLowerCase();
+    if (t.includes("late payment")) return "Late payment interest";
+    if (t.includes("payment window")) return "Payment window";
+    return card.title;
+  };
+
+  const updateSetup = (setupId: string, next: ReviewSetup) =>
+    setSetups((prev) => ({ ...prev, [setupId]: next }));
+
   // Render AI text and convert [§...] tokens into CitationPills
   const renderAiText = (text: string) => {
     const parts = text.split(/(\[§[^\]]+\])/g);
@@ -367,14 +557,84 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
     });
   };
 
-  const renderBlock = (block: RichBlock, idx: number) => {
+  const renderBlock = (block: RichBlock, idx: number, msgId: string) => {
     switch (block.kind) {
       case "suggestion":
-        return <SuggestionCard key={idx} {...block} />;
+        return (
+          <div key={block.cardId} className="animate-fade-in">
+            <SuggestionCard
+              {...block}
+              onApply={() => resolveCard(msgId, block.cardId, "applied", block)}
+              onDismiss={() => resolveCard(msgId, block.cardId, "dismissed", block)}
+            />
+          </div>
+        );
       case "table":
         return <ComparisonTable key={idx} {...block} />;
       case "checklist":
         return <Checklist key={idx} {...block} />;
+      case "setup":
+        return (
+          <ReviewSetupCard
+            key={block.setupId}
+            setup={setups[block.setupId]}
+            onChange={(next) => updateSetup(block.setupId, next)}
+            onStart={() => runReview(block.setupId)}
+            onEdit={() => toast("Tweak any value above")}
+            started={reviewRuns[block.setupId] !== "idle"}
+          />
+        );
+      case "status":
+        return (
+          <div
+            key={idx}
+            className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground animate-fade-in"
+          >
+            <span className="inline-flex w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+            <span className="leading-snug">{block.label}</span>
+          </div>
+        );
+      case "completion":
+        return (
+          <div key={idx} className="mt-2 flex flex-wrap gap-1.5 animate-fade-in">
+            <Button
+              size="sm"
+              className="h-7 text-[11px]"
+              onClick={() => {
+                // Apply all critical via DOM helper for the seeded card
+                applyEditToCanvas("§3 Payment Terms", "1.5% per month", "1% per month");
+                setMessages((prev) =>
+                  prev.map((m) => {
+                    const blocks = (m.blocks || []).map((b) => {
+                      if (b.kind === "suggestion" && b.severity === "Critical") {
+                        removeMarginPin(b.cardId);
+                        return {
+                          kind: "status",
+                          label: `Applied — late-payment interest changed to 1% per month in §3.`,
+                        } as RichBlock;
+                      }
+                      return b;
+                    });
+                    return { ...m, blocks };
+                  })
+                );
+                setHasResolvedAny(true);
+              }}
+            >
+              Apply all critical
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-[11px]"
+              onClick={runSecondPass}
+              disabled={!hasResolvedAny || isStreaming}
+              title={!hasResolvedAny ? "Apply or dismiss a suggestion first" : "Re-read the document"}
+            >
+              Run second pass
+            </Button>
+          </div>
+        );
     }
   };
 
@@ -526,7 +786,7 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
                     <span className="inline-block w-1 h-3 bg-primary animate-pulse ml-0.5 align-middle" />
                   )}
                 </div>
-                {msg.blocks?.map((b, i) => renderBlock(b, i))}
+                {msg.blocks?.map((b, i) => renderBlock(b, i, msg.id))}
                 {msg.hasSuggestions && !isStreaming && pendingSuggestions.length > 0 && (
                   <div className="mt-2 flex gap-1.5">
                     <Button size="sm" className="h-7 text-[10px] flex-1" onClick={handleAcceptAll}>
