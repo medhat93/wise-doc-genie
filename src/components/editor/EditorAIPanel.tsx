@@ -240,27 +240,94 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
     setActiveIntent(null);
 
     setTimeout(() => {
-      const isEdit = isEditRequest(text, intent);
       const aiId = `a-${Date.now()}`;
+      const lower = text.toLowerCase();
+
+      // Seeded mock: Review as Client
+      if (intent === "Review" || lower.includes("review as client")) {
+        const blocks: RichBlock[] = [
+          {
+            kind: "suggestion",
+            severity: "Critical",
+            title: "Late payment interest is above playbook ceiling",
+            citation: "§3 Payment Terms",
+            oldText: "1.5% per month",
+            newText: "1% per month",
+            reasoning:
+              "Your Vendor MSA Playbook caps late-payment interest at 1% per month (rule #7).",
+          },
+          {
+            kind: "suggestion",
+            severity: "Medium",
+            title: "Payment window shorter than standard",
+            citation: "§3 Payment Terms",
+            oldText: "fifteen (15) days",
+            newText: "thirty (30) days",
+            reasoning:
+              "Market norm for B2B services is NET-30. NET-15 puts pressure on Client cash flow.",
+          },
+          {
+            kind: "suggestion",
+            severity: "Low",
+            title: "Missing governing law",
+            description: "No governing-law clause was found in this agreement.",
+            citation: "§ End of document",
+            newText:
+              "Governing Law. This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles.",
+            reasoning:
+              "Adding an explicit governing-law clause prevents jurisdictional disputes if a conflict arises.",
+          },
+        ];
+        streamAssistant(
+          aiId,
+          "Reviewing Master Services Agreement as Client, full document, using Vendor MSA Playbook. Found 4 issues — streaming as I go.",
+          { blocks }
+        );
+        return;
+      }
+
+      // Seeded mock: Summarize this contract
+      if (intent === "Summarize" || lower.includes("summari")) {
+        const blocks: RichBlock[] = [
+          {
+            kind: "table",
+            caption: "At a glance",
+            headers: ["Field", "Value"],
+            rows: [
+              { cells: ["Term", "12 months"] },
+              { cells: ["Value", "[Contract.Value]"] },
+              { cells: ["Payment", "NET-15"], chip: "Below market" },
+              { cells: ["Termination", "30 days notice"] },
+              { cells: ["Governing law", "Not specified ⚠️"], chip: "Risk" },
+            ],
+          },
+        ];
+        streamAssistant(
+          aiId,
+          "Here's the summary at a glance:\n\nSee [§3 Payment Terms] and [§2 Scope of Services] for the source.",
+          { blocks }
+        );
+        return;
+      }
+
+      // Edit-intent → tracked changes
+      const isEdit = isEditRequest(text, intent);
       if (isEdit) {
         const count = generateSuggestions();
         streamAssistant(
           aiId,
-          `I've added ${count} suggestion${count === 1 ? "" : "s"} to the document. Review them inline and accept or reject each one.`,
-          { hasSuggestions: true, blocks: [{ kind: "diff", title: "Suggested redlines" }] }
+          `I've added ${count} suggestion${count === 1 ? "" : "s"} to the document. Review them inline and accept or reject each one. See [§2 Scope of Services] and [§5 Termination].`,
+          { hasSuggestions: true }
         );
-      } else {
-        const key = pickResponseKey(text);
-        const blocks: RichBlock[] | undefined =
-          intent === "Summarize" || key === "summarize"
-            ? [{ kind: "card", title: "Document summary" }]
-            : key === "payment"
-            ? [{ kind: "table", title: "Pricing breakdown" }]
-            : intent === "Review"
-            ? [{ kind: "checklist", title: "Review checklist" }]
-            : undefined;
-        streamAssistant(aiId, MOCK_AI_RESPONSES[key], { blocks });
+        return;
       }
+
+      // Generic Q&A
+      const key = pickResponseKey(text);
+      streamAssistant(
+        aiId,
+        `${MOCK_AI_RESPONSES[key]} See [§3 Payment Terms] for the source.`
+      );
     }, 200);
   };
 
@@ -290,57 +357,24 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
     return acc;
   }, {});
 
+  // Render AI text and convert [§...] tokens into CitationPills
+  const renderAiText = (text: string) => {
+    const parts = text.split(/(\[§[^\]]+\])/g);
+    return parts.map((part, i) => {
+      const m = part.match(/^\[(§[^\]]+)\]$/);
+      if (m) return <CitationPill key={i} label={m[1]} />;
+      return <span key={i}>{part}</span>;
+    });
+  };
+
   const renderBlock = (block: RichBlock, idx: number) => {
     switch (block.kind) {
-      case "card":
-        return (
-          <div
-            key={idx}
-            className="rounded-lg border border-border bg-muted/30 p-3 mt-2"
-          >
-            <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">
-              {block.title}
-            </div>
-            <div className="text-xs text-foreground/80">[card placeholder]</div>
-          </div>
-        );
+      case "suggestion":
+        return <SuggestionCard key={idx} {...block} />;
       case "table":
-        return (
-          <div
-            key={idx}
-            className="rounded-lg border border-border overflow-hidden mt-2"
-          >
-            <div className="bg-muted/40 px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground border-b">
-              {block.title}
-            </div>
-            <div className="p-3 text-xs text-foreground/80">[table placeholder]</div>
-          </div>
-        );
-      case "diff":
-        return (
-          <div
-            key={idx}
-            className="rounded-lg border border-primary/30 bg-primary/5 p-3 mt-2"
-          >
-            <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-primary mb-1">
-              <Sparkles size={10} />
-              {block.title}
-            </div>
-            <div className="text-xs text-foreground/80">[diff placeholder]</div>
-          </div>
-        );
+        return <ComparisonTable key={idx} {...block} />;
       case "checklist":
-        return (
-          <div
-            key={idx}
-            className="rounded-lg border border-border bg-muted/30 p-3 mt-2"
-          >
-            <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">
-              {block.title}
-            </div>
-            <div className="text-xs text-foreground/80">[checklist placeholder]</div>
-          </div>
-        );
+        return <Checklist key={idx} {...block} />;
     }
   };
 
