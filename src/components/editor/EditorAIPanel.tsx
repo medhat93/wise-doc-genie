@@ -45,6 +45,8 @@ import CitationPill from "./ai-blocks/CitationPill";
 
 import ReviewSetupCard, { type ReviewSetup } from "./ai-blocks/ReviewSetupCard";
 import { addMarginPin, removeMarginPin, applyEditToCanvas } from "./ai-blocks/aiBlockUtils";
+import AICanvasOverlay from "./AICanvasOverlay";
+import { AI_EVENTS, type AiUserAction, type AiCanvasSummary } from "./ai-blocks/aiEvents";
 
 const EDIT_KEYWORDS = [
   "change", "rewrite", "update", "modify", "add a clause",
@@ -76,7 +78,8 @@ type RichBlock =
   | ({ kind: "checklist" } & ChecklistProps)
   | { kind: "setup"; setupId: string }
   | { kind: "status"; label: string }
-  | { kind: "completion"; criticalCount: number };
+  | { kind: "completion"; criticalCount: number }
+  | { kind: "canvas-link"; layout: "outline" | "risk" | "comparison" | "extracted"; label: string };
 
 interface ChatMessage {
   id: string;
@@ -139,7 +142,8 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [activePlaybooks, setActivePlaybooks] = useState<string[]>(["vendor-msa", "my-playbook"]);
   const [playbookOpen, setPlaybookOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [canvasOpen, setCanvasOpen] = useState(false);
+  const [canvasInitialLayout, setCanvasInitialLayout] = useState<AiCanvasSummary["layout"]>("outline");
   const [setups, setSetups] = useState<Record<string, ReviewSetup>>({});
   const [reviewRuns, setReviewRuns] = useState<Record<string, "idle" | "running" | "done">>({});
   const [hasResolvedAny, setHasResolvedAny] = useState(false);
@@ -172,6 +176,42 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [pendingAiQuestion, setPendingAiQuestion]);
+
+  // Listen for slash/selection actions and canvas summaries (cross-surface bus)
+  useEffect(() => {
+    const onAction = (e: Event) => {
+      const detail = (e as CustomEvent<AiUserAction>).detail;
+      if (!detail) return;
+      handleExternalAction(detail);
+    };
+    const onSummary = (e: Event) => {
+      const s = (e as CustomEvent<AiCanvasSummary>).detail;
+      if (!s) return;
+      const id = `a-canvas-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id,
+          role: "assistant",
+          content: `Canvas: ${s.label} · `,
+          blocks: [{ kind: "canvas-link", layout: s.layout, label: s.label }],
+        },
+      ]);
+    };
+    const onOpenCanvas = (e: Event) => {
+      const detail = (e as CustomEvent<{ layout?: AiCanvasSummary["layout"] }>).detail;
+      setCanvasInitialLayout(detail?.layout ?? "outline");
+      setCanvasOpen(true);
+    };
+    window.addEventListener(AI_EVENTS.USER_ACTION, onAction);
+    window.addEventListener(AI_EVENTS.CANVAS_SUMMARY, onSummary);
+    window.addEventListener(AI_EVENTS.OPEN_CANVAS, onOpenCanvas);
+    return () => {
+      window.removeEventListener(AI_EVENTS.USER_ACTION, onAction);
+      window.removeEventListener(AI_EVENTS.CANVAS_SUMMARY, onSummary);
+      window.removeEventListener(AI_EVENTS.OPEN_CANVAS, onOpenCanvas);
+    };
+  });
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -257,6 +297,104 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
       setComments((prev) => [newComment, ...prev]);
     });
     return mockSuggestions.length;
+  };
+
+  // Handle a user action coming from slash menu / selection menu
+  const handleExternalAction = (action: AiUserAction) => {
+    const userId = `u-ext-${Date.now()}`;
+    const userMsg: ChatMessage = {
+      id: userId,
+      role: "user",
+      content: action.prompt,
+      intent: (action.intent as ChatMessage["intent"]) ?? undefined,
+      selectedText: action.selectedText,
+    };
+    setMessages((prev) => [...prev, userMsg]);
+
+    setTimeout(() => {
+      const aiId = `a-ext-${Date.now()}`;
+      const k = action.kind;
+
+      // Selection → Make stricter → SuggestionCard
+      if (k === "make-stricter") {
+        const card: SuggestionBlockData = {
+          cardId: `ext-card-${Date.now()}`,
+          severity: "Medium",
+          title: "Tighten payment-terms language",
+          citation: "§3 Payment Terms",
+          oldText: "Late payments may be subject to interest at 1.5% per month",
+          newText: "Late payments must accrue interest at 1% per month, compounded monthly, until paid in full",
+          reasoning: "Replaced permissive 'may' with mandatory 'must' and aligned the rate with your playbook.",
+        };
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: aiId,
+            role: "assistant",
+            content: "Here's a stricter version of the selected clause:",
+            blocks: [{ kind: "suggestion", ...card }],
+          },
+        ]);
+        return;
+      }
+
+      // Selection → Compare to playbook → ComparisonTable
+      if (k === "compare-playbook") {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: aiId,
+            role: "assistant",
+            content: "Comparing the selected clause to your active playbook:",
+            blocks: [
+              {
+                kind: "table",
+                caption: "Selection vs Vendor MSA Playbook",
+                headers: ["Aspect", "Your selection", "Playbook standard"],
+                rows: [
+                  { cells: ["Payment window", "NET-15", "NET-30"], chip: "Risk" },
+                  { cells: ["Late interest", "1.5% / month", "1% / month"], chip: "Above market" },
+                  { cells: ["Currency", "USD", "USD"], chip: "Matches playbook" },
+                ],
+              },
+            ],
+          },
+        ]);
+        return;
+      }
+
+      // Slash → Draft clause → confirmation message
+      if (k === "draft-clause") {
+        const input = (action.payload?.input as string) || "";
+        const subject = input.toLowerCase().includes("saudi") ? "Saudi Arabia" : input || "the requested topic";
+        streamAssistant(
+          aiId,
+          `Drafted a governing-law clause for ${subject}. Accept to insert into the document.`
+        );
+        return;
+      }
+
+      // Slash → other kinds → generic confirmation
+      if (action.intent === "Slash") {
+        streamAssistant(
+          aiId,
+          `Done — streamed the result into the editor as a pending insertion. Use Accept / Reject above the block.`
+        );
+        return;
+      }
+
+      // Selection generic actions (ask, rewrite, shorten, explain)
+      const labelMap: Record<string, string> = {
+        ask: "Here's what this clause means in plain English:",
+        rewrite: "Here's a clearer rewrite:",
+        shorten: "Here's a shorter version:",
+        explain: "Plain-English explanation of the selected text:",
+      };
+      streamAssistant(
+        aiId,
+        `${labelMap[k || ""] || "Here's my take:"} the selected language is generally clear, but you could tighten the obligation by replacing soft modal verbs ("may", "should") with mandatory ones ("must", "shall"). See [§3 Payment Terms] for context.`
+      );
+    }, 200);
   };
 
   const handleSend = () => {
@@ -756,6 +894,25 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
             </Button>
           </div>
         );
+      case "canvas-link":
+        return (
+          <div
+            key={idx}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-md border bg-primary/5 px-2 py-1 animate-fade-in"
+          >
+            <Maximize2 size={11} className="text-primary" />
+            <span className="text-[11px] text-foreground">{block.label}</span>
+            <button
+              onClick={() => {
+                setCanvasInitialLayout(block.layout);
+                setCanvasOpen(true);
+              }}
+              className="text-[11px] font-medium text-primary hover:underline ml-1"
+            >
+              reopen
+            </button>
+          </div>
+        );
     }
   };
 
@@ -798,10 +955,10 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
               size="icon"
               className="h-7 w-7"
               onClick={() => {
-                setExpanded((v) => !v);
-                toast(expanded ? "Collapsed" : "Expanded to canvas");
+                setCanvasInitialLayout("outline");
+                setCanvasOpen(true);
               }}
-              title="Expand"
+              title="Expand to canvas"
             >
               <Maximize2 size={14} />
             </Button>
@@ -1284,6 +1441,11 @@ const EditorAIPanel = ({ docType = "", onClose }: EditorAIPanelProps) => {
           </div>
         </SheetContent>
       </Sheet>
+      <AICanvasOverlay
+        open={canvasOpen}
+        initialLayout={canvasInitialLayout}
+        onClose={() => setCanvasOpen(false)}
+      />
     </div>
   );
 };

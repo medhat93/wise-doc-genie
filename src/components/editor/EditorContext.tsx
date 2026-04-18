@@ -200,6 +200,8 @@ interface EditorContextType {
   setChecklistState: React.Dispatch<React.SetStateAction<ChecklistState>>;
   documentVisibility: Record<string, string[]>;
   setDocumentVisibility: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
+  requestOpenAiPanel: () => void;
+  setRequestOpenAiPanel: (fn: () => void) => void;
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
@@ -238,6 +240,11 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
   const [checklistState, setChecklistState] = useState<ChecklistState>({ completedStepIds: [], skippedStepIds: [] });
   const [documentVisibility, setDocumentVisibility] = useState<Record<string, string[]>>({});
+  const openAiPanelRef = useState<{ fn: () => void }>({ fn: () => {} })[0];
+  const setRequestOpenAiPanel = useCallback((fn: () => void) => {
+    openAiPanelRef.fn = fn;
+  }, [openAiPanelRef]);
+  const requestOpenAiPanel = useCallback(() => openAiPanelRef.fn(), [openAiPanelRef]);
 
   return (
     <EditorContext.Provider value={{
@@ -256,6 +263,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       aiSuggestions, setAiSuggestions,
       checklistState, setChecklistState,
       documentVisibility, setDocumentVisibility,
+      requestOpenAiPanel, setRequestOpenAiPanel,
     }}>
       {children}
     </EditorContext.Provider>

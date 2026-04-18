@@ -10,6 +10,8 @@ import EditorFieldSettings from "@/components/editor/EditorFieldSettings";
 import { useEditorContext } from "@/components/editor/EditorContext";
 import CorrectionBanner from "@/components/editor/CorrectionBanner";
 import VersionHistoryOverlay from "@/components/editor/VersionHistoryOverlay";
+import EditorSlashMenu from "@/components/editor/EditorSlashMenu";
+import SelectionAIMenu from "@/components/editor/SelectionAIMenu";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -66,7 +68,7 @@ const EditorPageInner = () => {
   const childType = searchParams.get("childType") || "amendment";
   const [isEsign, setIsEsign] = useState(initialMode === "esign");
   const isMobile = useIsMobile();
-  const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen, participants, placedFields, usedVariables, variableValues } = useEditorContext();
+  const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen, participants, placedFields, usedVariables, variableValues, setRequestOpenAiPanel } = useEditorContext();
 
   const [loading, setLoading] = useState(true);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
@@ -100,6 +102,11 @@ const EditorPageInner = () => {
   useEffect(() => {
     setCommentsPanelOpen(activePanel === "comments");
   }, [activePanel, setCommentsPanelOpen]);
+
+  // Register opener so slash/selection menus can pop the AI panel
+  useEffect(() => {
+    setRequestOpenAiPanel(() => setActivePanel("ai"));
+  }, [setRequestOpenAiPanel]);
 
   const handlePanelToggle = (id: PanelId) => {
     setActivePanel((prev) => (prev === id ? null : id));
@@ -164,21 +171,27 @@ const EditorPageInner = () => {
         )}
 
         {/* Center — Document canvas (full width now) */}
-        <EditorCanvas
-          showToolbar={!isEsign}
-          onFieldSelect={handleFieldSelect}
-          onOpenComments={handleOpenComments}
-          onOpenAi={handleOpenAi}
-          onOpenVersionHistory={() => setVersionHistoryOpen(true)}
-          isEsign={isEsign}
-          hideZoomBar={!!selectedFieldId}
-          hideMarginComments={!!selectedFieldId && !!activePanel && activePanel !== "field-settings"}
-        />
+        <div data-editor-canvas-host className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <EditorCanvas
+            showToolbar={!isEsign}
+            onFieldSelect={handleFieldSelect}
+            onOpenComments={handleOpenComments}
+            onOpenAi={handleOpenAi}
+            onOpenVersionHistory={() => setVersionHistoryOpen(true)}
+            isEsign={isEsign}
+            hideZoomBar={!!selectedFieldId}
+            hideMarginComments={!!selectedFieldId && !!activePanel && activePanel !== "field-settings"}
+          />
+        </div>
 
       <VersionHistoryOverlay
         open={versionHistoryOpen}
         onClose={() => setVersionHistoryOpen(false)}
       />
+
+      {/* In-editor AI surfaces */}
+      <EditorSlashMenu />
+      <SelectionAIMenu />
 
         {/* Desktop panel */}
         {!isMobile && (
