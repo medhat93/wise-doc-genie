@@ -150,13 +150,32 @@ export default function SigningPage() {
   };
 
   const handleSelectDoc = (docId: string) => {
-    if (docId === activeDocId) return;
-    setDocTransition(false);
-    setTimeout(() => {
-      setActiveDocId(docId);
-      setDocTransition(true);
-    }, 50);
+    setActiveDocId(docId);
+    const el = document.getElementById(`signing-doc-${docId}`);
+    if (el && documentRef.current) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
+
+  // Update active doc based on scroll position
+  useEffect(() => {
+    const container = documentRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const containerTop = container.getBoundingClientRect().top;
+      let current = SIGNING_DOCUMENTS[0].id;
+      for (const doc of SIGNING_DOCUMENTS) {
+        const el = document.getElementById(`signing-doc-${doc.id}`);
+        if (el) {
+          const top = el.getBoundingClientRect().top - containerTop;
+          if (top <= 100) current = doc.id;
+        }
+      }
+      setActiveDocId(prev => (prev === current ? prev : current));
+    };
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
