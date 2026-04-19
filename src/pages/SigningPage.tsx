@@ -150,13 +150,32 @@ export default function SigningPage() {
   };
 
   const handleSelectDoc = (docId: string) => {
-    if (docId === activeDocId) return;
-    setDocTransition(false);
-    setTimeout(() => {
-      setActiveDocId(docId);
-      setDocTransition(true);
-    }, 50);
+    setActiveDocId(docId);
+    const el = document.getElementById(`signing-doc-${docId}`);
+    if (el && documentRef.current) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
+
+  // Update active doc based on scroll position
+  useEffect(() => {
+    const container = documentRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const containerTop = container.getBoundingClientRect().top;
+      let current = SIGNING_DOCUMENTS[0].id;
+      for (const doc of SIGNING_DOCUMENTS) {
+        const el = document.getElementById(`signing-doc-${doc.id}`);
+        if (el) {
+          const top = el.getBoundingClientRect().top - containerTop;
+          if (top <= 100) current = doc.id;
+        }
+      }
+      setActiveDocId(prev => (prev === current ? prev : current));
+    };
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
@@ -265,31 +284,46 @@ export default function SigningPage() {
 
 
 
-          {/* Document canvas */}
+          {/* Document canvas — all documents stacked */}
           <div
             ref={documentRef}
-            className={cn(
-              'flex-1 overflow-y-auto bg-slate-50 py-8 px-4 transition-opacity duration-200',
-              docTransition ? 'opacity-100' : 'opacity-0'
-            )}
+            className="flex-1 overflow-y-auto bg-slate-50 py-8 px-4"
           >
-            {activeDoc.ack === 'sign' && (
-              <NDADocument
-                highlightedSection={highlightedSection}
-                signed={signed}
-                signatureData={signatureData}
-                onFieldClick={handleFieldClick}
-              />
-            )}
-            {activeDoc.ack === 'none' && activeDoc.type === 'supplement' && (
-              <SupplementDocument
-                key={activeDoc.id}
-                doc={activeDoc}
-                accepted={true}
-                onAccept={() => {}}
-              />
-            )}
-            {activeDoc.ack === 'none' && activeDoc.type !== 'supplement' && <AttachmentDocument />}
+            {SIGNING_DOCUMENTS.map((doc, idx) => (
+              <div
+                key={doc.id}
+                id={`signing-doc-${doc.id}`}
+                className={cn('scroll-mt-4', idx > 0 && 'mt-12 pt-8 border-t border-border/60')}
+              >
+                <div className="max-w-3xl mx-auto mb-3 flex items-center gap-2 px-1">
+                  <FileText size={14} className="text-muted-foreground" />
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{doc.name}</span>
+                  <span className={cn(
+                    'text-[9px] px-1.5 rounded font-medium',
+                    doc.type === 'primary' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'
+                  )}>
+                    {doc.type.charAt(0).toUpperCase() + doc.type.slice(1)}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground ml-auto">{doc.pages} pg</span>
+                </div>
+                {doc.ack === 'sign' && (
+                  <NDADocument
+                    highlightedSection={highlightedSection}
+                    signed={signed}
+                    signatureData={signatureData}
+                    onFieldClick={handleFieldClick}
+                  />
+                )}
+                {doc.ack === 'none' && doc.type === 'supplement' && (
+                  <SupplementDocument
+                    doc={doc}
+                    accepted={true}
+                    onAccept={() => {}}
+                  />
+                )}
+                {doc.ack === 'none' && doc.type !== 'supplement' && <AttachmentDocument />}
+              </div>
+            ))}
           </div>
         </div>
 
