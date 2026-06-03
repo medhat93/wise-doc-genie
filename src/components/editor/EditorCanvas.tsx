@@ -13,15 +13,12 @@ import { ZoomBar, SearchBar } from "./EditorZoomSearch";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
-import { useEditorContext, COMMENT_SECTIONS, type Comment, type AiSuggestion, type AnnotationType } from "./EditorContext";
+import { useEditorContext, COMMENT_SECTIONS, DEFAULT_EDITOR_DOCUMENTS, type Comment, type AiSuggestion, type AnnotationType } from "./EditorContext";
 import { toast } from "sonner";
 
 /* ── Mock documents ── */
-export const MOCK_DOCUMENTS: EditorDocument[] = [
-  { id: "doc-1", name: "Master Services Agreement", docType: "primary", fileType: "pdf" },
-  { id: "doc-2", name: "Schedule A — Pricing", docType: "supplement", fileType: "docx" },
-  { id: "doc-3", name: "Insurance Certificate", docType: "attachment", fileType: "pdf" },
-];
+/** @deprecated Kept for backward-compat with panels that haven't migrated to context. */
+export const MOCK_DOCUMENTS: EditorDocument[] = DEFAULT_EDITOR_DOCUMENTS;
 
 const DOC_TYPE_DOT: Record<string, string> = {
   primary: "bg-[hsl(var(--brand-indigo))]",
@@ -349,7 +346,29 @@ const Doc3Content = ({ comments, onClickHighlight }: { comments: Comment[]; onCl
 );
 
 /* ── AI Suggestion Block ── */
+const GenericDocContent = ({ name }: { name: string }) => (
+  <>
+    <h1 className="text-2xl font-bold text-foreground mb-1">{name}</h1>
+    <p className="text-xs text-muted-foreground mb-8">Uploaded document — preview</p>
+    <div className="space-y-4">
+      <div className="h-3 bg-muted rounded w-3/4" />
+      <div className="h-3 bg-muted rounded w-full" />
+      <div className="h-3 bg-muted rounded w-5/6" />
+      <div className="h-3 bg-muted rounded w-2/3" />
+      <div className="mt-8 space-y-3">
+        <div className="h-3 bg-muted rounded w-1/2" />
+        <div className="h-3 bg-muted rounded w-full" />
+        <div className="h-3 bg-muted rounded w-4/5" />
+      </div>
+      <p className="text-sm text-muted-foreground italic mt-6">
+        Document content will appear here once parsed. Drag fields onto the page or open the side panel to configure signers and annotations.
+      </p>
+    </div>
+  </>
+);
+
 const AiSuggestionBlock = ({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   suggestion,
   onAccept,
   onReject,
@@ -940,11 +959,23 @@ interface EditorCanvasProps {
 const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpenAi, onOpenVersionHistory, isEsign, hideZoomBar, hideMarginComments }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
   const [showIndicator, setShowIndicator] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, setComments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues, aiSuggestions, setAiSuggestions } = useEditorContext();
+  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, setComments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues, aiSuggestions, setAiSuggestions, editorDocuments } = useEditorContext();
+  const documents = editorDocuments;
+  const [activeDocId, setActiveDocId] = useState<string | null>(documents[0]?.id ?? null);
+
+  useEffect(() => {
+    // Keep activeDocId valid when docs change (reorder/delete/add)
+    if (documents.length === 0) {
+      setActiveDocId(null);
+      return;
+    }
+    if (!documents.find(d => d.id === activeDocId)) {
+      setActiveDocId(documents[0].id);
+    }
+  }, [documents, activeDocId]);
 
   const [selectionToolbar, setSelectionToolbar] = useState<{ x: number; y: number; text: string } | null>(null);
   const [openThreadSection, setOpenThreadSection] = useState<string | null>(null);
@@ -1031,7 +1062,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
         participantId: parsed.participantId,
         participantName: parsed.participantName,
         participantColor: parsed.participantColor,
-        page: MOCK_DOCUMENTS.findIndex((d) => d.id === docId) + 1,
+      page: documents.findIndex((d) => d.id === docId) + 1,
         x: Math.max(0, x),
         y: Math.max(0, y),
         width: parsed.defaultWidth,
@@ -1154,7 +1185,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
-  }, []);
+  }, [documents]);
 
   const handleScroll = useCallback(() => {
     setShowIndicator(true);
@@ -1167,7 +1198,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     docRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  const activeDoc = MOCK_DOCUMENTS.find((d) => d.id === activeDocId) ?? null;
+  const activeDoc = documents.find((d) => d.id === activeDocId) ?? null;
 
   // Comments for margin bubbles — grouped by docId then sectionRef
   const inlineComments = comments.filter((c) => c.type === "inline");
@@ -1212,7 +1243,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     <div className="flex-1 flex flex-col overflow-hidden">
       {showToolbar && (
         <EditorToolbar
-          documents={MOCK_DOCUMENTS}
+          documents={documents}
           activeDocId={activeDocId}
           onScrollToDoc={scrollToDoc}
           onOpenComments={onOpenComments}
@@ -1264,7 +1295,19 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
             transformOrigin: "top center",
           }}
         >
-          {MOCK_DOCUMENTS.map((doc, idx) => {
+          {documents.length === 0 && (
+            <div className="flex justify-center">
+              <div className="max-w-[816px] w-full bg-card shadow-sm border border-dashed rounded-sm min-h-[400px] flex items-center justify-center p-12 text-center">
+                <div className="space-y-2">
+                  <p className="text-base font-semibold text-foreground">No documents yet</p>
+                  <p className="text-sm text-muted-foreground">
+                    Add a document from the checklist on the right to get started.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          {documents.map((doc, idx) => {
             const docFields = placedFields.filter((f) => f.page === idx + 1);
             return (
               <div key={doc.id}>
@@ -1305,8 +1348,10 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                         </>
                       ) : doc.id === "doc-2" ? (
                         <Doc2Content comments={comments} onClickHighlight={handleClickHighlight} />
-                      ) : (
+                      ) : doc.id === "doc-3" ? (
                         <Doc3Content comments={comments} onClickHighlight={handleClickHighlight} />
+                      ) : (
+                        <GenericDocContent name={doc.name} />
                       )}
                     </div>
                     {docFields.map((f) => (

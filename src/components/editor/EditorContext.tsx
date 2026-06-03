@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import type { Participant } from "./EditorParticipantsPanel";
 import type { PlacedField } from "./EditorFieldsPanel";
+import type { EditorDocument } from "./EditorDocumentsPopover";
 
 /* ── Comment types ── */
 export type AnnotationType = "comment" | "suggestion" | "ai_suggestion";
@@ -170,6 +171,13 @@ export interface ChecklistState {
   skippedStepIds: string[];
 }
 
+/* ── Default seed documents (used when entering editor without explicit docs) ── */
+export const DEFAULT_EDITOR_DOCUMENTS: EditorDocument[] = [
+  { id: "doc-1", name: "Master Services Agreement", docType: "primary", fileType: "pdf" },
+  { id: "doc-2", name: "Schedule A — Pricing", docType: "supplement", fileType: "docx" },
+  { id: "doc-3", name: "Insurance Certificate", docType: "attachment", fileType: "pdf" },
+];
+
 interface EditorContextType {
   participants: Participant[];
   setParticipants: React.Dispatch<React.SetStateAction<Participant[]>>;
@@ -202,6 +210,8 @@ interface EditorContextType {
   setDocumentVisibility: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
   requestOpenAiPanel: () => void;
   setRequestOpenAiPanel: (fn: () => void) => void;
+  editorDocuments: EditorDocument[];
+  setEditorDocuments: React.Dispatch<React.SetStateAction<EditorDocument[]>>;
 }
 
 const EditorContext = createContext<EditorContextType | null>(null);
@@ -241,6 +251,21 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [checklistState, setChecklistState] = useState<ChecklistState>({ completedStepIds: [], skippedStepIds: [] });
   const [documentVisibility, setDocumentVisibility] = useState<Record<string, string[]>>({});
   const openAiPanelRef = useState<{ fn: () => void }>({ fn: () => {} })[0];
+
+  // Hydrate documents from sessionStorage (set by CreateDocument when navigating in)
+  const [editorDocuments, setEditorDocuments] = useState<EditorDocument[]>(() => {
+    if (typeof window === "undefined") return DEFAULT_EDITOR_DOCUMENTS;
+    try {
+      const raw = sessionStorage.getItem("editor:incomingDocs");
+      if (raw) {
+        sessionStorage.removeItem("editor:incomingDocs");
+        const parsed = JSON.parse(raw) as EditorDocument[];
+        return Array.isArray(parsed) ? parsed : DEFAULT_EDITOR_DOCUMENTS;
+      }
+    } catch {}
+    return DEFAULT_EDITOR_DOCUMENTS;
+  });
+
   const setRequestOpenAiPanel = useCallback((fn: () => void) => {
     openAiPanelRef.fn = fn;
   }, [openAiPanelRef]);
@@ -264,6 +289,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       checklistState, setChecklistState,
       documentVisibility, setDocumentVisibility,
       requestOpenAiPanel, setRequestOpenAiPanel,
+      editorDocuments, setEditorDocuments,
     }}>
       {children}
     </EditorContext.Provider>

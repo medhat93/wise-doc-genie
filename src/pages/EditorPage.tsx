@@ -68,7 +68,21 @@ const EditorPageInner = () => {
   const childType = searchParams.get("childType") || "amendment";
   const [isEsign, setIsEsign] = useState(initialMode === "esign");
   const isMobile = useIsMobile();
-  const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen, participants, placedFields, usedVariables, variableValues, setRequestOpenAiPanel } = useEditorContext();
+  const { selectedFieldId, setSelectedFieldId, setCommentsPanelOpen, participants, placedFields, usedVariables, variableValues, setRequestOpenAiPanel, setEditorDocuments } = useEditorContext();
+
+  // Hydrate documents from sessionStorage handoff (set by CreateDocument)
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("editor:incomingDocs");
+      if (raw !== null) {
+        sessionStorage.removeItem("editor:incomingDocs");
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setEditorDocuments(parsed);
+        }
+      }
+    } catch {}
+  }, [setEditorDocuments]);
 
   const [loading, setLoading] = useState(true);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);

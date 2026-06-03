@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, AlertTriangle, ChevronUp, GripVertical, Send, FileText, Search, ShieldCheck, UserCheck, Sparkles, Plus, Lock } from "lucide-react";
+import { Check, AlertTriangle, ChevronUp, GripVertical, Send, FileText, Search, ShieldCheck, UserCheck, Sparkles, Plus, Lock, ArrowUp, ArrowDown, Trash2, FilePlus2 } from "lucide-react";
 import { PenTool, Type, Calendar, TextCursorInput, CheckSquare, Stamp, Radio, Mail, Building, User, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,8 @@ import type { PanelId } from "./EditorPanelToolbar";
 import ParticipantsDialog from "@/components/ParticipantsDialog";
 import ReviewSendDialog from "./ReviewSendDialog";
 import MissingFieldsWarningDialog, { type ParticipantIssue, type DocumentIssue } from "./MissingFieldsWarningDialog";
+import AddDocumentsDialog from "./AddDocumentsDialog";
+import type { EditorDocument } from "./EditorDocumentsPopover";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -148,6 +150,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     usedVariables,
     variableValues, setVariableValues,
     checklistState, setChecklistState,
+    editorDocuments, setEditorDocuments,
   } = useEditorContext();
 
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
@@ -155,6 +158,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
   const [showSendSection, setShowSendSection] = useState(false);
+  const [addDocsOpen, setAddDocsOpen] = useState(false);
 
   // Snapshot tracking for re-edit detection
   const [stepSnapshots, setStepSnapshots] = useState<Record<string, string>>({});
@@ -181,6 +185,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const stepRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   // Compute statuses
+  const hasDocuments = editorDocuments.length > 0;
   const hasParticipants = participants.length > 0;
   const hasFields = placedFields.length > 0;
   const usedTokens = new Set(usedVariables);
@@ -242,36 +247,23 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       case "fields": return JSON.stringify(placedFields.map(f => ({ id: f.id, fieldTypeId: f.fieldTypeId, participantId: f.participantId })));
       case "placeholders": return JSON.stringify(variableValues);
       case "workflow": return JSON.stringify({ selectedWorkflow, workflowAssignees });
+      case "documents": return JSON.stringify(editorDocuments.map(d => ({ id: d.id, docType: d.docType })));
       default: return "";
     }
-  }, [participants, placedFields, variableValues, selectedWorkflow, workflowAssignees]);
+  }, [participants, placedFields, variableValues, selectedWorkflow, workflowAssignees, editorDocuments]);
 
 
   const steps: WizardStep[] = useMemo(() => {
     const s: WizardStep[] = [
       {
-        id: "participants",
-        title: "Add participants",
-        description: "Add the people who need to sign, review, or receive this document",
+        id: "documents",
+        title: "Add documents",
+        description: "Add the documents you want to send for signature",
         isVisible: true,
-        isComplete: hasParticipants || isStepManuallyCompleted("participants"),
-        completeSummary: hasParticipants
-          ? (participants.length === 1 && participants[0].email === "ahmed@signit.sa"
-            ? "1 signer (you)"
-            : `${participants.length} participant${participants.length !== 1 ? "s" : ""} added`)
+        isComplete: hasDocuments,
+        completeSummary: hasDocuments
+          ? `${editorDocuments.length} document${editorDocuments.length !== 1 ? "s" : ""} added`
           : "",
-      },
-      {
-        id: "fields",
-        title: "Place annotation fields",
-        description: "Drag signature fields onto the document for each participant",
-        isVisible: true,
-        isComplete: hasFields || isStepManuallyCompleted("fields"),
-        completeSummary: hasFields
-          ? `${placedFields.length} field${placedFields.length !== 1 ? "s" : ""} placed across ${new Set(placedFields.map(f => f.participantId)).size} participant${new Set(placedFields.map(f => f.participantId)).size !== 1 ? "s" : ""}`
-          : (isStepManuallyCompleted("fields") ? "Skipped — signers place own fields" : ""),
-        isOptional: true,
-        skipLabel: "Skip — participants will place their own fields",
       },
       {
         id: "placeholders",
@@ -285,7 +277,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       },
       {
         id: "workflow",
-        title: "Fill the required workflow",
+        title: "Fill in required workflow",
         description: "Complete the required document workflow",
         isVisible: workflowEnforced,
         isComplete: workflowComplete || isStepManuallyCompleted("workflow"),
@@ -293,9 +285,33 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
           ? `${WORKFLOW_TEMPLATES[selectedWorkflow]?.label} applied`
           : "",
       },
+      {
+        id: "participants",
+        title: "Add signers",
+        description: "Add the people who need to sign, review, or receive this document",
+        isVisible: true,
+        isComplete: hasParticipants || isStepManuallyCompleted("participants"),
+        completeSummary: hasParticipants
+          ? (participants.length === 1 && participants[0].email === "ahmed@signit.sa"
+            ? "1 signer (you)"
+            : `${participants.length} participant${participants.length !== 1 ? "s" : ""} added`)
+          : "",
+      },
+      {
+        id: "fields",
+        title: "Add fields",
+        description: "Drag signature fields onto the document for each participant",
+        isVisible: true,
+        isComplete: hasFields || isStepManuallyCompleted("fields"),
+        completeSummary: hasFields
+          ? `${placedFields.length} field${placedFields.length !== 1 ? "s" : ""} placed across ${new Set(placedFields.map(f => f.participantId)).size} participant${new Set(placedFields.map(f => f.participantId)).size !== 1 ? "s" : ""}`
+          : (isStepManuallyCompleted("fields") ? "Skipped — signers place own fields" : ""),
+        isOptional: true,
+        skipLabel: "Skip — participants will place their own fields",
+      },
     ];
     return s.filter(step => step.isVisible);
-  }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
+  }, [hasDocuments, editorDocuments.length, hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
 
   // Detect changes in expanded completed steps and reactivate them
   useEffect(() => {
@@ -354,6 +370,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   const getStepConditionMessage = (step: WizardStep): string | null => {
     switch (step.id) {
+      case "documents": return hasDocuments ? null : "Add at least one document";
       case "participants": return hasParticipants ? null : "Add at least one participant";
       case "fields": return null; // optional
       case "placeholders": return null; // optional
@@ -590,6 +607,116 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   /* ── Render step content ── */
   const renderStepContent = (step: WizardStep, _index: number, isCompletedExpanded: boolean) => {
     switch (step.id) {
+      case "documents":
+        return (
+          <div className="space-y-3">
+            {hasDocuments ? (
+              <div className="space-y-1.5">
+                {editorDocuments.map((doc, i) => {
+                  const isPrimary = doc.docType === "primary";
+                  return (
+                    <div
+                      key={doc.id}
+                      className={cn(
+                        "flex items-center gap-2 px-2 py-1.5 rounded-md border bg-card",
+                        doc.docType === "supplement" && "border-l-[3px] border-l-amber-400",
+                      )}
+                    >
+                      <GripVertical size={12} className="text-muted-foreground/60 flex-shrink-0" />
+                      <FileText size={14} className="text-muted-foreground flex-shrink-0" />
+                      <span className="text-xs font-medium truncate flex-1">{doc.name}</span>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[9px] h-4 px-1.5 cursor-pointer",
+                          isPrimary
+                            ? "bg-primary/10 text-primary border-primary/20"
+                            : "bg-amber-500/10 text-amber-700 border-amber-500/20",
+                        )}
+                        onClick={() => {
+                          setEditorDocuments(prev => prev.map(d =>
+                            d.id === doc.id ? { ...d, docType: isPrimary ? "supplement" : "primary" } : d
+                          ));
+                          toast.success(`Set as ${isPrimary ? "supplement" : "primary"}`);
+                        }}
+                        title="Click to toggle primary / supplement"
+                      >
+                        {isPrimary ? "Primary" : "Supplement"}
+                      </Badge>
+                      <div className="flex items-center gap-0.5">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              disabled={i === 0}
+                              onClick={() => {
+                                setEditorDocuments(prev => {
+                                  const next = [...prev];
+                                  [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                                  return next;
+                                });
+                              }}
+                              className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <ArrowUp size={11} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="text-xs">Move up</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              disabled={i === editorDocuments.length - 1}
+                              onClick={() => {
+                                setEditorDocuments(prev => {
+                                  const next = [...prev];
+                                  [next[i], next[i + 1]] = [next[i + 1], next[i]];
+                                  return next;
+                                });
+                              }}
+                              className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <ArrowDown size={11} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="text-xs">Move down</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => {
+                                setEditorDocuments(prev => prev.filter(d => d.id !== doc.id));
+                                toast.success("Document removed");
+                              }}
+                              className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 size={11} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="text-xs">Remove</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-md border border-dashed p-4 text-center space-y-1.5">
+                <FilePlus2 size={20} className="mx-auto text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">You started with a blank canvas.</p>
+                <p className="text-[11px] text-muted-foreground/80">Add documents to begin preparing them for signature.</p>
+              </div>
+            )}
+            <Button
+              variant={hasDocuments ? "outline" : "default"}
+              className="w-full h-9 gap-2"
+              onClick={() => setAddDocsOpen(true)}
+            >
+              <Plus size={14} />
+              Add documents
+            </Button>
+          </div>
+        );
+
       case "participants":
         return (
           <div className="space-y-3">
@@ -1097,6 +1224,12 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       )}
 
       <ParticipantsDialog open={participantsOpen} onOpenChange={setParticipantsOpen} fromEditor />
+
+      <AddDocumentsDialog
+        open={addDocsOpen}
+        onOpenChange={setAddDocsOpen}
+        onAdd={(docs) => setEditorDocuments(prev => [...prev, ...docs])}
+      />
 
       {/* Send dialogs */}
       <MissingFieldsWarningDialog

@@ -57,6 +57,7 @@ import {
   Template,
 } from "@/data/templates";
 import { UploadedDocument, DriveFile, DRIVE_PROVIDERS } from "@/types/document";
+import type { EditorDocument } from "@/components/editor/EditorDocumentsPopover";
 import TemplateCard from "@/components/TemplateCard";
 import TemplatePreviewDialog from "@/components/TemplatePreviewDialog";
 import DocumentQueuePanel from "@/components/DocumentQueuePanel";
@@ -269,6 +270,21 @@ const CreateDocument = () => {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // ── Helper: hand off docs to editor and navigate ──────────────────────
+  const handoffToEditor = useCallback((docs: EditorDocument[], extraQuery = "") => {
+    try {
+      sessionStorage.setItem("editor:incomingDocs", JSON.stringify(docs));
+    } catch {}
+    navigate(`/editor${extraQuery}`);
+  }, [navigate]);
+
+  const inferFileType = (name: string): EditorDocument["fileType"] => {
+    const lower = name.toLowerCase();
+    if (lower.endsWith(".pdf")) return "pdf";
+    if (lower.match(/\.(png|jpe?g|gif|webp)$/)) return "image";
+    return "docx";
+  };
+
   const templateSectionRef = useRef<HTMLDivElement>(null);
   const templateSentinelRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
@@ -300,38 +316,20 @@ const CreateDocument = () => {
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const newDocs: UploadedDocument[] = fileArray.map((file) => ({
-      id: crypto.randomUUID(),
-      file,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      progress: 0,
-      status: "uploading" as const,
-      pageCount: Math.floor(Math.random() * 20) + 1,
-      documentType: isFollowUp ? ("supplement" as const) : ("primary" as const),
+    if (fileArray.length === 0) return;
+    const newDocs: EditorDocument[] = fileArray.map((file) => ({
+      id: `doc-${crypto.randomUUID().slice(0, 8)}`,
+      name: file.name.replace(/\.[^.]+$/, ""),
+      docType: isFollowUp ? "supplement" : "primary",
+      fileType: inferFileType(file.name),
     }));
-    setDocuments((prev) => [...prev, ...newDocs]);
-    setQueueManuallyOpened(true);
-
     toast({
-      title: `${fileArray.length} file${fileArray.length !== 1 ? "s" : ""} added to queue`,
+      title: `Opening editor with ${fileArray.length} document${fileArray.length !== 1 ? "s" : ""}...`,
       variant: "success" as const,
     });
-
-    // Check if any Word files were uploaded
-    const wordFile = fileArray.find((f) =>
-      f.name.match(/\.(docx?|dot|dotx)$/i) ||
-      f.type.includes("word") ||
-      f.type.includes("msword")
-    );
-    if (wordFile) {
-      const matchingDoc = newDocs.find((d) => d.name === wordFile.name);
-      if (matchingDoc) {
-        setWordEditDialog({ file: wordFile, doc: matchingDoc });
-      }
-    }
-  }, []);
+    handoffToEditor(newDocs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFollowUp, handoffToEditor]);
 
   useEffect(() => {
     const uploading = documents.filter((d) => d.status === "uploading" && !d.isTemplate && !d.isAI);
@@ -408,25 +406,19 @@ const CreateDocument = () => {
   }, []);
 
   const handleDriveImport = useCallback((files: DriveFile[], providerName: string) => {
-    const newDocs: UploadedDocument[] = files.map((file) => ({
-      id: crypto.randomUUID(),
-      name: file.name,
-      size: file.size,
-      type: file.mimeType || "application/octet-stream",
-      progress: 0,
-      status: "uploading" as const,
-      pageCount: Math.floor(Math.random() * 15) + 1,
-      documentType: "primary" as const,
-      isDriveImport: true,
-      driveProvider: providerName,
+    const newDocs: EditorDocument[] = files.map((file) => ({
+      id: `doc-${crypto.randomUUID().slice(0, 8)}`,
+      name: file.name.replace(/\.[^.]+$/, ""),
+      docType: "primary",
+      fileType: inferFileType(file.name),
     }));
-    setDocuments((prev) => [...prev, ...newDocs]);
-    setQueueManuallyOpened(true);
     toast({
-      title: `Importing ${files.length} file${files.length !== 1 ? "s" : ""} from ${providerName}`,
+      title: `Imported ${files.length} file${files.length !== 1 ? "s" : ""} from ${providerName}`,
       variant: "success" as const,
     });
-  }, []);
+    handoffToEditor(newDocs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handoffToEditor]);
 
   const handleDriveSelect = useCallback((providerId: string) => {
     setActiveFilter(providerId);
@@ -464,7 +456,13 @@ const CreateDocument = () => {
       title: "Opening editor with AI draft...",
       variant: "success" as const,
     });
-    navigate(`/editor?ai=true&type=${encodeURIComponent(docType)}`);
+    const doc: EditorDocument = {
+      id: `doc-${crypto.randomUUID().slice(0, 8)}`,
+      name: `${docType} (AI draft)`,
+      docType: "primary",
+      fileType: "docx",
+    };
+    handoffToEditor([doc], `?ai=true&type=${encodeURIComponent(docType)}`);
   };
 
   const handleStartBlank = () => {
@@ -472,31 +470,25 @@ const CreateDocument = () => {
       title: "Opening blank editor...",
       variant: "success" as const,
     });
-    navigate("/editor");
+    handoffToEditor([]);
   };
 
   // ─── Templates ────────────────────────────────────────────────────────────
 
   const handleUseTemplate = useCallback((template: Template) => {
-    const queued: UploadedDocument = {
-      id: crypto.randomUUID(),
+    const doc: EditorDocument = {
+      id: `doc-${crypto.randomUUID().slice(0, 8)}`,
       name: template.name,
-      type: "template",
-      progress: 100,
-      status: "complete",
-      isTemplate: true,
-      isUserTemplate: template.source === "user",
-      gradient: template.gradient,
-      pageCount: template.pageCount,
-      documentType: "primary",
+      docType: "primary",
+      fileType: "pdf",
     };
-    setDocuments((prev) => [...prev, queued]);
-    setQueueManuallyOpened(true);
     toast({
-      title: `"${template.name}" added to queue`,
+      title: `Opening editor with "${template.name}"...`,
       variant: "success" as const,
     });
-  }, []);
+    handoffToEditor([doc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handoffToEditor]);
 
   // Filtering logic
   const getFilteredTemplates = () => {
