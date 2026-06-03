@@ -476,6 +476,16 @@ const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments
   };
 
   const handleStartBlank = () => {
+    if (embedded && onSubmitDocuments) {
+      const doc: EditorDocument = {
+        id: `doc-${crypto.randomUUID().slice(0, 8)}`,
+        name: "Untitled document",
+        docType: "primary",
+        fileType: "docx",
+      };
+      onSubmitDocuments([doc]);
+      return;
+    }
     toast({
       title: "Opening blank editor...",
       variant: "success" as const,
