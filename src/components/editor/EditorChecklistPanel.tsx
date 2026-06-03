@@ -185,6 +185,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const stepRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   // Compute statuses
+  const hasDocuments = editorDocuments.length > 0;
   const hasParticipants = participants.length > 0;
   const hasFields = placedFields.length > 0;
   const usedTokens = new Set(usedVariables);
