@@ -701,6 +701,7 @@ const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments
       )}
 
       {/* ─── Header ──────────────────────────────────────────────────────── */}
+      {!embedded && (
       <header className="border-b bg-background flex-shrink-0">
         <div className="relative h-auto min-h-[3.5rem] md:h-16 flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 gap-2 sm:gap-0">
           <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
@@ -739,6 +740,7 @@ const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments
           </div>
         </div>
       </header>
+      )}
 
       <div className="flex flex-1 overflow-hidden relative">
         <main className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin">
