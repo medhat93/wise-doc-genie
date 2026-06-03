@@ -700,14 +700,14 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
               <div className="space-y-2">
                 <Button variant="outline" className="w-full h-9 gap-2" onClick={() => setParticipantsOpen(true)}>
                   <HugeiconsIcon icon={UserAdd01Icon} size={16} />
-                  Manage participants
+                  Manage signers
                 </Button>
               </div>
             ) : (
               <div className="space-y-0">
                 <Button className="w-full h-10 gap-2" onClick={() => setParticipantsOpen(true)}>
                   <HugeiconsIcon icon={UserAdd01Icon} size={16} />
-                  Add participants
+                  Add signers
                 </Button>
                 {!isCompletedExpanded && (
                   <button
