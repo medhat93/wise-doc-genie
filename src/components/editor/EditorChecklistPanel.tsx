@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, AlertTriangle, ChevronUp, GripVertical, Send, FileText, Search, ShieldCheck, UserCheck, Sparkles, Plus, Lock } from "lucide-react";
+import { Check, AlertTriangle, ChevronUp, GripVertical, Send, FileText, Search, ShieldCheck, UserCheck, Sparkles, Plus, Lock, ArrowUp, ArrowDown, Trash2, FilePlus2 } from "lucide-react";
 import { PenTool, Type, Calendar, TextCursorInput, CheckSquare, Stamp, Radio, Mail, Building, User, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,8 @@ import type { PanelId } from "./EditorPanelToolbar";
 import ParticipantsDialog from "@/components/ParticipantsDialog";
 import ReviewSendDialog from "./ReviewSendDialog";
 import MissingFieldsWarningDialog, { type ParticipantIssue, type DocumentIssue } from "./MissingFieldsWarningDialog";
+import AddDocumentsDialog from "./AddDocumentsDialog";
+import type { EditorDocument } from "./EditorDocumentsPopover";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from "@hugeicons/react";
