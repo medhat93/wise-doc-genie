@@ -988,7 +988,7 @@ const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments
         </main>
 
         {/* ─── Desktop Queue Panel ───────────────────────────────────── */}
-        {!isMobile && (
+        {!embedded && !isMobile && (
           <AnimatePresence>
             {showQueue && (
               <motion.div
@@ -1013,7 +1013,7 @@ const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments
         )}
 
         {/* Mobile queue drawer */}
-        {isMobile && (
+        {!embedded && isMobile && (
           <Drawer open={mobileQueueOpen} onOpenChange={setMobileQueueOpen}>
             <DrawerContent className="max-h-[85vh]">
               <DocumentQueuePanel
