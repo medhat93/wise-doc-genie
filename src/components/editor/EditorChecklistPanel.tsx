@@ -1,6 +1,23 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, AlertTriangle, ChevronUp, GripVertical, Send, FileText, Search, ShieldCheck, UserCheck, Sparkles, Plus, Lock, ArrowUp, ArrowDown, Trash2, FilePlus2 } from "lucide-react";
+import { Check, AlertTriangle, ChevronUp, GripVertical, Send, FileText, Search, ShieldCheck, UserCheck, Sparkles, Plus, Lock, Trash2, FilePlus2 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { PenTool, Type, Calendar, TextCursorInput, CheckSquare, Stamp, Radio, Mail, Building, User, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -186,6 +203,10 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   // Compute statuses
   const hasDocuments = editorDocuments.length > 0;
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   const hasParticipants = participants.length > 0;
   const hasFields = placedFields.length > 0;
   const usedTokens = new Set(usedVariables);
@@ -611,94 +632,45 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
         return (
           <div className="space-y-3">
             {hasDocuments ? (
-              <div className="space-y-1.5">
-                {editorDocuments.map((doc, i) => {
-                  const isPrimary = doc.docType === "primary";
-                  return (
-                    <div
-                      key={doc.id}
-                      className={cn(
-                        "flex items-center gap-2 px-2 py-1.5 rounded-md border bg-card",
-                        doc.docType === "supplement" && "border-l-[3px] border-l-amber-400",
-                      )}
-                    >
-                      <GripVertical size={12} className="text-muted-foreground/60 flex-shrink-0" />
-                      <FileText size={14} className="text-muted-foreground flex-shrink-0" />
-                      <span className="text-xs font-medium truncate flex-1">{doc.name}</span>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-[9px] h-4 px-1.5 cursor-pointer",
-                          isPrimary
-                            ? "bg-primary/10 text-primary border-primary/20"
-                            : "bg-amber-500/10 text-amber-700 border-amber-500/20",
-                        )}
-                        onClick={() => {
+              <DndContext
+                sensors={dndSensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(e: DragEndEvent) => {
+                  const { active, over } = e;
+                  if (!over || active.id === over.id) return;
+                  setEditorDocuments(prev => {
+                    const oldIdx = prev.findIndex(d => d.id === active.id);
+                    const newIdx = prev.findIndex(d => d.id === over.id);
+                    if (oldIdx < 0 || newIdx < 0) return prev;
+                    return arrayMove(prev, oldIdx, newIdx);
+                  });
+                }}
+              >
+                <SortableContext
+                  items={editorDocuments.map(d => d.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-1.5">
+                    {editorDocuments.map(doc => (
+                      <SortableDocRow
+                        key={doc.id}
+                        doc={doc}
+                        onToggleType={() => {
+                          const isPrimary = doc.docType === "primary";
                           setEditorDocuments(prev => prev.map(d =>
                             d.id === doc.id ? { ...d, docType: isPrimary ? "supplement" : "primary" } : d
                           ));
                           toast.success(`Set as ${isPrimary ? "supplement" : "primary"}`);
                         }}
-                        title="Click to toggle primary / supplement"
-                      >
-                        {isPrimary ? "Primary" : "Supplement"}
-                      </Badge>
-                      <div className="flex items-center gap-0.5">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              disabled={i === 0}
-                              onClick={() => {
-                                setEditorDocuments(prev => {
-                                  const next = [...prev];
-                                  [next[i - 1], next[i]] = [next[i], next[i - 1]];
-                                  return next;
-                                });
-                              }}
-                              className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              <ArrowUp size={11} />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="text-xs">Move up</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              disabled={i === editorDocuments.length - 1}
-                              onClick={() => {
-                                setEditorDocuments(prev => {
-                                  const next = [...prev];
-                                  [next[i], next[i + 1]] = [next[i + 1], next[i]];
-                                  return next;
-                                });
-                              }}
-                              className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              <ArrowDown size={11} />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="text-xs">Move down</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => {
-                                setEditorDocuments(prev => prev.filter(d => d.id !== doc.id));
-                                toast.success("Document removed");
-                              }}
-                              className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 size={11} />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="text-xs">Remove</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                        onRemove={() => {
+                          setEditorDocuments(prev => prev.filter(d => d.id !== doc.id));
+                          toast.success("Document removed");
+                        }}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             ) : (
               <div className="rounded-md border border-dashed p-4 text-center space-y-1.5">
                 <FilePlus2 size={20} className="mx-auto text-muted-foreground" />
@@ -1243,6 +1215,71 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
         open={sendOpen}
         onOpenChange={setSendOpen}
       />
+    </div>
+  );
+};
+
+/* ── Sortable document row (drag handle) ── */
+interface SortableDocRowProps {
+  doc: EditorDocument;
+  onToggleType: () => void;
+  onRemove: () => void;
+}
+
+const SortableDocRow = ({ doc, onToggleType, onRemove }: SortableDocRowProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: doc.id });
+  const isPrimary = doc.docType === "primary";
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-center gap-2 px-2 py-1.5 rounded-md border bg-card",
+        doc.docType === "supplement" && "border-l-[3px] border-l-amber-400",
+        isDragging && "shadow-md",
+      )}
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none text-muted-foreground/60 hover:text-foreground p-0.5 -ml-0.5"
+        aria-label="Drag to reorder"
+      >
+        <GripVertical size={12} />
+      </button>
+      <FileText size={14} className="text-muted-foreground flex-shrink-0" />
+      <span className="text-xs font-medium truncate flex-1">{doc.name}</span>
+      <Badge
+        variant="outline"
+        className={cn(
+          "text-[9px] h-4 px-1.5 cursor-pointer",
+          isPrimary
+            ? "bg-primary/10 text-primary border-primary/20"
+            : "bg-amber-500/10 text-amber-700 border-amber-500/20",
+        )}
+        onClick={onToggleType}
+        title="Click to toggle primary / supplement"
+      >
+        {isPrimary ? "Primary" : "Supplement"}
+      </Badge>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={onRemove}
+            className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 size={11} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="text-xs">Remove</TooltipContent>
+      </Tooltip>
     </div>
   );
 };
