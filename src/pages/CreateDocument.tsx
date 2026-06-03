@@ -406,25 +406,19 @@ const CreateDocument = () => {
   }, []);
 
   const handleDriveImport = useCallback((files: DriveFile[], providerName: string) => {
-    const newDocs: UploadedDocument[] = files.map((file) => ({
-      id: crypto.randomUUID(),
-      name: file.name,
-      size: file.size,
-      type: file.mimeType || "application/octet-stream",
-      progress: 0,
-      status: "uploading" as const,
-      pageCount: Math.floor(Math.random() * 15) + 1,
-      documentType: "primary" as const,
-      isDriveImport: true,
-      driveProvider: providerName,
+    const newDocs: EditorDocument[] = files.map((file) => ({
+      id: `doc-${crypto.randomUUID().slice(0, 8)}`,
+      name: file.name.replace(/\.[^.]+$/, ""),
+      docType: "primary",
+      fileType: inferFileType(file.name),
     }));
-    setDocuments((prev) => [...prev, ...newDocs]);
-    setQueueManuallyOpened(true);
     toast({
-      title: `Importing ${files.length} file${files.length !== 1 ? "s" : ""} from ${providerName}`,
+      title: `Imported ${files.length} file${files.length !== 1 ? "s" : ""} from ${providerName}`,
       variant: "success" as const,
     });
-  }, []);
+    handoffToEditor(newDocs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handoffToEditor]);
 
   const handleDriveSelect = useCallback((providerId: string) => {
     setActiveFilter(providerId);
@@ -476,25 +470,19 @@ const CreateDocument = () => {
   // ─── Templates ────────────────────────────────────────────────────────────
 
   const handleUseTemplate = useCallback((template: Template) => {
-    const queued: UploadedDocument = {
-      id: crypto.randomUUID(),
+    const doc: EditorDocument = {
+      id: `doc-${crypto.randomUUID().slice(0, 8)}`,
       name: template.name,
-      type: "template",
-      progress: 100,
-      status: "complete",
-      isTemplate: true,
-      isUserTemplate: template.source === "user",
-      gradient: template.gradient,
-      pageCount: template.pageCount,
-      documentType: "primary",
+      docType: "primary",
+      fileType: "pdf",
     };
-    setDocuments((prev) => [...prev, queued]);
-    setQueueManuallyOpened(true);
     toast({
-      title: `"${template.name}" added to queue`,
+      title: `Opening editor with "${template.name}"...`,
       variant: "success" as const,
     });
-  }, []);
+    handoffToEditor([doc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handoffToEditor]);
 
   // Filtering logic
   const getFilteredTemplates = () => {
