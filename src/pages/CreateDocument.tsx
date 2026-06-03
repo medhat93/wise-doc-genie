@@ -316,38 +316,20 @@ const CreateDocument = () => {
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const newDocs: UploadedDocument[] = fileArray.map((file) => ({
-      id: crypto.randomUUID(),
-      file,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      progress: 0,
-      status: "uploading" as const,
-      pageCount: Math.floor(Math.random() * 20) + 1,
-      documentType: isFollowUp ? ("supplement" as const) : ("primary" as const),
+    if (fileArray.length === 0) return;
+    const newDocs: EditorDocument[] = fileArray.map((file) => ({
+      id: `doc-${crypto.randomUUID().slice(0, 8)}`,
+      name: file.name.replace(/\.[^.]+$/, ""),
+      docType: isFollowUp ? "supplement" : "primary",
+      fileType: inferFileType(file.name),
     }));
-    setDocuments((prev) => [...prev, ...newDocs]);
-    setQueueManuallyOpened(true);
-
     toast({
-      title: `${fileArray.length} file${fileArray.length !== 1 ? "s" : ""} added to queue`,
+      title: `Opening editor with ${fileArray.length} document${fileArray.length !== 1 ? "s" : ""}...`,
       variant: "success" as const,
     });
-
-    // Check if any Word files were uploaded
-    const wordFile = fileArray.find((f) =>
-      f.name.match(/\.(docx?|dot|dotx)$/i) ||
-      f.type.includes("word") ||
-      f.type.includes("msword")
-    );
-    if (wordFile) {
-      const matchingDoc = newDocs.find((d) => d.name === wordFile.name);
-      if (matchingDoc) {
-        setWordEditDialog({ file: wordFile, doc: matchingDoc });
-      }
-    }
-  }, []);
+    handoffToEditor(newDocs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFollowUp, handoffToEditor]);
 
   useEffect(() => {
     const uploading = documents.filter((d) => d.status === "uploading" && !d.isTemplate && !d.isAI);
