@@ -347,6 +347,7 @@ const Doc3Content = ({ comments, onClickHighlight }: { comments: Comment[]; onCl
 
 /* ── AI Suggestion Block ── */
 const AiSuggestionBlock = ({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   suggestion,
   onAccept,
   onReject,
