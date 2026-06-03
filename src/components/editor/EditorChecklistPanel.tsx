@@ -203,6 +203,10 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   // Compute statuses
   const hasDocuments = editorDocuments.length > 0;
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   const hasParticipants = participants.length > 0;
   const hasFields = placedFields.length > 0;
   const usedTokens = new Set(usedVariables);
