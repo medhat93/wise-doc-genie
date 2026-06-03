@@ -464,7 +464,7 @@ const CreateDocument = () => {
       title: "Opening blank editor...",
       variant: "success" as const,
     });
-    navigate("/editor");
+    handoffToEditor([]);
   };
 
   // ─── Templates ────────────────────────────────────────────────────────────
