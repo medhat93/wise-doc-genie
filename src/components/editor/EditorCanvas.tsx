@@ -937,11 +937,23 @@ interface EditorCanvasProps {
 const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpenAi, onOpenVersionHistory, isEsign, hideZoomBar, hideMarginComments }: EditorCanvasProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const docRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [activeDocId, setActiveDocId] = useState<string | null>(MOCK_DOCUMENTS[0].id);
   const [showIndicator, setShowIndicator] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, setComments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues, aiSuggestions, setAiSuggestions } = useEditorContext();
+  const { placedFields, setPlacedFields, selectedFieldId, setSelectedFieldId, comments, setComments, commentsPanelOpen, setPendingCommentRef, setPendingAiQuestion, variableValues, aiSuggestions, setAiSuggestions, editorDocuments } = useEditorContext();
+  const documents = editorDocuments;
+  const [activeDocId, setActiveDocId] = useState<string | null>(documents[0]?.id ?? null);
+
+  useEffect(() => {
+    // Keep activeDocId valid when docs change (reorder/delete/add)
+    if (documents.length === 0) {
+      setActiveDocId(null);
+      return;
+    }
+    if (!documents.find(d => d.id === activeDocId)) {
+      setActiveDocId(documents[0].id);
+    }
+  }, [documents, activeDocId]);
 
   const [selectionToolbar, setSelectionToolbar] = useState<{ x: number; y: number; text: string } | null>(null);
   const [openThreadSection, setOpenThreadSection] = useState<string | null>(null);
@@ -1028,7 +1040,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
         participantId: parsed.participantId,
         participantName: parsed.participantName,
         participantColor: parsed.participantColor,
-        page: MOCK_DOCUMENTS.findIndex((d) => d.id === docId) + 1,
+      page: documents.findIndex((d) => d.id === docId) + 1,
         x: Math.max(0, x),
         y: Math.max(0, y),
         width: parsed.defaultWidth,
@@ -1151,7 +1163,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
-  }, []);
+  }, [documents]);
 
   const handleScroll = useCallback(() => {
     setShowIndicator(true);
@@ -1164,7 +1176,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     docRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  const activeDoc = MOCK_DOCUMENTS.find((d) => d.id === activeDocId) ?? null;
+  const activeDoc = documents.find((d) => d.id === activeDocId) ?? null;
 
   // Comments for margin bubbles — grouped by docId then sectionRef
   const inlineComments = comments.filter((c) => c.type === "inline");
