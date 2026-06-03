@@ -1221,7 +1221,7 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
     <div className="flex-1 flex flex-col overflow-hidden">
       {showToolbar && (
         <EditorToolbar
-          documents={MOCK_DOCUMENTS}
+          documents={documents}
           activeDocId={activeDocId}
           onScrollToDoc={scrollToDoc}
           onOpenComments={onOpenComments}
