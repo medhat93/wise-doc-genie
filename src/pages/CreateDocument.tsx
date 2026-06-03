@@ -199,7 +199,13 @@ function TemplateCardSkeleton() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const CreateDocument = () => {
+interface CreateDocumentProps {
+  embedded?: boolean;
+  disableAI?: boolean;
+  onSubmitDocuments?: (docs: EditorDocument[]) => void;
+}
+
+const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments }: CreateDocumentProps = {}) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
@@ -272,11 +278,15 @@ const CreateDocument = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   // ── Helper: hand off docs to editor and navigate ──────────────────────
   const handoffToEditor = useCallback((docs: EditorDocument[], extraQuery = "") => {
+    if (embedded && onSubmitDocuments) {
+      onSubmitDocuments(docs);
+      return;
+    }
     try {
       sessionStorage.setItem("editor:incomingDocs", JSON.stringify(docs));
     } catch {}
     navigate(`/editor${extraQuery}`);
-  }, [navigate]);
+  }, [navigate, embedded, onSubmitDocuments]);
 
   const inferFileType = (name: string): EditorDocument["fileType"] => {
     const lower = name.toLowerCase();
@@ -466,6 +476,16 @@ const CreateDocument = () => {
   };
 
   const handleStartBlank = () => {
+    if (embedded && onSubmitDocuments) {
+      const doc: EditorDocument = {
+        id: `doc-${crypto.randomUUID().slice(0, 8)}`,
+        name: "Untitled document",
+        docType: "primary",
+        fileType: "docx",
+      };
+      onSubmitDocuments([doc]);
+      return;
+    }
     toast({
       title: "Opening blank editor...",
       variant: "success" as const,
@@ -578,7 +598,8 @@ const CreateDocument = () => {
     setPreviewOpen(true);
   };
 
-  const actions = isEsign ? esignQuickActions : fullQuickActions;
+  const baseActions = isEsign ? esignQuickActions : fullQuickActions;
+  const actions = disableAI ? baseActions.filter((a) => a.id !== "ai") : baseActions;
 
   // Build filter tabs
   const driveLogoMap: Record<string, React.ReactNode> = {
@@ -624,14 +645,14 @@ const CreateDocument = () => {
 
   return (
     <div
-      className="h-screen flex flex-col"
+      className={`${embedded ? "h-full" : "h-screen"} flex flex-col`}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       {/* ─── Correction/Follow-up Banners ────────────────────────────── */}
-      {isCorrection && (
+      {!embedded && isCorrection && (
         <div className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-300 dark:border-amber-800 px-4 py-2 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-300">
             <AlertTriangle size={16} />
@@ -643,7 +664,7 @@ const CreateDocument = () => {
           </div>
         </div>
       )}
-      {isFollowUp && (
+      {!embedded && isFollowUp && (
         <div className="bg-blue-50 dark:bg-blue-950/30 border-b border-blue-300 dark:border-blue-800 px-4 py-2 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 text-sm font-medium text-blue-800 dark:text-blue-300">
             <LinkIcon size={16} />
@@ -671,7 +692,7 @@ const CreateDocument = () => {
           </div>
         </div>
       )}
-      {isRelated && (
+      {!embedded && isRelated && (
         <div className="bg-muted/50 border-b px-4 py-2 flex items-center gap-2 text-xs text-muted-foreground shrink-0">
           <LinkIcon size={12} />
           Related to: Annual Review — Acme Corp
@@ -680,6 +701,7 @@ const CreateDocument = () => {
       )}
 
       {/* ─── Header ──────────────────────────────────────────────────────── */}
+      {!embedded && (
       <header className="border-b bg-background flex-shrink-0">
         <div className="relative h-auto min-h-[3.5rem] md:h-16 flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 md:px-6 py-2 sm:py-0 gap-2 sm:gap-0">
           <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
@@ -718,6 +740,7 @@ const CreateDocument = () => {
           </div>
         </div>
       </header>
+      )}
 
       <div className="flex flex-1 overflow-hidden relative">
         <main className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin">
@@ -965,7 +988,7 @@ const CreateDocument = () => {
         </main>
 
         {/* ─── Desktop Queue Panel ───────────────────────────────────── */}
-        {!isMobile && (
+        {!embedded && !isMobile && (
           <AnimatePresence>
             {showQueue && (
               <motion.div
@@ -990,7 +1013,7 @@ const CreateDocument = () => {
         )}
 
         {/* Mobile queue drawer */}
-        {isMobile && (
+        {!embedded && isMobile && (
           <Drawer open={mobileQueueOpen} onOpenChange={setMobileQueueOpen}>
             <DrawerContent className="max-h-[85vh]">
               <DocumentQueuePanel
