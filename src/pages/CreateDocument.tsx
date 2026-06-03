@@ -199,7 +199,13 @@ function TemplateCardSkeleton() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const CreateDocument = () => {
+interface CreateDocumentProps {
+  embedded?: boolean;
+  disableAI?: boolean;
+  onSubmitDocuments?: (docs: EditorDocument[]) => void;
+}
+
+const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments }: CreateDocumentProps = {}) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
@@ -272,11 +278,15 @@ const CreateDocument = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   // ── Helper: hand off docs to editor and navigate ──────────────────────
   const handoffToEditor = useCallback((docs: EditorDocument[], extraQuery = "") => {
+    if (embedded && onSubmitDocuments) {
+      onSubmitDocuments(docs);
+      return;
+    }
     try {
       sessionStorage.setItem("editor:incomingDocs", JSON.stringify(docs));
     } catch {}
     navigate(`/editor${extraQuery}`);
-  }, [navigate]);
+  }, [navigate, embedded, onSubmitDocuments]);
 
   const inferFileType = (name: string): EditorDocument["fileType"] => {
     const lower = name.toLowerCase();
