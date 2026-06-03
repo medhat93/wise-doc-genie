@@ -1219,4 +1219,69 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   );
 };
 
+/* ── Sortable document row (drag handle) ── */
+interface SortableDocRowProps {
+  doc: EditorDocument;
+  onToggleType: () => void;
+  onRemove: () => void;
+}
+
+const SortableDocRow = ({ doc, onToggleType, onRemove }: SortableDocRowProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: doc.id });
+  const isPrimary = doc.docType === "primary";
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-center gap-2 px-2 py-1.5 rounded-md border bg-card",
+        doc.docType === "supplement" && "border-l-[3px] border-l-amber-400",
+        isDragging && "shadow-md",
+      )}
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none text-muted-foreground/60 hover:text-foreground p-0.5 -ml-0.5"
+        aria-label="Drag to reorder"
+      >
+        <GripVertical size={12} />
+      </button>
+      <FileText size={14} className="text-muted-foreground flex-shrink-0" />
+      <span className="text-xs font-medium truncate flex-1">{doc.name}</span>
+      <Badge
+        variant="outline"
+        className={cn(
+          "text-[9px] h-4 px-1.5 cursor-pointer",
+          isPrimary
+            ? "bg-primary/10 text-primary border-primary/20"
+            : "bg-amber-500/10 text-amber-700 border-amber-500/20",
+        )}
+        onClick={onToggleType}
+        title="Click to toggle primary / supplement"
+      >
+        {isPrimary ? "Primary" : "Supplement"}
+      </Badge>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={onRemove}
+            className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 size={11} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="text-xs">Remove</TooltipContent>
+      </Tooltip>
+    </div>
+  );
+};
+
 export default EditorChecklistPanel;
