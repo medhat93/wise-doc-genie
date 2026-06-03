@@ -598,7 +598,8 @@ const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments
     setPreviewOpen(true);
   };
 
-  const actions = isEsign ? esignQuickActions : fullQuickActions;
+  const baseActions = isEsign ? esignQuickActions : fullQuickActions;
+  const actions = disableAI ? baseActions.filter((a) => a.id !== "ai") : baseActions;
 
   // Build filter tabs
   const driveLogoMap: Record<string, React.ReactNode> = {
@@ -644,14 +645,14 @@ const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments
 
   return (
     <div
-      className="h-screen flex flex-col"
+      className={`${embedded ? "h-full" : "h-screen"} flex flex-col`}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       {/* ─── Correction/Follow-up Banners ────────────────────────────── */}
-      {isCorrection && (
+      {!embedded && isCorrection && (
         <div className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-300 dark:border-amber-800 px-4 py-2 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-300">
             <AlertTriangle size={16} />
@@ -663,7 +664,7 @@ const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments
           </div>
         </div>
       )}
-      {isFollowUp && (
+      {!embedded && isFollowUp && (
         <div className="bg-blue-50 dark:bg-blue-950/30 border-b border-blue-300 dark:border-blue-800 px-4 py-2 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 text-sm font-medium text-blue-800 dark:text-blue-300">
             <LinkIcon size={16} />
@@ -691,7 +692,7 @@ const CreateDocument = ({ embedded = false, disableAI = false, onSubmitDocuments
           </div>
         </div>
       )}
-      {isRelated && (
+      {!embedded && isRelated && (
         <div className="bg-muted/50 border-b px-4 py-2 flex items-center gap-2 text-xs text-muted-foreground shrink-0">
           <LinkIcon size={12} />
           Related to: Annual Review — Acme Corp
