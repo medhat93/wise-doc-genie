@@ -246,36 +246,23 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       case "fields": return JSON.stringify(placedFields.map(f => ({ id: f.id, fieldTypeId: f.fieldTypeId, participantId: f.participantId })));
       case "placeholders": return JSON.stringify(variableValues);
       case "workflow": return JSON.stringify({ selectedWorkflow, workflowAssignees });
+      case "documents": return JSON.stringify(editorDocuments.map(d => ({ id: d.id, docType: d.docType })));
       default: return "";
     }
-  }, [participants, placedFields, variableValues, selectedWorkflow, workflowAssignees]);
+  }, [participants, placedFields, variableValues, selectedWorkflow, workflowAssignees, editorDocuments]);
 
 
   const steps: WizardStep[] = useMemo(() => {
     const s: WizardStep[] = [
       {
-        id: "participants",
-        title: "Add participants",
-        description: "Add the people who need to sign, review, or receive this document",
+        id: "documents",
+        title: "Add documents",
+        description: "Add the documents you want to send for signature",
         isVisible: true,
-        isComplete: hasParticipants || isStepManuallyCompleted("participants"),
-        completeSummary: hasParticipants
-          ? (participants.length === 1 && participants[0].email === "ahmed@signit.sa"
-            ? "1 signer (you)"
-            : `${participants.length} participant${participants.length !== 1 ? "s" : ""} added`)
+        isComplete: hasDocuments,
+        completeSummary: hasDocuments
+          ? `${editorDocuments.length} document${editorDocuments.length !== 1 ? "s" : ""} added`
           : "",
-      },
-      {
-        id: "fields",
-        title: "Place annotation fields",
-        description: "Drag signature fields onto the document for each participant",
-        isVisible: true,
-        isComplete: hasFields || isStepManuallyCompleted("fields"),
-        completeSummary: hasFields
-          ? `${placedFields.length} field${placedFields.length !== 1 ? "s" : ""} placed across ${new Set(placedFields.map(f => f.participantId)).size} participant${new Set(placedFields.map(f => f.participantId)).size !== 1 ? "s" : ""}`
-          : (isStepManuallyCompleted("fields") ? "Skipped — signers place own fields" : ""),
-        isOptional: true,
-        skipLabel: "Skip — participants will place their own fields",
       },
       {
         id: "placeholders",
@@ -289,7 +276,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
       },
       {
         id: "workflow",
-        title: "Fill the required workflow",
+        title: "Fill in required workflow",
         description: "Complete the required document workflow",
         isVisible: workflowEnforced,
         isComplete: workflowComplete || isStepManuallyCompleted("workflow"),
@@ -297,9 +284,33 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
           ? `${WORKFLOW_TEMPLATES[selectedWorkflow]?.label} applied`
           : "",
       },
+      {
+        id: "participants",
+        title: "Add signers",
+        description: "Add the people who need to sign, review, or receive this document",
+        isVisible: true,
+        isComplete: hasParticipants || isStepManuallyCompleted("participants"),
+        completeSummary: hasParticipants
+          ? (participants.length === 1 && participants[0].email === "ahmed@signit.sa"
+            ? "1 signer (you)"
+            : `${participants.length} participant${participants.length !== 1 ? "s" : ""} added`)
+          : "",
+      },
+      {
+        id: "fields",
+        title: "Add fields",
+        description: "Drag signature fields onto the document for each participant",
+        isVisible: true,
+        isComplete: hasFields || isStepManuallyCompleted("fields"),
+        completeSummary: hasFields
+          ? `${placedFields.length} field${placedFields.length !== 1 ? "s" : ""} placed across ${new Set(placedFields.map(f => f.participantId)).size} participant${new Set(placedFields.map(f => f.participantId)).size !== 1 ? "s" : ""}`
+          : (isStepManuallyCompleted("fields") ? "Skipped — signers place own fields" : ""),
+        isOptional: true,
+        skipLabel: "Skip — participants will place their own fields",
+      },
     ];
     return s.filter(step => step.isVisible);
-  }, [hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
+  }, [hasDocuments, editorDocuments.length, hasParticipants, participants, hasFields, placedFields, hasVariables, allVarsFilled, usedTokens.size, workflowEnforced, workflowComplete, selectedWorkflow, isStepManuallyCompleted]);
 
   // Detect changes in expanded completed steps and reactivate them
   useEffect(() => {
