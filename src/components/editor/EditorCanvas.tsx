@@ -346,6 +346,27 @@ const Doc3Content = ({ comments, onClickHighlight }: { comments: Comment[]; onCl
 );
 
 /* ── AI Suggestion Block ── */
+const GenericDocContent = ({ name }: { name: string }) => (
+  <>
+    <h1 className="text-2xl font-bold text-foreground mb-1">{name}</h1>
+    <p className="text-xs text-muted-foreground mb-8">Uploaded document — preview</p>
+    <div className="space-y-4">
+      <div className="h-3 bg-muted rounded w-3/4" />
+      <div className="h-3 bg-muted rounded w-full" />
+      <div className="h-3 bg-muted rounded w-5/6" />
+      <div className="h-3 bg-muted rounded w-2/3" />
+      <div className="mt-8 space-y-3">
+        <div className="h-3 bg-muted rounded w-1/2" />
+        <div className="h-3 bg-muted rounded w-full" />
+        <div className="h-3 bg-muted rounded w-4/5" />
+      </div>
+      <p className="text-sm text-muted-foreground italic mt-6">
+        Document content will appear here once parsed. Drag fields onto the page or open the side panel to configure signers and annotations.
+      </p>
+    </div>
+  </>
+);
+
 const AiSuggestionBlock = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   suggestion,
