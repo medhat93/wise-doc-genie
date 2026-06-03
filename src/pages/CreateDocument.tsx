@@ -57,6 +57,7 @@ import {
   Template,
 } from "@/data/templates";
 import { UploadedDocument, DriveFile, DRIVE_PROVIDERS } from "@/types/document";
+import type { EditorDocument } from "@/components/editor/EditorDocumentsPopover";
 import TemplateCard from "@/components/TemplateCard";
 import TemplatePreviewDialog from "@/components/TemplatePreviewDialog";
 import DocumentQueuePanel from "@/components/DocumentQueuePanel";
@@ -269,6 +270,21 @@ const CreateDocument = () => {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // ── Helper: hand off docs to editor and navigate ──────────────────────
+  const handoffToEditor = useCallback((docs: EditorDocument[], extraQuery = "") => {
+    try {
+      sessionStorage.setItem("editor:incomingDocs", JSON.stringify(docs));
+    } catch {}
+    navigate(`/editor${extraQuery}`);
+  }, [navigate]);
+
+  const inferFileType = (name: string): EditorDocument["fileType"] => {
+    const lower = name.toLowerCase();
+    if (lower.endsWith(".pdf")) return "pdf";
+    if (lower.match(/\.(png|jpe?g|gif|webp)$/)) return "image";
+    return "docx";
+  };
+
   const templateSectionRef = useRef<HTMLDivElement>(null);
   const templateSentinelRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
