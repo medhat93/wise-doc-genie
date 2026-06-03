@@ -1273,7 +1273,19 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
             transformOrigin: "top center",
           }}
         >
-          {MOCK_DOCUMENTS.map((doc, idx) => {
+          {documents.length === 0 && (
+            <div className="flex justify-center">
+              <div className="max-w-[816px] w-full bg-card shadow-sm border border-dashed rounded-sm min-h-[400px] flex items-center justify-center p-12 text-center">
+                <div className="space-y-2">
+                  <p className="text-base font-semibold text-foreground">No documents yet</p>
+                  <p className="text-sm text-muted-foreground">
+                    Add a document from the checklist on the right to get started.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          {documents.map((doc, idx) => {
             const docFields = placedFields.filter((f) => f.page === idx + 1);
             return (
               <div key={doc.id}>
@@ -1314,8 +1326,10 @@ const EditorCanvas = ({ showToolbar = true, onFieldSelect, onOpenComments, onOpe
                         </>
                       ) : doc.id === "doc-2" ? (
                         <Doc2Content comments={comments} onClickHighlight={handleClickHighlight} />
-                      ) : (
+                      ) : doc.id === "doc-3" ? (
                         <Doc3Content comments={comments} onClickHighlight={handleClickHighlight} />
+                      ) : (
+                        <GenericDocContent name={doc.name} />
                       )}
                     </div>
                     {docFields.map((f) => (
