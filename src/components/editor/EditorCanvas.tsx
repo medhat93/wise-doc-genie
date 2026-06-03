@@ -13,15 +13,12 @@ import { ZoomBar, SearchBar } from "./EditorZoomSearch";
 import EditorToolbar from "./EditorToolbar";
 import type { EditorDocument } from "./EditorDocumentsPopover";
 import { FIELD_TYPES, type PlacedField } from "./EditorFieldsPanel";
-import { useEditorContext, COMMENT_SECTIONS, type Comment, type AiSuggestion, type AnnotationType } from "./EditorContext";
+import { useEditorContext, COMMENT_SECTIONS, DEFAULT_EDITOR_DOCUMENTS, type Comment, type AiSuggestion, type AnnotationType } from "./EditorContext";
 import { toast } from "sonner";
 
 /* ── Mock documents ── */
-export const MOCK_DOCUMENTS: EditorDocument[] = [
-  { id: "doc-1", name: "Master Services Agreement", docType: "primary", fileType: "pdf" },
-  { id: "doc-2", name: "Schedule A — Pricing", docType: "supplement", fileType: "docx" },
-  { id: "doc-3", name: "Insurance Certificate", docType: "attachment", fileType: "pdf" },
-];
+/** @deprecated Kept for backward-compat with panels that haven't migrated to context. */
+export const MOCK_DOCUMENTS: EditorDocument[] = DEFAULT_EDITOR_DOCUMENTS;
 
 const DOC_TYPE_DOT: Record<string, string> = {
   primary: "bg-[hsl(var(--brand-indigo))]",
