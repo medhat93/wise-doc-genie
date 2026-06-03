@@ -1224,6 +1224,12 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
       <ParticipantsDialog open={participantsOpen} onOpenChange={setParticipantsOpen} fromEditor />
 
+      <AddDocumentsDialog
+        open={addDocsOpen}
+        onOpenChange={setAddDocsOpen}
+        onAdd={(docs) => setEditorDocuments(prev => [...prev, ...docs])}
+      />
+
       {/* Send dialogs */}
       <MissingFieldsWarningDialog
         open={warningOpen}
