@@ -370,6 +370,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
 
   const getStepConditionMessage = (step: WizardStep): string | null => {
     switch (step.id) {
+      case "documents": return hasDocuments ? null : "Add at least one document";
       case "participants": return hasParticipants ? null : "Add at least one participant";
       case "fields": return null; // optional
       case "placeholders": return null; // optional
