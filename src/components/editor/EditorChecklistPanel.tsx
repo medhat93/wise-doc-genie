@@ -150,6 +150,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
     usedVariables,
     variableValues, setVariableValues,
     checklistState, setChecklistState,
+    editorDocuments, setEditorDocuments,
   } = useEditorContext();
 
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
@@ -157,6 +158,7 @@ const EditorChecklistPanel = ({ onSwitchPanel }: EditorChecklistPanelProps) => {
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
   const [showSendSection, setShowSendSection] = useState(false);
+  const [addDocsOpen, setAddDocsOpen] = useState(false);
 
   // Snapshot tracking for re-edit detection
   const [stepSnapshots, setStepSnapshots] = useState<Record<string, string>>({});
