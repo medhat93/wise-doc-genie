@@ -456,7 +456,13 @@ const CreateDocument = () => {
       title: "Opening editor with AI draft...",
       variant: "success" as const,
     });
-    navigate(`/editor?ai=true&type=${encodeURIComponent(docType)}`);
+    const doc: EditorDocument = {
+      id: `doc-${crypto.randomUUID().slice(0, 8)}`,
+      name: `${docType} (AI draft)`,
+      docType: "primary",
+      fileType: "docx",
+    };
+    handoffToEditor([doc], `?ai=true&type=${encodeURIComponent(docType)}`);
   };
 
   const handleStartBlank = () => {
